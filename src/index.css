@@ -2,41 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Hoch Online Real Estate - Luxury Design System
+Gold and White theme with medieval elegance
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
+    /* Base Colors */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 15%;
 
+    /* Card Components */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 15%;
 
+    /* Popover Components */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary Gold Theme */
+    --primary: 51 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-muted: 51 100% 85%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary Luxury Tones */
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted Elements */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent Elements */
+    --accent: 51 100% 95%;
+    --accent-foreground: 0 0% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Status Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Borders & Inputs */
+    --border: 0 0% 90%;
+    --input: 0 0% 94%;
+    --ring: 51 100% 50%;
 
-    --radius: 0.5rem;
+    /* Design System Elements */
+    --radius: 0.75rem;
+    
+    /* Custom Luxury Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%), hsl(45 100% 60%));
+    --gradient-gold-subtle: linear-gradient(135deg, hsl(51 100% 95%), hsl(0 0% 100%));
+    --gradient-hero: linear-gradient(135deg, hsla(0 0% 0% / 0.4), hsla(51 100% 50% / 0.2));
+    
+    /* Luxury Shadows */
+    --shadow-luxury: 0 25px 50px -12px hsla(51 100% 50% / 0.25);
+    --shadow-gold: 0 10px 25px -5px hsla(51 100% 50% / 0.3);
+    --shadow-subtle: 0 4px 20px -2px hsla(0 0% 0% / 0.1);
+    
+    /* Animation Timings */
+    --transition-luxury: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +128,80 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+  
+  /* Luxury Typography */
+  .font-serif-luxury {
+    font-family: 'Playfair Display', 'Georgia', serif;
+  }
+  
+  /* Custom Component Classes */
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  .gold-gradient {
+    background: var(--gradient-gold);
+  }
+  
+  .gold-gradient-subtle {
+    background: var(--gradient-gold-subtle);
+  }
+  
+  .shadow-luxury {
+    box-shadow: var(--shadow-luxury);
+  }
+  
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+  
+  .shadow-subtle {
+    box-shadow: var(--shadow-subtle);
+  }
+  
+  .transition-luxury {
+    transition: var(--transition-luxury);
+  }
+  
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  /* Scroll behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Property card animations */
+  .property-card {
+    @apply transition-luxury hover:shadow-luxury hover:-translate-y-2;
+  }
+  
+  /* Gold button variants */
+  .btn-gold {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-gold transition-luxury;
+  }
+  
+  .btn-outline-gold {
+    @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-luxury;
+  }
+}
+
+@layer components {
+  /* Floating consultation button */
+  .consultation-btn {
+    @apply fixed bottom-6 right-6 z-50 btn-gold px-6 py-3 rounded-full shadow-luxury;
+  }
+  
+  /* Hero section overlay */
+  .hero-overlay {
+    @apply absolute inset-0 hero-gradient;
+  }
+  
+  /* Service card hover effect */
+  .service-card {
+    @apply transition-luxury hover:shadow-gold hover:-translate-y-1;
   }
 }
