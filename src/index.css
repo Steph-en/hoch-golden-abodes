@@ -22,9 +22,9 @@ All colors MUST be HSL.
     --popover-foreground: 0 0% 15%;
 
     /* Primary Gold Theme */
-    --primary: 51 100% 50%;
+    --primary: 38 49% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-muted: 51 100% 85%;
+    --primary-muted: 38 49% 85%;
 
     /* Secondary Luxury Tones */
     --secondary: 0 0% 98%;
@@ -35,7 +35,7 @@ All colors MUST be HSL.
     --muted-foreground: 0 0% 45%;
 
     /* Accent Elements */
-    --accent: 51 100% 95%;
+    --accent: 38 49% 95%;
     --accent-foreground: 0 0% 15%;
 
     /* Status Colors */
@@ -47,19 +47,19 @@ All colors MUST be HSL.
     /* Borders & Inputs */
     --border: 0 0% 90%;
     --input: 0 0% 94%;
-    --ring: 51 100% 50%;
+    --ring: 38 49% 58%;
 
     /* Design System Elements */
     --radius: 0.75rem;
     
     /* Custom Luxury Gradients */
-    --gradient-gold: linear-gradient(135deg, hsl(51 100% 50%), hsl(45 100% 60%));
-    --gradient-gold-subtle: linear-gradient(135deg, hsl(51 100% 95%), hsl(0 0% 100%));
-    --gradient-hero: linear-gradient(135deg, hsla(0 0% 0% / 0.4), hsla(51 100% 50% / 0.2));
+    --gradient-gold: linear-gradient(135deg, hsl(38 49% 58%), hsl(38 49% 68%));
+    --gradient-gold-subtle: linear-gradient(135deg, hsl(38 49% 95%), hsl(0 0% 100%));
+    --gradient-hero: linear-gradient(135deg, hsla(0 0% 0% / 0.4), hsla(38 49% 58% / 0.2));
     
     /* Luxury Shadows */
-    --shadow-luxury: 0 25px 50px -12px hsla(51 100% 50% / 0.25);
-    --shadow-gold: 0 10px 25px -5px hsla(51 100% 50% / 0.3);
+    --shadow-luxury: 0 25px 50px -12px hsla(38 49% 58% / 0.25);
+    --shadow-gold: 0 10px 25px -5px hsla(38 49% 58% / 0.3);
     --shadow-subtle: 0 4px 20px -2px hsla(0 0% 0% / 0.1);
     
     /* Animation Timings */
