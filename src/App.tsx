@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ConsultationButton from "./components/ConsultationButton";
+import LogoProcessor from "./components/LogoProcessor";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Explore from "./pages/Explore";
@@ -36,6 +37,7 @@ const App = () => (
           </main>
           <Footer />
           <ConsultationButton />
+          <LogoProcessor />
         </div>
       </BrowserRouter>
     </TooltipProvider>
