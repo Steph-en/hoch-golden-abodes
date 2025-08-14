@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Phone } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import logo from "@/assets/logo.jpeg";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,13 +23,12 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 gold-gradient rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">H</span>
-            </div>
-            <span className="font-serif-luxury text-xl font-semibold text-foreground">
-              Hoch Online
-            </span>
+          <Link to="/" className="flex items-center space-x-3">
+            <img 
+              src={logo} 
+              alt="Hoch Online Real Estate" 
+              className="h-12 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Navigation */}

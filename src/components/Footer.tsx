@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo.jpeg";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -36,13 +37,12 @@ const Footer = () => {
           <div className="grid md:grid-cols-4 gap-8">
             {/* Company Info */}
             <div className="md:col-span-1">
-              <div className="flex items-center space-x-2 mb-6">
-                <div className="w-10 h-10 gold-gradient rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-lg">H</span>
-                </div>
-                <span className="font-serif-luxury text-xl font-semibold">
-                  Hoch Online
-                </span>
+              <div className="flex items-center space-x-3 mb-6">
+                <img 
+                  src={logo} 
+                  alt="Hoch Online Real Estate" 
+                  className="h-10 w-auto object-contain"
+                />
               </div>
               <p className="text-background/80 mb-6 leading-relaxed">
                 Premier real estate services in East Legon and Greater Accra. Your trusted partner for luxury properties, development, and architectural excellence.
