@@ -1,91 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { MapPin, Bed, Bath, Square, Heart, ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import property1 from "@/assets/property-1.jpg";
-import property2 from "@/assets/property-2.jpg";
-import property3 from "@/assets/property-3.jpg";
-import property4 from "@/assets/property-4.jpg";
-import property5 from "@/assets/property-5.jpg";
-import property6 from "@/assets/property-6.jpg";
-
-const properties = [
-  {
-    id: 1,
-    image: property1,
-    title: "Tropical Villa Retreat",
-    location: "East Legon, Accra",
-    price: "$850,000",
-    beds: 5,
-    baths: 4,
-    sqft: "4,200",
-    type: "Villa",
-    featured: true,
-  },
-  {
-    id: 2,
-    image: property2,
-    title: "Modern City Apartment",
-    location: "Airport Residential, Accra",
-    price: "$320,000",
-    beds: 3,
-    baths: 2,
-    sqft: "1,800",
-    type: "Apartment",
-    featured: false,
-  },
-  {
-    id: 3,
-    image: property3,
-    title: "Executive Townhouse",
-    location: "Cantonments, Accra",
-    price: "$520,000",
-    beds: 4,
-    baths: 3,
-    sqft: "2,600",
-    type: "Townhouse",
-    featured: true,
-  },
-  {
-    id: 4,
-    image: property4,
-    title: "Beachfront Paradise",
-    location: "Cape Coast",
-    price: "$1,200,000",
-    beds: 6,
-    baths: 5,
-    sqft: "5,500",
-    type: "Villa",
-    featured: true,
-  },
-  {
-    id: 5,
-    image: property5,
-    title: "Commercial Complex",
-    location: "Osu, Accra",
-    price: "$2,500,000",
-    beds: 0,
-    baths: 0,
-    sqft: "12,000",
-    type: "Commercial",
-    featured: false,
-  },
-  {
-    id: 6,
-    image: property6,
-    title: "Skyline Penthouse",
-    location: "Ridge, Accra",
-    price: "$780,000",
-    beds: 4,
-    baths: 3,
-    sqft: "3,200",
-    type: "Penthouse",
-    featured: true,
-  },
-];
-
-const propertyTypes = ["All", "Villa", "Apartment", "Townhouse", "Penthouse", "Commercial"];
+import { properties, propertyTypes } from "@/data/properties";
 
 const FeaturedProperties = () => {
   const [activeFilter, setActiveFilter] = useState("All");
@@ -120,7 +38,7 @@ const FeaturedProperties = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] as const },
     },
   };
 
@@ -268,9 +186,11 @@ const FeaturedProperties = () => {
                 animate={{ opacity: hoveredId === property.id ? 1 : 0 }}
                 className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-foreground via-foreground/90 to-transparent pt-20"
               >
-                <Button className="w-full btn-primary group/btn">
-                  View Property
-                  <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
+                <Button asChild className="w-full btn-primary group/btn">
+                  <Link to={`/property/${property.id}`}>
+                    View Property
+                    <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
+                  </Link>
                 </Button>
               </motion.div>
             </motion.div>
