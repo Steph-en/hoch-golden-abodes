@@ -35,7 +35,7 @@ const Header = () => {
       transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled 
-          ? "py-3 glass shadow-md-custom" 
+          ? "py-3 bg-white/80 backdrop-blur-xl shadow-[0_2px_20px_-5px_rgba(0,0,0,0.1)] border-b border-white/20" 
           : "py-5 bg-transparent"
       }`}
     >
