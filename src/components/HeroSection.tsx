@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import heroProperty1 from "@/assets/hero-property-1.jpg";
 import heroProperty2 from "@/assets/hero-property-2.jpg";
 import heroProperty3 from "@/assets/hero-property-3.jpg";
+import PropertySearch from "./PropertySearch";
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -133,29 +134,8 @@ const HeroSection = () => {
               </motion.div>
             </AnimatePresence>
             
-            {/* CTA Buttons */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <Button 
-                size="lg" 
-                className="btn-primary text-base px-8 py-6 group"
-              >
-                Explore Properties
-                <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="px-8 py-6 text-base border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 backdrop-blur-sm group"
-              >
-                <Play className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:scale-110" />
-                Watch Video
-              </Button>
-            </motion.div>
+            {/* Property Search */}
+            <PropertySearch />
 
             {/* Stats Preview */}
             <motion.div
