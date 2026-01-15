@@ -1,222 +1,254 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { useInView } from "framer-motion";
+import { useRef } from "react";
+import { Building2, PenTool, Users, Home, Palette, Calculator, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Building2, PenTool, Users, Home, Palette, Calculator, CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Services = () => {
+  const heroRef = useRef(null);
+  const servicesRef = useRef(null);
+  const processRef = useRef(null);
+  const ctaRef = useRef(null);
+  
+  const heroInView = useInView(heroRef, { once: true });
+  const servicesInView = useInView(servicesRef, { once: true, margin: "-100px" });
+  const processInView = useInView(processRef, { once: true, margin: "-100px" });
+  const ctaInView = useInView(ctaRef, { once: true, margin: "-100px" });
+
   const mainServices = [
     {
       icon: Building2,
-      title: "Development & Construction",
-      description: "From concept to completion, we deliver exceptional residential and commercial developments with the highest standards of quality and craftsmanship.",
-      features: [
-        "Custom residential development",
-        "Commercial property construction",
-        "Project management & oversight",
-        "Quality assurance & inspections",
-        "Sustainable building practices",
-        "Timely delivery guarantee"
-      ],
-      process: [
-        "Initial consultation & site analysis",
-        "Design development & planning permits",
-        "Construction phase management",
-        "Quality control & final inspections",
-        "Handover & warranty support"
-      ]
+      title: "Development",
+      description: "From concept to completion, we deliver exceptional residential and commercial developments.",
+      features: ["Custom design", "Project management", "Quality assurance"]
     },
     {
       icon: PenTool,
-      title: "Architecture & Interior Design",
-      description: "Our award-winning design team creates stunning spaces that blend functionality with aesthetic excellence, tailored to your lifestyle and preferences.",
-      features: [
-        "Architectural planning & design",
-        "Interior design & space planning",
-        "3D visualization & rendering",
-        "Sustainable design solutions",
-        "Smart home integration",
-        "Luxury finishing coordination"
-      ],
-      process: [
-        "Design brief & concept development",
-        "Detailed architectural drawings",
-        "Interior design schemes",
-        "3D visualization & approval",
-        "Implementation & supervision"
-      ]
+      title: "Architecture",
+      description: "Award-winning designs that blend functionality with aesthetic excellence.",
+      features: ["3D visualization", "Smart home integration", "Sustainable design"]
     },
     {
       icon: Users,
-      title: "Sales, Leasing & Consultancy",
-      description: "Expert guidance through every step of your real estate journey, from property selection to closing, ensuring the best outcomes for our clients.",
-      features: [
-        "Property sales & acquisition",
-        "Rental management services",
-        "Investment advisory",
-        "Market analysis & valuation",
-        "Legal support coordination",
-        "After-sales support"
-      ],
-      process: [
-        "Needs assessment & consultation",
-        "Property matching & viewing",
-        "Negotiation & legal support",
-        "Transaction completion",
-        "Ongoing client support"
-      ]
+      title: "Sales & Leasing",
+      description: "Expert guidance through every step of your real estate journey.",
+      features: ["Property matching", "Investment advisory", "Legal support"]
     }
   ];
 
   const additionalServices = [
-    {
-      icon: Home,
-      title: "Property Management",
-      description: "Comprehensive property management services for investors and landlords"
-    },
-    {
-      icon: Palette,
-      title: "Renovation & Remodeling",
-      description: "Transform existing spaces with our expert renovation services"
-    },
-    {
-      icon: Calculator,
-      title: "Real Estate Investment",
-      description: "Strategic investment advice and portfolio management"
-    }
+    { icon: Home, title: "Property Management" },
+    { icon: Palette, title: "Renovation" },
+    { icon: Calculator, title: "Investment Advisory" }
+  ];
+
+  const processSteps = [
+    { step: "01", title: "Consultation", description: "Understand your vision and requirements" },
+    { step: "02", title: "Planning", description: "Design and strategy development" },
+    { step: "03", title: "Execution", description: "Professional implementation" },
+    { step: "04", title: "Delivery", description: "Handover and ongoing support" }
   ];
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen bg-background overflow-hidden">
       {/* Hero Section */}
-      <section className="py-20 bg-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-serif-luxury text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Our <span className="text-primary">Premium Services</span>
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Comprehensive real estate solutions designed to exceed expectations and deliver exceptional value. 
-            From luxury property development to expert sales consultancy, we're your trusted partner in real estate.
-          </p>
+      <section 
+        ref={heroRef}
+        className="relative min-h-[60vh] flex items-center justify-center overflow-hidden"
+      >
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&h=1080&fit=crop"
+            alt="Architecture"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-background" />
+        </div>
+
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+            className="font-serif text-4xl md:text-6xl font-bold text-white mb-6"
+          >
+            Premium <span className="text-primary">Services</span>
+          </motion.h1>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto"
+          >
+            Comprehensive real estate solutions designed to exceed expectations
+          </motion.p>
         </div>
       </section>
 
       {/* Main Services */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-20">
+      <section ref={servicesRef} className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={servicesInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <span className="text-primary font-medium text-sm tracking-wider uppercase mb-4 block">
+              What We Offer
+            </span>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
+              Our Core Services
+            </h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
             {mainServices.map((service, index) => (
-              <div key={index} className={`grid lg:grid-cols-2 gap-12 items-center ${
-                index % 2 === 1 ? 'lg:flex-row-reverse' : ''
-              }`}>
-                <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
-                  <div className="flex items-center mb-6">
-                    <div className="w-16 h-16 gold-gradient rounded-2xl flex items-center justify-center mr-4">
-                      <service.icon className="w-8 h-8 text-primary-foreground" />
-                    </div>
-                    <h2 className="font-serif-luxury text-3xl font-bold text-foreground">
-                      {service.title}
-                    </h2>
-                  </div>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 40 }}
+                animate={servicesInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.6, delay: index * 0.15 }}
+                whileHover={{ y: -10 }}
+                className="group relative bg-background rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all border border-border overflow-hidden"
+              >
+                {/* Hover gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="relative">
+                  <motion.div 
+                    className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <service.icon className="w-7 h-7 text-primary" />
+                  </motion.div>
                   
-                  <p className="text-muted-foreground mb-8 leading-relaxed text-lg">
+                  <h3 className="font-serif text-xl font-semibold text-foreground mb-3">
+                    {service.title}
+                  </h3>
+                  
+                  <p className="text-muted-foreground mb-6 leading-relaxed">
                     {service.description}
                   </p>
-
-                  <div className="mb-8">
-                    <h3 className="font-semibold text-foreground mb-4 text-lg">Key Features:</h3>
-                    <div className="grid md:grid-cols-2 gap-3">
-                      {service.features.map((feature, featureIndex) => (
-                        <div key={featureIndex} className="flex items-center">
-                          <CheckCircle className="w-5 h-5 text-primary mr-3 flex-shrink-0" />
-                          <span className="text-muted-foreground">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button size="lg" className="btn-gold px-8">
-                    Learn More
-                  </Button>
+                  
+                  <ul className="space-y-2">
+                    {service.features.map((feature, i) => (
+                      <li key={i} className="flex items-center text-sm text-muted-foreground">
+                        <Check className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-
-                <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
-                  <Card className="bg-secondary border-border">
-                    <CardContent className="p-8">
-                      <h3 className="font-serif-luxury text-xl font-semibold text-foreground mb-6">
-                        Our Process
-                      </h3>
-                      <div className="space-y-4">
-                        {service.process.map((step, stepIndex) => (
-                          <div key={stepIndex} className="flex items-start">
-                            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold mr-4 flex-shrink-0 mt-1">
-                              {stepIndex + 1}
-                            </div>
-                            <p className="text-muted-foreground">{step}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
+              </motion.div>
             ))}
           </div>
+
+          {/* Additional Services */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={servicesInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mt-16 grid grid-cols-3 gap-4"
+          >
+            {additionalServices.map((service, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.02 }}
+                className="flex items-center gap-3 p-4 bg-secondary/50 rounded-xl"
+              >
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <service.icon className="w-5 h-5 text-primary" />
+                </div>
+                <span className="font-medium text-foreground text-sm">{service.title}</span>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Additional Services */}
-      <section className="py-20 bg-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="font-serif-luxury text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Additional <span className="text-primary">Services</span>
+      {/* Process Section */}
+      <section ref={processRef} className="py-24 px-4 bg-secondary/50">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={processInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <span className="text-primary font-medium text-sm tracking-wider uppercase mb-4 block">
+              How We Work
+            </span>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
+              Our Process
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Extending our expertise to meet all your real estate needs
-            </p>
-          </div>
+          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {additionalServices.map((service, index) => (
-              <Card key={index} className="text-center h-full hover:shadow-gold transition-all duration-300">
-                <CardContent className="p-8">
-                  <div className="w-16 h-16 gold-gradient rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <service.icon className="w-8 h-8 text-primary-foreground" />
+          <div className="grid md:grid-cols-4 gap-6">
+            {processSteps.map((step, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                animate={processInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="relative"
+              >
+                <div className="bg-background rounded-2xl p-6 text-center h-full shadow-lg">
+                  <div className="text-5xl font-bold text-primary/20 mb-4">
+                    {step.step}
                   </div>
-                  <h3 className="font-serif-luxury text-xl font-semibold text-foreground mb-4">
-                    {service.title}
-                  </h3>
-                  <p className="text-muted-foreground mb-6">
-                    {service.description}
-                  </p>
-                  <Button variant="outline" className="w-full">
-                    Learn More
-                  </Button>
-                </CardContent>
-              </Card>
+                  <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
+                  <p className="text-muted-foreground text-sm">{step.description}</p>
+                </div>
+                
+                {/* Connector line */}
+                {index < processSteps.length - 1 && (
+                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-0.5 bg-primary/30" />
+                )}
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="gold-gradient-subtle rounded-3xl p-12 text-center">
-            <h2 className="font-serif-luxury text-3xl md:text-4xl font-bold text-foreground mb-6">
-              Ready to Start Your Project?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Contact our expert team today for a free consultation and discover how we can bring your real estate vision to life.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="btn-gold px-8 py-3">
-                Schedule Consultation
-              </Button>
-              <Button size="lg" variant="outline" className="px-8 py-3">
-                View Portfolio
-              </Button>
+      <section ref={ctaRef} className="py-24 px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={ctaInView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ duration: 0.6 }}
+            className="relative bg-charcoal rounded-3xl p-12 md:p-16 text-center overflow-hidden"
+          >
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-2xl" />
+            
+            <div className="relative">
+              <h2 className="font-serif text-3xl md:text-4xl font-bold text-white mb-4">
+                Ready to Start Your Project?
+              </h2>
+              <p className="text-white/70 mb-8 max-w-xl mx-auto">
+                Get in touch for a free consultation and discover how we can bring your vision to life.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/contact">
+                  <Button size="lg" className="group">
+                    Schedule Consultation
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+                <Link to="/explore">
+                  <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                    View Portfolio
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
     </div>
