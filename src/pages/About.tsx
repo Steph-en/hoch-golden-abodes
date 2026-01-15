@@ -1,182 +1,281 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { useInView } from "framer-motion";
+import { useRef } from "react";
+import { Users, Award, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Users, Award, MapPin, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const About = () => {
+  const heroRef = useRef(null);
+  const storyRef = useRef(null);
+  const valuesRef = useRef(null);
+  const teamRef = useRef(null);
+  
+  const heroInView = useInView(heroRef, { once: true, margin: "-100px" });
+  const storyInView = useInView(storyRef, { once: true, margin: "-100px" });
+  const valuesInView = useInView(valuesRef, { once: true, margin: "-100px" });
+  const teamInView = useInView(teamRef, { once: true, margin: "-100px" });
+
   const teamMembers = [
     {
       name: "Sarah Mensah",
       role: "Founder & CEO",
-      description: "15+ years in luxury real estate and development",
       image: "https://images.unsplash.com/photo-1494790108755-2616b67b8f7e?w=400&h=400&fit=crop&crop=face"
     },
     {
       name: "Kwame Asante",
       role: "Head of Architecture",
-      description: "Award-winning architect specializing in contemporary design",
       image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face"
     },
     {
       name: "Ama Osei",
       role: "Sales Director",
-      description: "Expert in luxury property sales and client relations",
       image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face"
     }
   ];
 
   const values = [
-    {
-      icon: Award,
-      title: "Excellence",
-      description: "We deliver exceptional quality in every project and service"
-    },
-    {
-      icon: Users,
-      title: "Client-Focused",
-      description: "Your satisfaction and success are our top priorities"
-    },
-    {
-      icon: MapPin,
-      title: "Local Expertise",
-      description: "Deep knowledge of East Legon and Greater Accra markets"
-    },
-    {
-      icon: Clock,
-      title: "Timely Delivery",
-      description: "We respect your time and deliver on our promises"
-    }
+    { icon: Award, title: "Excellence", description: "Exceptional quality in every project" },
+    { icon: Users, title: "Client-Focused", description: "Your success is our priority" },
+    { icon: MapPin, title: "Local Expertise", description: "Deep market knowledge" },
+    { icon: Clock, title: "Timely Delivery", description: "We deliver on our promises" }
+  ];
+
+  const stats = [
+    { value: "15+", label: "Years Experience" },
+    { value: "500+", label: "Properties Sold" },
+    { value: "98%", label: "Client Satisfaction" },
+    { value: "50+", label: "Team Members" }
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background overflow-hidden">
       {/* Hero Section */}
-      <section className="py-20 bg-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-serif-luxury text-4xl md:text-5xl font-bold text-foreground mb-6">
-            About <span className="text-primary">Hoch Online</span>
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Founded on the principles of excellence and innovation, Hoch Online has established itself as a premier 
-            real estate company in East Legon and Greater Accra, delivering exceptional properties and unparalleled service.
-          </p>
+      <section 
+        ref={heroRef}
+        className="relative min-h-[70vh] flex items-center justify-center overflow-hidden"
+      >
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&h=1080&fit=crop"
+            alt="Luxury property"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-background" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <motion.span
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="inline-block px-4 py-2 bg-primary/20 backdrop-blur-sm rounded-full text-primary text-sm font-medium mb-6"
+          >
+            Established 2009
+          </motion.span>
+          
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="font-serif text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
+          >
+            Building Dreams,
+            <br />
+            <span className="text-primary">Creating Legacies</span>
+          </motion.h1>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto"
+          >
+            Ghana's premier luxury real estate company, transforming visions into exceptional living spaces.
+          </motion.p>
         </div>
       </section>
 
+      {/* Stats Bar */}
+      <section className="relative z-20 -mt-16 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={heroInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-8"
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={heroInView ? { opacity: 1, scale: 1 } : {}}
+                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+                className="text-center"
+              >
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-1">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-muted-foreground">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
       {/* Story Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="font-serif-luxury text-3xl font-bold text-foreground mb-6">
+      <section ref={storyRef} className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={storyInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.8 }}
+            >
+              <span className="text-primary font-medium text-sm tracking-wider uppercase mb-4 block">
                 Our Story
+              </span>
+              <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight">
+                A Legacy of Excellence in Ghanaian Real Estate
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  Hoch Online was born from a vision to transform the real estate landscape in Ghana. 
-                  We recognized the need for a company that combines international standards with 
-                  local expertise, creating exceptional living spaces that reflect the aspirations 
-                  of modern Ghanaians.
+                  Founded in East Legon, Hoch Online emerged from a vision to redefine luxury living in Ghana. We blend international standards with deep local expertise.
                 </p>
                 <p>
-                  From our headquarters in East Legon, we've grown to become a trusted name in 
-                  luxury real estate, development, and architectural services. Our team of experts 
-                  brings together decades of experience in creating homes that are not just 
-                  beautiful, but truly livable.
-                </p>
-                <p>
-                  Today, we continue to push boundaries, embracing new technologies and sustainable 
-                  practices while maintaining our commitment to craftsmanship and client satisfaction.
+                  Today, we're trusted by discerning clients who demand excellence—from bespoke villa developments to premium commercial spaces.
                 </p>
               </div>
-            </div>
-            <div className="relative">
-              <div className="gold-gradient-subtle rounded-2xl p-8">
-                <h3 className="font-serif-luxury text-2xl font-semibold text-foreground mb-4">
-                  Our Mission
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  To create exceptional living spaces and provide unparalleled real estate services 
-                  that exceed expectations and enhance the lives of our clients.
-                </p>
-                <h3 className="font-serif-luxury text-2xl font-semibold text-foreground mb-4">
-                  Our Vision
-                </h3>
-                <p className="text-muted-foreground">
-                  To be the leading real estate company in Ghana, recognized for innovation, 
-                  quality, and our commitment to sustainable development.
-                </p>
+              <Link to="/services">
+                <Button className="mt-8 group">
+                  Explore Our Services
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={storyInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="aspect-[4/5] rounded-2xl overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&h=1000&fit=crop"
+                  alt="Luxury villa"
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
+              <div className="absolute -bottom-6 -left-6 bg-primary text-primary-foreground p-6 rounded-xl">
+                <div className="text-3xl font-bold">15+</div>
+                <div className="text-sm opacity-90">Years of Trust</div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Values Section */}
-      <section className="py-20 bg-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="font-serif-luxury text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Our <span className="text-primary">Core Values</span>
+      <section ref={valuesRef} className="py-24 px-4 bg-secondary/50">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={valuesInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <span className="text-primary font-medium text-sm tracking-wider uppercase mb-4 block">
+              What Drives Us
+            </span>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
+              Our Core Values
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              The principles that guide everything we do
-            </p>
-          </div>
+          </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, index) => (
-              <Card key={index} className="text-center h-full">
-                <CardContent className="p-6">
-                  <div className="w-16 h-16 gold-gradient rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <value.icon className="w-8 h-8 text-primary-foreground" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-3">{value.title}</h3>
-                  <p className="text-muted-foreground text-sm">{value.description}</p>
-                </CardContent>
-              </Card>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                animate={valuesInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="bg-background rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <motion.div 
+                  className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-5"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <value.icon className="w-7 h-7 text-primary" />
+                </motion.div>
+                <h3 className="font-semibold text-foreground text-lg mb-2">{value.title}</h3>
+                <p className="text-muted-foreground text-sm">{value.description}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Team Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="font-serif-luxury text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Meet Our <span className="text-primary">Expert Team</span>
+      <section ref={teamRef} className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={teamInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <span className="text-primary font-medium text-sm tracking-wider uppercase mb-4 block">
+              Meet the Experts
+            </span>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
+              Our Leadership Team
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Experienced professionals dedicated to your success
-            </p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
-              <Card key={index} className="text-center overflow-hidden">
-                <div className="aspect-square overflow-hidden">
-                  <img 
-                    src={member.image} 
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 40 }}
+                animate={teamInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.6, delay: index * 0.15 }}
+                whileHover={{ y: -10 }}
+                className="group"
+              >
+                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden mb-6">
+                  <img
+                    src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-                <CardContent className="p-6">
-                  <h3 className="font-serif-luxury text-xl font-semibold text-foreground mb-2">
-                    {member.name}
-                  </h3>
-                  <p className="text-primary font-medium mb-3">{member.role}</p>
-                  <p className="text-muted-foreground text-sm">{member.description}</p>
-                </CardContent>
-              </Card>
+                <h3 className="font-serif text-xl font-semibold text-foreground mb-1">
+                  {member.name}
+                </h3>
+                <p className="text-primary font-medium text-sm">{member.role}</p>
+              </motion.div>
             ))}
           </div>
 
-          <div className="text-center mt-12">
-            <Button size="lg" className="btn-gold px-8 py-3">
-              Join Our Team
-            </Button>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={teamInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="text-center mt-12"
+          >
+            <Link to="/contact">
+              <Button variant="outline" size="lg" className="group">
+                Join Our Team
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </section>
     </div>
