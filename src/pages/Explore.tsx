@@ -166,7 +166,7 @@ const Explore = () => {
                         className={`px-4 py-2 rounded-full text-sm transition-all ${
                           selectedPriceRange === range.label
                             ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-foreground hover:bg-secondary/80"
+                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
                         }`}
                       >
                         {range.label}
