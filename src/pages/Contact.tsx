@@ -156,7 +156,7 @@ const Contact = () => {
 
                 <a 
                   href="mailto:info@hochonline.com"
-                  className="flex items-center gap-4 p-4 bg-secondary/50 rounded-xl hover:bg-secondary transition-colors group"
+                  className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors group"
                 >
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                     <Mail className="w-5 h-5 text-primary" />
