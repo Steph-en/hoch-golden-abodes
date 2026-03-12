@@ -63,7 +63,7 @@ const Services = () => {
             alt="Architecture"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-background" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
@@ -158,7 +158,7 @@ const Services = () => {
               <motion.div
                 key={index}
                 whileHover={{ scale: 1.02 }}
-                className="flex items-center gap-3 p-4 bg-secondary/50 rounded-xl"
+                className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl"
               >
                 <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                   <service.icon className="w-5 h-5 text-primary" />
@@ -171,7 +171,7 @@ const Services = () => {
       </section>
 
       {/* Process Section */}
-      <section ref={processRef} className="py-24 px-4 bg-secondary/50">
+      <section ref={processRef} className="py-24 px-4 bg-muted/50">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -221,7 +221,7 @@ const Services = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={ctaInView ? { opacity: 1, scale: 1 } : {}}
             transition={{ duration: 0.6 }}
-            className="relative bg-charcoal rounded-3xl p-12 md:p-16 text-center overflow-hidden"
+            className="relative bg-foreground rounded-3xl p-12 md:p-16 text-center overflow-hidden"
           >
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />

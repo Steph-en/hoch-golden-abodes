@@ -126,7 +126,7 @@ const ConsultationButton = () => {
           </div>
 
           <div className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full btn-gold">
+            <Button type="submit" className="w-full btn-primary">
               <Send className="w-4 h-4 mr-2" />
               Send Consultation Request
             </Button>

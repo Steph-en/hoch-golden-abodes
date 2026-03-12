@@ -66,7 +66,7 @@ const Contact = () => {
             alt="Office"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-background" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
@@ -142,7 +142,7 @@ const Contact = () => {
               <div className="space-y-4">
                 <a 
                   href="tel:+233123456789"
-                  className="flex items-center gap-4 p-4 bg-secondary/50 rounded-xl hover:bg-secondary transition-colors group"
+                  className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors group"
                 >
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                     <Phone className="w-5 h-5 text-primary" />
@@ -156,7 +156,7 @@ const Contact = () => {
 
                 <a 
                   href="mailto:info@hochonline.com"
-                  className="flex items-center gap-4 p-4 bg-secondary/50 rounded-xl hover:bg-secondary transition-colors group"
+                  className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors group"
                 >
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                     <Mail className="w-5 h-5 text-primary" />
@@ -278,7 +278,7 @@ const Contact = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="aspect-[21/9] bg-secondary rounded-2xl overflow-hidden relative"
+            className="aspect-[21/9] bg-muted rounded-2xl overflow-hidden relative"
           >
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">

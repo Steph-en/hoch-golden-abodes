@@ -58,7 +58,7 @@ const Explore = () => {
       {/* Header */}
       <section 
         ref={headerRef}
-        className="relative py-20 px-4 bg-gradient-to-b from-secondary to-background"
+        className="relative py-20 px-4 bg-gradient-to-b from-muted to-background"
       >
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -126,7 +126,7 @@ const Explore = () => {
                         className={`px-4 py-2 rounded-full text-sm transition-all ${
                           selectedType === type
                             ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-foreground hover:bg-secondary/80"
+                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
                         }`}
                       >
                         {type}
@@ -146,7 +146,7 @@ const Explore = () => {
                         className={`px-4 py-2 rounded-full text-sm transition-all ${
                           selectedLocation === loc
                             ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-foreground hover:bg-secondary/80"
+                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
                         }`}
                       >
                         {loc}
@@ -166,7 +166,7 @@ const Explore = () => {
                         className={`px-4 py-2 rounded-full text-sm transition-all ${
                           selectedPriceRange === range.label
                             ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-foreground hover:bg-secondary/80"
+                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
                         }`}
                       >
                         {range.label}
@@ -223,7 +223,7 @@ const Explore = () => {
                     />
                     
                     {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     
                     {/* Like Button */}
                     <button
@@ -234,7 +234,7 @@ const Explore = () => {
                         className={`w-5 h-5 transition-colors ${
                           likedProperties.includes(property.id)
                             ? "text-red-500 fill-red-500"
-                            : "text-charcoal"
+                            : "text-foreground"
                         }`}
                       />
                     </button>
@@ -242,7 +242,7 @@ const Explore = () => {
                     {/* Price */}
                     <div className="absolute bottom-4 left-4">
                       <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full">
-                        <span className="font-bold text-charcoal">{property.price}</span>
+                        <span className="font-bold text-foreground">{property.price}</span>
                       </div>
                     </div>
 
@@ -296,7 +296,7 @@ const Explore = () => {
               animate={{ opacity: 1 }}
               className="text-center py-20"
             >
-              <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">No properties found</h3>
