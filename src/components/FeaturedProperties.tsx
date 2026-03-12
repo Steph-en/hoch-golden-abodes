@@ -84,7 +84,7 @@ const FeaturedProperties = () => {
               className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                 activeFilter === type
                   ? "bg-primary text-primary-foreground shadow-gold"
-                  : "bg-secondary text-secondary-foreground hover:bg-primary/10 hover:text-primary"
+                  : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
               }`}
             >
               {type}

@@ -62,7 +62,7 @@ const About = () => {
             alt="Luxury property"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-background" />
         </div>
 
         {/* Content */}
@@ -179,7 +179,7 @@ const About = () => {
       </section>
 
       {/* Values Section */}
-      <section ref={valuesRef} className="py-24 px-4 bg-secondary/50">
+      <section ref={valuesRef} className="py-24 px-4 bg-muted/50">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -253,7 +253,7 @@ const About = () => {
                     alt={member.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
                 <h3 className="font-serif text-xl font-semibold text-foreground mb-1">
                   {member.name}
