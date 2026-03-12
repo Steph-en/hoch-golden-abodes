@@ -242,7 +242,7 @@ const Explore = () => {
                     {/* Price */}
                     <div className="absolute bottom-4 left-4">
                       <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full">
-                        <span className="font-bold text-charcoal">{property.price}</span>
+                        <span className="font-bold text-foreground">{property.price}</span>
                       </div>
                     </div>
 
