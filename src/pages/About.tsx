@@ -71,7 +71,7 @@ const About = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={heroInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="inline-block px-4 py-2 bg-primary/20 backdrop-blur-sm rounded-full text-primary text-sm font-medium mb-6"
+            className="inline-block px-4 py-2 bg-primary/80 backdrop-blur-sm rounded-full text-white text-sm font-medium mb-6"
           >
             Established 2009
           </motion.span>

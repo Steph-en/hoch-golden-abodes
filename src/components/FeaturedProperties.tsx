@@ -132,7 +132,7 @@ const FeaturedProperties = () => {
                   onClick={() => toggleLike(property.id)}
                   className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
                     likedProperties.includes(property.id)
-                      ? "bg-red-500 text-white"
+                      ? "bg-primary text-white"
                       : "bg-white/20 text-white hover:bg-white/40"
                   }`}
                 >
@@ -184,9 +184,9 @@ const FeaturedProperties = () => {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: hoveredId === property.id ? 1 : 0 }}
-                className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-foreground via-foreground/90 to-transparent pt-20"
+                className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-foreground via-foreground/60 to-transparent pt-20"
               >
-                <Button asChild className="w-full btn-primary group/btn">
+                <Button asChild className="w-full bg-primary group/btn">
                   <Link to={`/property/${property.id}`}>
                     View Property
                     <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />

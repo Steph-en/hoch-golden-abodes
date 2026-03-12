@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, ArrowRight } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "@/assets/logo.jpeg";
+import logo from "@/assets/logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
