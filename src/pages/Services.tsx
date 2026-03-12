@@ -171,7 +171,7 @@ const Services = () => {
       </section>
 
       {/* Process Section */}
-      <section ref={processRef} className="py-24 px-4 bg-secondary/50">
+      <section ref={processRef} className="py-24 px-4 bg-muted/50">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
