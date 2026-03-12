@@ -58,7 +58,7 @@ const Explore = () => {
       {/* Header */}
       <section 
         ref={headerRef}
-        className="relative py-20 px-4 bg-gradient-to-b from-secondary to-background"
+        className="relative py-20 px-4 bg-gradient-to-b from-muted to-background"
       >
         <div className="max-w-6xl mx-auto">
           <motion.div
