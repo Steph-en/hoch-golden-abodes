@@ -146,8 +146,8 @@ const PropertySearch = () => {
                       setPriceRange(range.label);
                       setShowPriceDropdown(false);
                     }}
-                    className={`w-full px-5 py-3 text-left hover:bg-secondary transition-colors ${
-                      priceRange === range.label ? 'bg-primary/10 text-primary' : 'text-foreground'
+                    className={`w-full px-5 py-3 text-left hover:bg-primary/10 hover:text-primary transition-colors ${
+                      priceRange === range.label ? 'bg-primary/10 text-primary font-medium' : 'text-foreground'
                     }`}
                   >
                     {range.label}
