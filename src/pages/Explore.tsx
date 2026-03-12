@@ -234,7 +234,7 @@ const Explore = () => {
                         className={`w-5 h-5 transition-colors ${
                           likedProperties.includes(property.id)
                             ? "text-red-500 fill-red-500"
-                            : "text-charcoal"
+                            : "text-foreground"
                         }`}
                       />
                     </button>
