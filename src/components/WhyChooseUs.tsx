@@ -60,7 +60,7 @@ const WhyChooseUs = () => {
   };
 
   return (
-    <section ref={sectionRef} className="py-24 lg:py-32 bg-secondary/30 relative overflow-hidden">
+    <section ref={sectionRef} className="py-24 lg:py-32 bg-muted/40 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
