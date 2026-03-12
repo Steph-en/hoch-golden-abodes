@@ -63,7 +63,7 @@ const Services = () => {
             alt="Architecture"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-background" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
