@@ -278,7 +278,7 @@ const Contact = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="aspect-[21/9] bg-secondary rounded-2xl overflow-hidden relative"
+            className="aspect-[21/9] bg-muted rounded-2xl overflow-hidden relative"
           >
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">

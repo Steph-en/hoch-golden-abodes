@@ -296,7 +296,7 @@ const Explore = () => {
               animate={{ opacity: 1 }}
               className="text-center py-20"
             >
-              <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">No properties found</h3>

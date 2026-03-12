@@ -221,7 +221,7 @@ const Services = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={ctaInView ? { opacity: 1, scale: 1 } : {}}
             transition={{ duration: 0.6 }}
-            className="relative bg-charcoal rounded-3xl p-12 md:p-16 text-center overflow-hidden"
+            className="relative bg-foreground rounded-3xl p-12 md:p-16 text-center overflow-hidden"
           >
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
