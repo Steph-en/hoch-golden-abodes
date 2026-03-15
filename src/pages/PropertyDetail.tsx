@@ -223,7 +223,7 @@ const PropertyDetail = () => {
             </div>
 
             {/* Property Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-secondary/50 rounded-2xl">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-muted/50 rounded-2xl">
               {property.beds > 0 && (
                 <div className="text-center">
                   <Bed className="w-8 h-8 text-primary mx-auto mb-2" />
@@ -263,7 +263,7 @@ const PropertyDetail = () => {
               <h2 className="font-display text-2xl font-semibold text-foreground mb-6">Amenities & Features</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {property.amenities.map((amenity, index) => (
-                  <div key={index} className="flex items-center gap-3 p-4 bg-secondary/50 rounded-xl">
+                  <div key={index} className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
                     <Check className="w-5 h-5 text-primary flex-shrink-0" />
                     <span className="text-foreground">{amenity}</span>
                   </div>
@@ -274,7 +274,7 @@ const PropertyDetail = () => {
             {/* Property Details */}
             <div>
               <h2 className="font-display text-2xl font-semibold text-foreground mb-6">Property Details</h2>
-              <div className="grid grid-cols-2 gap-6 p-6 bg-secondary/50 rounded-2xl">
+              <div className="grid grid-cols-2 gap-6 p-6 bg-muted/50 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-primary" />
                   <div>
@@ -304,7 +304,7 @@ const PropertyDetail = () => {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
-                    className="bg-secondary border-0"
+                    className="bg-muted border-0"
                   />
                 </div>
                 <div>
@@ -314,7 +314,7 @@ const PropertyDetail = () => {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
-                    className="bg-secondary border-0"
+                    className="bg-muted border-0"
                   />
                 </div>
                 <div>
@@ -323,7 +323,7 @@ const PropertyDetail = () => {
                     placeholder="Phone Number"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="bg-secondary border-0"
+                    className="bg-muted border-0"
                   />
                 </div>
                 <div>
@@ -332,7 +332,7 @@ const PropertyDetail = () => {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={4}
-                    className="bg-secondary border-0 resize-none"
+                    className="bg-muted border-0 resize-none"
                   />
                 </div>
                 <Button type="submit" className="w-full btn-primary py-6">
@@ -344,7 +344,7 @@ const PropertyDetail = () => {
               <div className="mt-8 pt-6 border-t border-border space-y-4">
                 <a
                   href="tel:+233201234567"
-                  className="flex items-center gap-3 p-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
+                  className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
                 >
                   <Phone className="w-5 h-5 text-primary" />
                   <div>
@@ -354,7 +354,7 @@ const PropertyDetail = () => {
                 </a>
                 <a
                   href="mailto:info@hochonline.com"
-                  className="flex items-center gap-3 p-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
+                  className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
                 >
                   <Mail className="w-5 h-5 text-primary" />
                   <div>

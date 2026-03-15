@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, MapPin, ArrowRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import gsap from "gsap";
 import heroProperty1 from "@/assets/hero-property-1.jpg";
 import heroProperty2 from "@/assets/hero-property-2.jpg";
 import heroProperty3 from "@/assets/hero-property-3.jpg";
@@ -9,6 +10,8 @@ import PropertySearch from "./PropertySearch";
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const heroContentRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
   
   const heroImages = [
     {
@@ -31,6 +34,48 @@ const HeroSection = () => {
     }
   ];
 
+  // GSAP hero entrance animation
+  useEffect(() => {
+    if (!heroContentRef.current) return;
+    
+    const tl = gsap.timeline({ delay: 0.3 });
+    
+    tl.fromTo(
+      heroContentRef.current.querySelectorAll(".gsap-hero-badge"),
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
+    )
+    .fromTo(
+      heroContentRef.current.querySelectorAll(".gsap-hero-title"),
+      { y: 60, opacity: 0, clipPath: "inset(100% 0% 0% 0%)" },
+      { y: 0, opacity: 1, clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power4.out" },
+      "-=0.3"
+    )
+    .fromTo(
+      heroContentRef.current.querySelectorAll(".gsap-hero-desc"),
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" },
+      "-=0.5"
+    )
+    .fromTo(
+      heroContentRef.current.querySelectorAll(".gsap-hero-search"),
+      { y: 40, opacity: 0, scale: 0.95 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "power3.out" },
+      "-=0.3"
+    );
+
+    if (statsRef.current) {
+      tl.fromTo(
+        statsRef.current.children,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power3.out" },
+        "-=0.4"
+      );
+    }
+
+    return () => { tl.kill(); };
+  }, []);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -38,13 +83,8 @@ const HeroSection = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
-  };
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
 
   return (
     <section className="relative h-screen min-h-[700px] overflow-hidden">
@@ -61,11 +101,7 @@ const HeroSection = () => {
                 transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
                 className="absolute inset-0"
               >
-                <img
-                  src={image.src}
-                  alt={image.title}
-                  className="w-full h-full object-cover"
-                />
+                <img src={image.src} alt={image.title} className="w-full h-full object-cover" />
               </motion.div>
             )
           ))}
@@ -73,26 +109,19 @@ const HeroSection = () => {
         <div className="hero-overlay" />
       </div>
 
-      {/* Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-background/30 to-transparent z-10" />
       <div className="absolute bottom-0 left-0 w-1/3 h-1 bg-gradient-to-r from-primary via-primary/50 to-transparent z-20" />
 
       {/* Navigation Arrows */}
       <div className="absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 z-20">
-        <motion.button
-          onClick={prevSlide}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+        <motion.button onClick={prevSlide} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
           className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white transition-all duration-300 border border-white/20"
         >
           <ChevronLeft className="w-6 h-6" />
         </motion.button>
       </div>
       <div className="absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 z-20">
-        <motion.button
-          onClick={nextSlide}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+        <motion.button onClick={nextSlide} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
           className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white transition-all duration-300 border border-white/20"
         >
           <ChevronRight className="w-6 h-6" />
@@ -100,21 +129,14 @@ const HeroSection = () => {
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 h-full flex items-center">
+      <div ref={heroContentRef} className="relative z-10 h-full flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="max-w-3xl">
-            {/* Location Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="inline-flex items-center space-x-2 mb-6 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"
-            >
+            <div className="gsap-hero-badge inline-flex items-center space-x-2 mb-6 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
               <MapPin className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-white/90">East Legon, Accra • Ghana</span>
-            </motion.div>
+            </div>
 
-            {/* Main Heading */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSlide}
@@ -123,27 +145,22 @@ const HeroSection = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
               >
-                <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-white leading-[1.1] mb-4">
+                <h1 className="gsap-hero-title font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-white leading-[1.1] mb-4">
                   {heroImages[currentSlide].title}
                   <br />
                   <span className="text-gradient">{heroImages[currentSlide].subtitle}</span>
                 </h1>
-                <p className="text-lg md:text-xl text-white/80 mb-8 max-w-xl leading-relaxed">
+                <p className="gsap-hero-desc text-lg md:text-xl text-white/80 mb-8 max-w-xl leading-relaxed">
                   {heroImages[currentSlide].description}
                 </p>
               </motion.div>
             </AnimatePresence>
             
-            {/* Property Search */}
-            <PropertySearch />
+            <div className="gsap-hero-search">
+              <PropertySearch />
+            </div>
 
-            {/* Stats Preview */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.6 }}
-              className="flex items-center gap-8 mt-12 pt-8 border-t border-white/20"
-            >
+            <div ref={statsRef} className="flex items-center gap-8 mt-12 pt-8 border-t border-white/20">
               <div>
                 <p className="font-display text-3xl font-semibold text-white">120+</p>
                 <p className="text-sm text-white/60">Properties Listed</p>
@@ -158,7 +175,7 @@ const HeroSection = () => {
                 <p className="font-display text-3xl font-semibold text-white">5+</p>
                 <p className="text-sm text-white/60">Years Experience</p>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Phone, ArrowRight } from "lucide-react";
+import { Menu, X, Phone, ArrowRight, User, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, profile, signOut } = useAuth();
   const location = useLocation();
 
   const navigation = [
@@ -19,9 +21,7 @@ const Header = () => {
   ];
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -41,7 +41,6 @@ const Header = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <motion.img 
               src={logo} 
@@ -52,7 +51,6 @@ const Header = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1">
             {navigation.map((item) => (
               <Link
@@ -80,7 +78,6 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Contact & CTA */}
           <div className="hidden lg:flex items-center space-x-4">
             <a 
               href="tel:+233123456789" 
@@ -93,20 +90,40 @@ const Header = () => {
               <Phone className="w-4 h-4" />
               <span>+233 123 456 789</span>
             </a>
-            
-            <Button 
-              asChild
-              size="sm"
-              className="btn-primary group"
-            >
-              <Link to="/contact">
-                Get Started
-                <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
-            </Button>
+
+            {user ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/auth"
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                    isScrolled ? "text-foreground" : "text-white"
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="hidden xl:inline">{profile?.display_name || "Account"}</span>
+                </Link>
+                <button
+                  onClick={signOut}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isScrolled ? "hover:bg-muted text-muted-foreground" : "hover:bg-white/10 text-white/70"
+                  }`}
+                  title="Sign out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <Button asChild size="sm" className="btn-primary group">
+                <Link to="/auth">
+                  Sign In
+                  <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+              </Button>
+            )}
           </div>
           
-          {/* Mobile menu button */}
           <Button
             variant="ghost"
             size="sm"
@@ -118,7 +135,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
@@ -156,16 +172,24 @@ const Header = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <a 
-                  href="tel:+233123456789" 
-                  className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-muted-foreground"
-                >
-                  <Phone className="w-5 h-5 text-primary" />
-                  <span>+233 123 456 789</span>
-                </a>
-                <Button className="w-full mt-3 btn-primary">
-                  Get Started
-                </Button>
+                {user ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <User className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="font-medium text-foreground">{profile?.display_name || "Account"}</span>
+                    </div>
+                    <Button onClick={() => { signOut(); setIsMenuOpen(false); }} variant="outline" className="w-full">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <Button asChild className="w-full btn-primary" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                )}
               </motion.div>
             </div>
           </motion.div>
