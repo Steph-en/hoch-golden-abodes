@@ -274,7 +274,7 @@ const PropertyDetail = () => {
             {/* Property Details */}
             <div>
               <h2 className="font-display text-2xl font-semibold text-foreground mb-6">Property Details</h2>
-              <div className="grid grid-cols-2 gap-6 p-6 bg-secondary/50 rounded-2xl">
+              <div className="grid grid-cols-2 gap-6 p-6 bg-muted/50 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-primary" />
                   <div>
