@@ -1,24 +1,24 @@
-import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import { useEffect, useRef, ReactNode } from "react";
+import gsap from "gsap";
 
 interface PageTransitionProps {
   children: ReactNode;
 }
 
 const PageTransition = ({ children }: PageTransitionProps) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{
-        duration: 0.5,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-    >
-      {children}
-    </motion.div>
-  );
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    
+    gsap.fromTo(
+      ref.current,
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }
+    );
+  }, []);
+
+  return <div ref={ref}>{children}</div>;
 };
 
 export default PageTransition;
