@@ -1,50 +1,53 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import { MapPin, Bed, Bath, Square, Heart, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { properties, propertyTypes } from "@/data/properties";
+import CompareButton from "./CompareButton";
+import { useFavorites } from "@/hooks/useFavorites";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const FeaturedProperties = () => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [hoveredId, setHoveredId] = useState<number | null>(null);
-  const [likedProperties, setLikedProperties] = useState<number[]>([]);
   const sectionRef = useRef(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   const filteredProperties = properties.filter(
     (property) => activeFilter === "All" || property.type === activeFilter
   );
 
-  const toggleLike = (id: number) => {
-    setLikedProperties((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+  // GSAP scroll-triggered card reveals
+  useEffect(() => {
+    if (!gridRef.current) return;
+    const cards = gridRef.current.querySelectorAll(".property-card-gsap");
+    
+    gsap.fromTo(cards, 
+      { y: 80, opacity: 0, scale: 0.95 },
+      {
+        y: 0, opacity: 1, scale: 1,
+        duration: 0.7,
+        stagger: 0.12,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: gridRef.current,
+          start: "top 80%",
+          toggleActions: "play none none none",
+        },
+      }
     );
-  };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] as const },
-    },
-  };
+    return () => { ScrollTrigger.getAll().forEach(t => t.kill()); };
+  }, [activeFilter]);
 
   return (
     <section ref={sectionRef} className="py-24 lg:py-32 bg-background relative overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-primary/5 to-transparent opacity-50" />
       <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-radial from-primary/5 to-transparent opacity-30" />
 
@@ -93,19 +96,13 @@ const FeaturedProperties = () => {
         </motion.div>
 
         {/* Properties Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
+        <div ref={gridRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProperties.map((property) => (
-            <motion.div
+            <div
               key={property.id}
-              variants={itemVariants}
               onMouseEnter={() => setHoveredId(property.id)}
               onMouseLeave={() => setHoveredId(null)}
-              className="group relative bg-card rounded-2xl overflow-hidden shadow-md-custom transition-all duration-500 hover:shadow-xl-custom hover:-translate-y-2"
+              className="property-card-gsap group relative bg-card rounded-2xl overflow-hidden shadow-md-custom transition-all duration-500 hover:shadow-xl-custom hover:-translate-y-2"
             >
               {/* Image Container */}
               <div className="relative h-72 overflow-hidden">
@@ -113,41 +110,34 @@ const FeaturedProperties = () => {
                   src={property.image}
                   alt={property.title}
                   className="w-full h-full object-cover"
-                  animate={{
-                    scale: hoveredId === property.id ? 1.1 : 1,
-                  }}
+                  animate={{ scale: hoveredId === property.id ? 1.1 : 1 }}
                   transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
 
-                {/* Featured Badge */}
                 {property.featured && (
                   <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-medium">
                     Featured
                   </div>
                 )}
 
-                {/* Like Button */}
-                <button
-                  onClick={() => toggleLike(property.id)}
-                  className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
-                    likedProperties.includes(property.id)
-                      ? "bg-primary text-white"
-                      : "bg-white/20 text-white hover:bg-white/40"
-                  }`}
-                >
-                  <Heart
-                    className={`w-5 h-5 ${
-                      likedProperties.includes(property.id) ? "fill-current" : ""
+                {/* Action Buttons */}
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <CompareButton property={property} />
+                  <button
+                    onClick={() => toggleFavorite(property.id)}
+                    className={`p-2.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                      isFavorite(property.id)
+                        ? "bg-red-500 text-white"
+                        : "bg-white/20 text-white hover:bg-white/40"
                     }`}
-                  />
-                </button>
+                  >
+                    <Heart className={`w-5 h-5 ${isFavorite(property.id) ? "fill-current" : ""}`} />
+                  </button>
+                </div>
 
-                {/* Price Tag */}
                 <div className="absolute bottom-4 left-4">
-                  <p className="text-2xl font-display font-semibold text-white">
-                    {property.price}
-                  </p>
+                  <p className="text-2xl font-display font-semibold text-white">{property.price}</p>
                 </div>
               </div>
 
@@ -161,7 +151,6 @@ const FeaturedProperties = () => {
                   {property.title}
                 </h3>
 
-                {/* Property Details */}
                 {property.beds > 0 && (
                   <div className="flex items-center gap-6 pt-4 border-t border-border">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -193,9 +182,9 @@ const FeaturedProperties = () => {
                   </Link>
                 </Button>
               </motion.div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* View All Button */}
         <motion.div
