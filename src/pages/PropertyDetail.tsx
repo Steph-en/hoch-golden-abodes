@@ -304,7 +304,7 @@ const PropertyDetail = () => {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
-                    className="bg-secondary border-0"
+                    className="bg-muted border-0"
                   />
                 </div>
                 <div>
@@ -314,7 +314,7 @@ const PropertyDetail = () => {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
-                    className="bg-secondary border-0"
+                    className="bg-muted border-0"
                   />
                 </div>
                 <div>
@@ -323,7 +323,7 @@ const PropertyDetail = () => {
                     placeholder="Phone Number"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="bg-secondary border-0"
+                    className="bg-muted border-0"
                   />
                 </div>
                 <div>
@@ -332,7 +332,7 @@ const PropertyDetail = () => {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={4}
-                    className="bg-secondary border-0 resize-none"
+                    className="bg-muted border-0 resize-none"
                   />
                 </div>
                 <Button type="submit" className="w-full btn-primary py-6">
