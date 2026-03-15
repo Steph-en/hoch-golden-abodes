@@ -223,7 +223,7 @@ const PropertyDetail = () => {
             </div>
 
             {/* Property Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-secondary/50 rounded-2xl">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-muted/50 rounded-2xl">
               {property.beds > 0 && (
                 <div className="text-center">
                   <Bed className="w-8 h-8 text-primary mx-auto mb-2" />
