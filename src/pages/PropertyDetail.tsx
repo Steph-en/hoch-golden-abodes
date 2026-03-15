@@ -344,7 +344,7 @@ const PropertyDetail = () => {
               <div className="mt-8 pt-6 border-t border-border space-y-4">
                 <a
                   href="tel:+233201234567"
-                  className="flex items-center gap-3 p-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
+                  className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
                 >
                   <Phone className="w-5 h-5 text-primary" />
                   <div>
@@ -354,7 +354,7 @@ const PropertyDetail = () => {
                 </a>
                 <a
                   href="mailto:info@hochonline.com"
-                  className="flex items-center gap-3 p-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
+                  className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors"
                 >
                   <Mail className="w-5 h-5 text-primary" />
                   <div>

@@ -96,7 +96,7 @@ const Contact = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={heroInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-6"
+          className="max-w-5xl mx-auto bg-card rounded-2xl shadow-xl p-6"
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {contactInfo.map((item, index) => (

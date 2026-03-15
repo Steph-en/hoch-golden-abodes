@@ -104,7 +104,7 @@ const About = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={heroInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-8"
+          className="max-w-5xl mx-auto bg-card rounded-2xl shadow-2xl p-8"
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
