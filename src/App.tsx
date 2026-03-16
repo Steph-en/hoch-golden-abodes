@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import ConsultationButton from "./components/ConsultationButton";
 import ComparisonDrawer from "./components/ComparisonDrawer";
 import ScrollToTop from "./components/ScrollToTop";
+import ScrollProgress from "./components/ScrollProgress";
 import { ComparisonProvider } from "./contexts/ComparisonContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
@@ -30,6 +31,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
+            <ScrollProgress />
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-1">

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, MapPin, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import heroProperty1 from "@/assets/hero-property-1.jpg";
@@ -10,76 +9,99 @@ import PropertySearch from "./PropertySearch";
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const heroContentRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
-  
+  const [textRevealed, setTextRevealed] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+
   const heroImages = [
     {
       src: heroProperty1,
-      title: "Find Your Dream Home",
-      subtitle: "in Ghana",
-      description: "Discover luxury properties and exclusive real estate opportunities across Accra's most prestigious neighborhoods"
+      lines: ["Welcome to", "Hoch", "Where Luxury Meets Home"],
+      description: "Discover luxury properties and exclusive real estate opportunities across Accra's most prestigious neighborhoods",
     },
     {
       src: heroProperty2,
-      title: "Premium Living",
-      subtitle: "Redefined",
-      description: "Contemporary apartments and penthouses with panoramic city views and world-class amenities"
+      lines: ["Premium Living", "Redefined", "Experience True Elegance"],
+      description: "Contemporary apartments and penthouses with panoramic city views and world-class amenities",
     },
     {
       src: heroProperty3,
-      title: "Invest in Excellence",
-      subtitle: "Build Wealth",
-      description: "Strategic real estate investments with exceptional returns in Ghana's thriving property market"
-    }
+      lines: ["Invest in", "Excellence", "Build Lasting Wealth"],
+      description: "Strategic real estate investments with exceptional returns in Ghana's thriving property market",
+    },
   ];
 
-  // GSAP hero entrance animation
+  // Dramatic hero entrance with word-by-word reveal
   useEffect(() => {
-    if (!heroContentRef.current) return;
-    
-    const tl = gsap.timeline({ delay: 0.3 });
-    
+    if (!heroRef.current) return;
+
+    const tl = gsap.timeline({ delay: 0.5 });
+
+    // Badge entrance
     tl.fromTo(
-      heroContentRef.current.querySelectorAll(".gsap-hero-badge"),
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }
-    )
-    .fromTo(
-      heroContentRef.current.querySelectorAll(".gsap-hero-title"),
-      { y: 60, opacity: 0, clipPath: "inset(100% 0% 0% 0%)" },
-      { y: 0, opacity: 1, clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power4.out" },
-      "-=0.3"
-    )
-    .fromTo(
-      heroContentRef.current.querySelectorAll(".gsap-hero-desc"),
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" },
-      "-=0.5"
-    )
-    .fromTo(
-      heroContentRef.current.querySelectorAll(".gsap-hero-search"),
-      { y: 40, opacity: 0, scale: 0.95 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "power3.out" },
-      "-=0.3"
+      ".hero-badge",
+      { y: 40, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
     );
 
-    if (statsRef.current) {
+    // Word-by-word title reveal with dramatic pauses
+    const words = heroRef.current.querySelectorAll(".hero-word");
+    words.forEach((word, i) => {
       tl.fromTo(
-        statsRef.current.children,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power3.out" },
-        "-=0.4"
+        word,
+        {
+          y: 120,
+          opacity: 0,
+          rotateX: -45,
+          skewY: 3,
+        },
+        {
+          y: 0,
+          opacity: 1,
+          rotateX: 0,
+          skewY: 0,
+          duration: 1,
+          ease: "power4.out",
+        },
+        i === 0 ? "+=0.1" : "-=0.4"
       );
-    }
+    });
 
-    return () => { tl.kill(); };
+    // Description fade in
+    tl.fromTo(
+      ".hero-description",
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+      "-=0.5"
+    );
+
+    // Search bar slides up
+    tl.fromTo(
+      ".hero-search",
+      { y: 60, opacity: 0, scale: 0.95 },
+      { y: 0, opacity: 1, scale: 1, duration: 1, ease: "power3.out" },
+      "-=0.4"
+    );
+
+    // Stats stagger in
+    tl.fromTo(
+      ".hero-stat",
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, stagger: 0.15, ease: "power3.out" },
+      "-=0.5"
+    );
+
+    tl.call(() => setTextRevealed(true));
+
+    return () => {
+      tl.kill();
+    };
   }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-    }, 6000);
+    }, 7000);
     return () => clearInterval(timer);
   }, []);
 
@@ -87,114 +109,146 @@ const HeroSection = () => {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
 
   return (
-    <section className="relative h-screen min-h-[700px] overflow-hidden">
-      {/* Background Image Slider */}
+    <section ref={heroRef} className="relative h-screen min-h-[750px] overflow-hidden">
+      {/* Background Image with Ken Burns effect */}
       <div className="absolute inset-0">
         <AnimatePresence mode="wait">
-          {heroImages.map((image, index) => (
-            index === currentSlide && (
-              <motion.div
-                key={index}
-                initial={{ scale: 1.1, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 1.05, opacity: 0 }}
-                transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
-                className="absolute inset-0"
-              >
-                <img src={image.src} alt={image.title} className="w-full h-full object-cover" />
-              </motion.div>
-            )
-          ))}
+          {heroImages.map(
+            (image, index) =>
+              index === currentSlide && (
+                <motion.div
+                  key={index}
+                  initial={{ scale: 1.15, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.05, opacity: 0 }}
+                  transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
+                  className="absolute inset-0"
+                >
+                  <img
+                    src={image.src}
+                    alt="Luxury property"
+                    className="w-full h-full object-cover"
+                  />
+                </motion.div>
+              )
+          )}
         </AnimatePresence>
-        <div className="hero-overlay" />
+        {/* Cinematic overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
       </div>
 
-      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-background/30 to-transparent z-10" />
-      <div className="absolute bottom-0 left-0 w-1/3 h-1 bg-gradient-to-r from-primary via-primary/50 to-transparent z-20" />
+      {/* Decorative lines */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent z-10" />
+      <div className="absolute bottom-0 left-0 w-1/3 h-0.5 bg-gradient-to-r from-primary via-primary/50 to-transparent z-20" />
 
       {/* Navigation Arrows */}
-      <div className="absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 z-20">
-        <motion.button onClick={prevSlide} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-          className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white transition-all duration-300 border border-white/20"
+      <div className="absolute left-6 lg:left-12 top-1/2 -translate-y-1/2 z-20">
+        <motion.button
+          onClick={prevSlide}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className="p-3 rounded-full bg-white/5 hover:bg-white/15 backdrop-blur-md text-white transition-all duration-500 border border-white/10"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5" />
         </motion.button>
       </div>
-      <div className="absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 z-20">
-        <motion.button onClick={nextSlide} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-          className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white transition-all duration-300 border border-white/20"
+      <div className="absolute right-6 lg:right-12 top-1/2 -translate-y-1/2 z-20">
+        <motion.button
+          onClick={nextSlide}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className="p-3 rounded-full bg-white/5 hover:bg-white/15 backdrop-blur-md text-white transition-all duration-500 border border-white/10"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-5 h-5" />
         </motion.button>
       </div>
 
       {/* Hero Content */}
-      <div ref={heroContentRef} className="relative z-10 h-full flex items-center">
+      <div className="relative z-10 h-full flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="max-w-3xl">
-            <div className="gsap-hero-badge inline-flex items-center space-x-2 mb-6 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+          <div className="max-w-4xl">
+            {/* Badge */}
+            <div className="hero-badge inline-flex items-center space-x-2 mb-8 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 opacity-0">
               <MapPin className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-white/90">East Legon, Accra • Ghana</span>
+              <span className="text-sm font-medium text-white/80 tracking-wider uppercase">
+                East Legon, Accra • Ghana
+              </span>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentSlide}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-              >
-                <h1 className="gsap-hero-title font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-white leading-[1.1] mb-4">
-                  {heroImages[currentSlide].title}
-                  <br />
-                  <span className="text-gradient">{heroImages[currentSlide].subtitle}</span>
-                </h1>
-                <p className="gsap-hero-desc text-lg md:text-xl text-white/80 mb-8 max-w-xl leading-relaxed">
-                  {heroImages[currentSlide].description}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-            
-            <div className="gsap-hero-search">
+            {/* Cinematic Title — word by word */}
+            <div ref={titleRef} className="mb-6" style={{ perspective: "1000px" }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentSlide}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {heroImages[currentSlide].lines.map((line, lineIdx) => (
+                    <div key={lineIdx} className="overflow-hidden">
+                      <h1
+                        className={`hero-word font-display leading-[0.95] tracking-tight opacity-0 ${
+                          lineIdx === 1
+                            ? "text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-gradient my-2"
+                            : "text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-white"
+                        }`}
+                      >
+                        {line}
+                      </h1>
+                    </div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Description */}
+            <p className="hero-description text-lg md:text-xl text-white/60 mb-10 max-w-xl leading-relaxed opacity-0">
+              {heroImages[currentSlide].description}
+            </p>
+
+            {/* Search */}
+            <div className="hero-search opacity-0">
               <PropertySearch />
             </div>
 
-            <div ref={statsRef} className="flex items-center gap-8 mt-12 pt-8 border-t border-white/20">
-              <div>
-                <p className="font-display text-3xl font-semibold text-white">120+</p>
-                <p className="text-sm text-white/60">Properties Listed</p>
-              </div>
-              <div className="w-px h-12 bg-white/20" />
-              <div>
-                <p className="font-display text-3xl font-semibold text-white">50+</p>
-                <p className="text-sm text-white/60">Happy Clients</p>
-              </div>
-              <div className="w-px h-12 bg-white/20 hidden sm:block" />
-              <div className="hidden sm:block">
-                <p className="font-display text-3xl font-semibold text-white">5+</p>
-                <p className="text-sm text-white/60">Years Experience</p>
-              </div>
+            {/* Stats */}
+            <div className="flex items-center gap-10 mt-14 pt-8 border-t border-white/10">
+              {[
+                { value: "120+", label: "Properties" },
+                { value: "50+", label: "Happy Clients" },
+                { value: "5+", label: "Years" },
+              ].map((stat, i) => (
+                <div key={i} className="hero-stat opacity-0">
+                  <p className="font-display text-3xl lg:text-4xl font-semibold text-white">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-white/40 uppercase tracking-widest mt-1">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-3">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex items-center space-x-3">
         {heroImages.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`relative h-1.5 rounded-full transition-all duration-500 overflow-hidden ${
-              index === currentSlide ? "w-12 bg-primary" : "w-6 bg-white/30 hover:bg-white/50"
+            className={`relative h-1 rounded-full transition-all duration-700 overflow-hidden ${
+              index === currentSlide ? "w-16 bg-primary" : "w-4 bg-white/20 hover:bg-white/40"
             }`}
           >
             {index === currentSlide && (
               <motion.div
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ duration: 6, ease: "linear" }}
+                transition={{ duration: 7, ease: "linear" }}
                 className="absolute inset-0 bg-primary/50 origin-left"
               />
             )}
@@ -206,16 +260,18 @@ const HeroSection = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.6 }}
-        className="absolute bottom-8 right-8 z-20 hidden lg:flex flex-col items-center space-y-2"
+        transition={{ delay: 3, duration: 1 }}
+        className="absolute bottom-10 right-10 z-20 hidden lg:flex flex-col items-center gap-3"
       >
-        <span className="text-xs text-white/50 uppercase tracking-widest rotate-90 origin-center translate-x-4">Scroll</span>
+        <span className="text-[10px] text-white/30 uppercase tracking-[0.3em] rotate-90 origin-center translate-x-4">
+          Scroll
+        </span>
         <motion.div
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-6 h-10 rounded-full border-2 border-white/30 flex items-start justify-center p-1"
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="w-5 h-9 rounded-full border border-white/20 flex items-start justify-center p-1.5"
         >
-          <motion.div className="w-1.5 h-1.5 rounded-full bg-white/80" />
+          <motion.div className="w-1 h-1 rounded-full bg-primary" />
         </motion.div>
       </motion.div>
     </section>
