@@ -174,7 +174,29 @@ const Explore = () => {
             <p className="text-muted-foreground">
               <span className="font-semibold text-foreground">{filteredProperties.length}</span> properties found
             </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="w-4 h-4 mr-1" /> Grid
+              </Button>
+              <Button
+                variant={viewMode === "map" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("map")}
+              >
+                <Map className="w-4 h-4 mr-1" /> Map
+              </Button>
+            </div>
           </div>
+
+          {viewMode === "map" ? (
+            <Suspense fallback={<div className="h-[500px] bg-muted rounded-2xl animate-pulse" />}>
+              <PropertyMap />
+            </Suspense>
+          ) : (
 
           <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
