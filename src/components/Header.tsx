@@ -94,7 +94,7 @@ const Header = () => {
             {user ? (
               <div className="flex items-center gap-3">
                 <Link
-                  to="/auth"
+                  to="/dashboard"
                   className={`flex items-center gap-2 text-sm font-medium transition-colors ${
                     isScrolled ? "text-foreground" : "text-white"
                   }`}
@@ -102,7 +102,7 @@ const Header = () => {
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                     <User className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="hidden xl:inline">{profile?.display_name || "Account"}</span>
+                  <span className="hidden xl:inline">{profile?.display_name || "Dashboard"}</span>
                 </Link>
                 <button
                   onClick={signOut}

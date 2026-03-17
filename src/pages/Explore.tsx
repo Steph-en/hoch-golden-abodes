@@ -1,8 +1,6 @@
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useInView } from "framer-motion";
-import { useRef } from "react";
-import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X } from "lucide-react";
+import { useState, useMemo, useRef, lazy, Suspense } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
+import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X, Map, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -10,32 +8,36 @@ import { properties, propertyTypes, locations, priceRanges } from "@/data/proper
 import CompareButton from "@/components/CompareButton";
 import { useFavorites } from "@/hooks/useFavorites";
 
+const PropertyMap = lazy(() => import("@/components/PropertyMap"));
+
 const Explore = () => {
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true });
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [selectedPriceRange, setSelectedPriceRange] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const filteredProperties = useMemo(() => {
-    return properties.filter(property => {
-      const matchesSearch = property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           property.location.toLowerCase().includes(searchQuery.toLowerCase());
+    return properties.filter((property) => {
+      const matchesSearch =
+        property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        property.location.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = !selectedType || property.type === selectedType;
       const matchesLocation = !selectedLocation || property.location.includes(selectedLocation);
-      
+
       let matchesPrice = true;
       if (selectedPriceRange) {
-        const range = priceRanges.find(r => r.label === selectedPriceRange);
+        const range = priceRanges.find((r) => r.label === selectedPriceRange);
         if (range) {
           matchesPrice = property.priceValue >= range.min && property.priceValue <= range.max;
         }
       }
-      
+
       return matchesSearch && matchesType && matchesLocation && matchesPrice;
     });
   }, [searchQuery, selectedType, selectedLocation, selectedPriceRange]);
@@ -83,7 +85,10 @@ const Explore = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 pr-4 py-6 text-lg rounded-full border-2 border-border focus:border-primary"
               />
-              <Button variant="ghost" size="icon" onClick={() => setShowFilters(!showFilters)}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowFilters(!showFilters)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
               >
                 <SlidersHorizontal className="w-5 h-5" />
@@ -107,8 +112,10 @@ const Explore = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground">Type</label>
                   <div className="flex flex-wrap gap-2">
-                    {propertyTypes.map(type => (
-                      <button key={type} onClick={() => setSelectedType(selectedType === type ? null : type)}
+                    {propertyTypes.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedType(selectedType === type ? null : type)}
                         className={`px-4 py-2 rounded-full text-sm transition-all ${
                           selectedType === type
                             ? "bg-primary text-primary-foreground"
@@ -124,8 +131,10 @@ const Explore = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground">Location</label>
                   <div className="flex flex-wrap gap-2">
-                    {locations.map(loc => (
-                      <button key={loc} onClick={() => setSelectedLocation(selectedLocation === loc ? null : loc)}
+                    {locations.map((loc) => (
+                      <button
+                        key={loc}
+                        onClick={() => setSelectedLocation(selectedLocation === loc ? null : loc)}
                         className={`px-4 py-2 rounded-full text-sm transition-all ${
                           selectedLocation === loc
                             ? "bg-primary text-primary-foreground"
@@ -141,8 +150,12 @@ const Explore = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground">Price</label>
                   <div className="flex flex-wrap gap-2">
-                    {priceRanges.map(range => (
-                      <button key={range.label} onClick={() => setSelectedPriceRange(selectedPriceRange === range.label ? null : range.label)}
+                    {priceRanges.map((range) => (
+                      <button
+                        key={range.label}
+                        onClick={() =>
+                          setSelectedPriceRange(selectedPriceRange === range.label ? null : range.label)
+                        }
                         className={`px-4 py-2 rounded-full text-sm transition-all ${
                           selectedPriceRange === range.label
                             ? "bg-primary text-primary-foreground"
@@ -157,7 +170,10 @@ const Explore = () => {
               </div>
 
               {hasActiveFilters && (
-                <button onClick={clearFilters} className="mt-4 text-sm text-primary hover:underline flex items-center gap-1">
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 text-sm text-primary hover:underline flex items-center gap-1"
+                >
                   <X className="w-4 h-4" /> Clear all filters
                 </button>
               )}
@@ -171,84 +187,139 @@ const Explore = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <p className="text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProperties.length}</span> properties found
+              <span className="font-semibold text-foreground">{filteredProperties.length}</span>{" "}
+              properties found
             </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="w-4 h-4 mr-1" /> Grid
+              </Button>
+              <Button
+                variant={viewMode === "map" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("map")}
+              >
+                <Map className="w-4 h-4 mr-1" /> Map
+              </Button>
+            </div>
           </div>
 
-          <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <AnimatePresence mode="popLayout">
-              {filteredProperties.map((property, index) => (
-                <motion.div
-                  key={property.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  whileHover={{ y: -8 }}
-                  className="group bg-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-border"
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <img src={property.image} alt={property.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    
-                    {/* Action Buttons */}
-                    <div className="absolute top-4 right-4 flex gap-2">
-                      <CompareButton property={property} />
-                      <button
-                        onClick={() => toggleFavorite(property.id)}
-                        className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
-                      >
-                        <Heart className={`w-5 h-5 transition-colors ${
-                          isFavorite(property.id) ? "text-red-500 fill-red-500" : "text-foreground"
-                        }`} />
-                      </button>
-                    </div>
+          {viewMode === "map" ? (
+            <Suspense
+              fallback={<div className="h-[500px] bg-muted rounded-2xl animate-pulse" />}
+            >
+              <PropertyMap />
+            </Suspense>
+          ) : (
+            <>
+              <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatePresence mode="popLayout">
+                  {filteredProperties.map((property, index) => (
+                    <motion.div
+                      key={property.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      whileHover={{ y: -8 }}
+                      className="group bg-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-border"
+                    >
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        <img
+                          src={property.image}
+                          alt={property.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                    <div className="absolute bottom-4 left-4">
-                      <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full">
-                        <span className="font-bold text-foreground">{property.price}</span>
+                        <div className="absolute top-4 right-4 flex gap-2">
+                          <CompareButton property={property} />
+                          <button
+                            onClick={() => toggleFavorite(property.id)}
+                            className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                          >
+                            <Heart
+                              className={`w-5 h-5 transition-colors ${
+                                isFavorite(property.id)
+                                  ? "text-red-500 fill-red-500"
+                                  : "text-foreground"
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="absolute bottom-4 left-4">
+                          <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full">
+                            <span className="font-bold text-foreground">{property.price}</span>
+                          </div>
+                        </div>
+
+                        <div className="absolute top-4 left-4">
+                          <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
+                            {property.type}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
-                        {property.type}
-                      </span>
-                    </div>
+                      <div className="p-5">
+                        <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-1">
+                          {property.title}
+                        </h3>
+                        <div className="flex items-center text-muted-foreground text-sm mb-4">
+                          <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
+                          <span className="line-clamp-1">{property.location}</span>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-5 border-t border-border pt-4">
+                          <div className="flex items-center gap-1.5">
+                            <Bed className="w-4 h-4" />
+                            <span>{property.beds}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Bath className="w-4 h-4" />
+                            <span>{property.baths}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Square className="w-4 h-4" />
+                            <span>{property.sqft} sqft</span>
+                          </div>
+                        </div>
+
+                        <Link to={`/property/${property.id}`}>
+                          <Button className="w-full" variant="outline">
+                            View Details
+                          </Button>
+                        </Link>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+
+              {filteredProperties.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-20"
+                >
+                  <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Search className="w-8 h-8 text-muted-foreground" />
                   </div>
-
-                  <div className="p-5">
-                    <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-1">{property.title}</h3>
-                    <div className="flex items-center text-muted-foreground text-sm mb-4">
-                      <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
-                      <span className="line-clamp-1">{property.location}</span>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-5 border-t border-border pt-4">
-                      <div className="flex items-center gap-1.5"><Bed className="w-4 h-4" /><span>{property.beds}</span></div>
-                      <div className="flex items-center gap-1.5"><Bath className="w-4 h-4" /><span>{property.baths}</span></div>
-                      <div className="flex items-center gap-1.5"><Square className="w-4 h-4" /><span>{property.sqft} sqft</span></div>
-                    </div>
-
-                    <Link to={`/property/${property.id}`}>
-                      <Button className="w-full" variant="outline">View Details</Button>
-                    </Link>
-                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No properties found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Try adjusting your filters or search query
+                  </p>
+                  <Button onClick={clearFilters} variant="outline">
+                    Clear Filters
+                  </Button>
                 </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-
-          {filteredProperties.length === 0 && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">No properties found</h3>
-              <p className="text-muted-foreground mb-6">Try adjusting your filters or search query</p>
-              <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
-            </motion.div>
+              )}
+            </>
           )}
         </div>
       </section>
