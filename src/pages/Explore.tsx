@@ -197,17 +197,90 @@ const Explore = () => {
               <PropertyMap />
             </Suspense>
           ) : (
+            <>
+              <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatePresence mode="popLayout">
+                  {filteredProperties.map((property, index) => (
+                    <motion.div
+                      key={property.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      whileHover={{ y: -8 }}
+                      className="group bg-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-border"
+                    >
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        <img src={property.image} alt={property.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        
+                        <div className="absolute top-4 right-4 flex gap-2">
+                          <CompareButton property={property} />
+                          <button
+                            onClick={() => toggleFavorite(property.id)}
+                            className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                          >
+                            <Heart className={`w-5 h-5 transition-colors ${
+                              isFavorite(property.id) ? "text-red-500 fill-red-500" : "text-foreground"
+                            }`} />
+                          </button>
+                        </div>
 
-          <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <AnimatePresence mode="popLayout">
-              {filteredProperties.map((property, index) => (
-                <motion.div
-                  key={property.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                        <div className="absolute bottom-4 left-4">
+                          <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full">
+                            <span className="font-bold text-foreground">{property.price}</span>
+                          </div>
+                        </div>
+
+                        <div className="absolute top-4 left-4">
+                          <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
+                            {property.type}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-5">
+                        <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-1">{property.title}</h3>
+                        <div className="flex items-center text-muted-foreground text-sm mb-4">
+                          <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
+                          <span className="line-clamp-1">{property.location}</span>
+                        </div>
+
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-5 border-t border-border pt-4">
+                          <div className="flex items-center gap-1.5"><Bed className="w-4 h-4" /><span>{property.beds}</span></div>
+                          <div className="flex items-center gap-1.5"><Bath className="w-4 h-4" /><span>{property.baths}</span></div>
+                          <div className="flex items-center gap-1.5"><Square className="w-4 h-4" /><span>{property.sqft} sqft</span></div>
+                        </div>
+
+                        <Link to={`/property/${property.id}`}>
+                          <Button className="w-full" variant="outline">View Details</Button>
+                        </Link>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+
+              {filteredProperties.length === 0 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+                  <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Search className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No properties found</h3>
+                  <p className="text-muted-foreground mb-6">Try adjusting your filters or search query</p>
+                  <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
+                </motion.div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Explore;
                   whileHover={{ y: -8 }}
                   className="group bg-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-border"
                 >
