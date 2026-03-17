@@ -19,6 +19,7 @@ const Explore = () => {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [selectedPriceRange, setSelectedPriceRange] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const filteredProperties = useMemo(() => {
