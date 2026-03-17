@@ -99,7 +99,7 @@ const CinematicTypography = () => {
   }, []);
 
   return (
-    <div ref={sectionRef} className="overflow-hidden">
+    <div ref={sectionRef} className="bg-black overflow-hidden">
       {/* Section 1: Letter-by-letter reveal */}
       <section className="typo-section-1 relative min-h-[50vh] flex items-center justify-center dark-gradient">
         <div className="text-center" style={{ perspective: "1000px" }}>

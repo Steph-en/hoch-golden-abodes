@@ -28,7 +28,6 @@ const Footer = () => {
     { name: "Properties", path: "/explore" },
     { name: "Services", path: "/services" },
     { name: "Contact", path: "/contact" },
-    { name: "Blog", path: "#" },
   ];
 
   const services = [
@@ -51,63 +50,11 @@ const Footer = () => {
   return (
     <footer ref={footerRef} className="relative overflow-hidden">
       {/* Newsletter Section */}
-      <div className="relative py-20 overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(38 45% 58%) 0%, hsl(42 50% 65%) 100%)" }}>
-        {/* Decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-            transition={{ duration: 30, repeat: Infinity }}
-            className="absolute -top-20 -right-20 w-80 h-80 rounded-full border border-white/20"
-          />
-          <motion.div
-            animate={{ scale: [1.2, 1, 1.2], rotate: [360, 180, 0] }}
-            transition={{ duration: 25, repeat: Infinity }}
-            className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full border border-white/10"
-          />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-            className="max-w-2xl mx-auto text-center"
-          >
-            <h3 className="font-display text-3xl md:text-4xl font-semibold text-white mb-4">
-              Stay Updated with Market Insights
-            </h3>
-            <p className="text-white/90 text-lg mb-8">
-              Get exclusive property listings, market trends, and investment opportunities
-              delivered straight to your inbox.
-            </p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto"
-            >
-              <div className="relative flex-1">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="Enter your email address"
-                  className="pl-12 h-14 bg-white border-0 text-foreground placeholder:text-muted-foreground rounded-xl"
-                />
-              </div>
-              <Button className="h-14 px-8 bg-foreground text-background hover:bg-foreground/90 rounded-xl group">
-                Subscribe
-                <Send className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </motion.div>
-            <p className="text-white/70 text-sm mt-4">
-              Join 5,000+ subscribers. No spam, unsubscribe anytime.
-            </p>
-          </motion.div>
-        </div>
+      <div className="relative py-1 overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(38 45% 58%) 0%, hsl(42 50% 65%) 100%)" }}>
       </div>
 
       {/* Main Footer */}
-      <div className="bg-foreground py-20">
+      <div className="bg-foreground py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-12">
             {/* Brand Column */}
@@ -183,7 +130,7 @@ const Footer = () => {
                       href="#"
                       className="text-background/70 hover:text-primary transition-colors duration-300 inline-flex items-center gap-2 group"
                     >
-                      <ArrowRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                      {/* <ArrowRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" /> */}
                       {service}
                     </a>
                   </li>

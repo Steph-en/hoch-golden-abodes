@@ -19,10 +19,10 @@ const Index = () => {
       <HeroSection />
 
       {/* Scroll-controlled cinematic video */}
-      <ScrollVideoHero />
+      {/* <ScrollVideoHero /> */}
 
       {/* Cinematic Typography Transitions */}
-      <CinematicTypography />
+      {/* <CinematicTypography /> */}
 
       {/* Storytelling: Luxury lifestyle */}
       <StorytellingSection
@@ -46,8 +46,8 @@ const Index = () => {
         bgImage={heroProperty2}
       />
 
-      <WhyChooseUs />
-      <ServicesSection />
+      {/* <WhyChooseUs /> */}
+      {/* <ServicesSection /> */}
 
       {/* Storytelling: Investment */}
       <StorytellingSection
@@ -61,8 +61,8 @@ const Index = () => {
         reverse
       />
 
-      <StatsSection />
-      <TestimonialsSection />
+      {/* <StatsSection /> */}
+      {/* <TestimonialsSection /> */}
     </div>
   );
 };

@@ -5,7 +5,9 @@ import { motion } from "framer-motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PLACEHOLDER_VIDEO = "https://videos.pexels.com/video-files/4571563/4571563-uhd_2560_1440_25fps.mp4";
+const PRIMARY_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4";
+const FALLBACK_VIDEO = "https://cdn.coverr.co/videos/coverr-hands-on-keyboard-955/1080p.mp4";
+const PLACEHOLDER_POSTER = "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=2400&q=80";
 
 interface TextOverlay {
   text: string;
@@ -25,6 +27,8 @@ const ScrollVideoHero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [activeOverlay, setActiveOverlay] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [videoSrc, setVideoSrc] = useState(PRIMARY_VIDEO);
+  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -74,14 +78,31 @@ const ScrollVideoHero = () => {
     <div ref={containerRef} className="relative" style={{ height: "400vh" }}>
       {/* Sticky video container */}
       <div className="sticky top-0 h-screen w-full overflow-hidden">
-        <video
-          ref={videoRef}
-          src={PLACEHOLDER_VIDEO}
-          muted
-          playsInline
-          preload="auto"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        {videoError ? (
+          <div className="absolute inset-0 bg-gray-900/80 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-white text-xl md:text-2xl">Video currently unavailable.</p>
+              <p className="text-white/70 text-sm mt-2">Please scroll to continue the experience.</p>
+            </div>
+          </div>
+        ) : (
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            poster={PLACEHOLDER_POSTER}
+            muted
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={() => {
+              if (videoSrc !== FALLBACK_VIDEO) {
+                setVideoSrc(FALLBACK_VIDEO);
+              } else {
+                setVideoError(true);
+              }
+            }}
+          />
+        )}
 
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70" />
