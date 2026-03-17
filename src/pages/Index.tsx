@@ -1,4 +1,5 @@
 import HeroSection from "@/components/HeroSection";
+import ScrollVideoHero from "@/components/ScrollVideoHero";
 import ServicesSection from "@/components/ServicesSection";
 import StatsSection from "@/components/StatsSection";
 import FeaturedProperties from "@/components/FeaturedProperties";
@@ -6,6 +7,8 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import WhyChooseUs from "@/components/WhyChooseUs";
 import CinematicBreak from "@/components/CinematicBreak";
 import StorytellingSection from "@/components/StorytellingSection";
+import CinematicTypography from "@/components/CinematicTypography";
+import PropertyReveal3D from "@/components/PropertyReveal3D";
 import heroProperty1 from "@/assets/hero-property-1.jpg";
 import heroProperty2 from "@/assets/hero-property-2.jpg";
 import heroProperty3 from "@/assets/hero-property-3.jpg";
@@ -15,10 +18,11 @@ const Index = () => {
     <div className="overflow-x-hidden">
       <HeroSection />
 
-      {/* Cinematic Break: Brand Statement */}
-      <CinematicBreak
-        words={["Elegance", "Exclusivity", "Prestige"]}
-      />
+      {/* Scroll-controlled cinematic video */}
+      <ScrollVideoHero />
+
+      {/* Cinematic Typography Transitions */}
+      <CinematicTypography />
 
       {/* Storytelling: Luxury lifestyle */}
       <StorytellingSection
@@ -32,6 +36,9 @@ const Index = () => {
       />
 
       <FeaturedProperties />
+
+      {/* 3D Property Reveal */}
+      <PropertyReveal3D />
 
       {/* Cinematic Break */}
       <CinematicBreak

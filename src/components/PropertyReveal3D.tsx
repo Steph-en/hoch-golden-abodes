@@ -1,6 +1,6 @@
-import { useRef, useEffect, useMemo, Suspense } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Float, Text } from "@react-three/drei";
+import { useRef, useEffect, useState, useMemo, Suspense } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -8,10 +8,8 @@ import { motion, useInView } from "framer-motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// A stylized building that extrudes on scroll
 const Building = ({ scrollProgress }: { scrollProgress: number }) => {
   const groupRef = useRef<THREE.Group>(null!);
-  const floorRefs = useRef<THREE.Mesh[]>([]);
 
   const floors = 5;
   const floorHeight = 0.6;
@@ -20,7 +18,6 @@ const Building = ({ scrollProgress }: { scrollProgress: number }) => {
 
   useFrame(() => {
     if (!groupRef.current) return;
-    // Gentle rotation based on scroll
     groupRef.current.rotation.y = scrollProgress * Math.PI * 0.5 - Math.PI * 0.25;
   });
 
@@ -35,16 +32,13 @@ const Building = ({ scrollProgress }: { scrollProgress: number }) => {
 
   return (
     <group ref={groupRef} position={[0, -1.5, 0]}>
-      {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[6, 6]} />
         <meshStandardMaterial color="#1a1a1a" transparent opacity={0.4} />
       </mesh>
 
-      {/* Building floors */}
       {floorMeshes.map(({ index, progress, width, depth }) => (
         <group key={index}>
-          {/* Floor slab */}
           <mesh
             position={[0, index * floorHeight * progress, 0]}
             scale={[progress, progress, progress]}
@@ -59,7 +53,6 @@ const Building = ({ scrollProgress }: { scrollProgress: number }) => {
             />
           </mesh>
 
-          {/* Windows */}
           {progress > 0.5 && index > 0 && (
             <>
               {[-0.5, 0, 0.5].map((x, wi) => (
@@ -83,7 +76,6 @@ const Building = ({ scrollProgress }: { scrollProgress: number }) => {
         </group>
       ))}
 
-      {/* Roof accent */}
       {scrollProgress > 0.7 && (
         <mesh position={[0, floors * floorHeight * Math.min(1, scrollProgress * 1.2), 0]}>
           <boxGeometry args={[baseWidth + 0.2, 0.1, baseDepth + 0.2]} />
@@ -104,7 +96,7 @@ const Scene = ({ scrollProgress }: { scrollProgress: number }) => {
   return (
     <>
       <ambientLight intensity={0.4} />
-      <directionalLight position={[5, 8, 5]} intensity={1} castShadow />
+      <directionalLight position={[5, 8, 5]} intensity={1} />
       <directionalLight position={[-3, 4, -2]} intensity={0.3} color="#c89b3c" />
       <pointLight position={[0, 3, 3]} intensity={0.5} color="#c89b3c" />
       <Building scrollProgress={scrollProgress} />
@@ -122,10 +114,8 @@ const Scene = ({ scrollProgress }: { scrollProgress: number }) => {
 const PropertyReveal3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const sectionInView = useInView(containerRef as any, { once: false, margin: "-20%" });
-
-  // Need useState import
   const [mounted, setMounted] = useState(false);
+  const sectionInView = useInView(containerRef as any, { once: false, margin: "-20%" });
 
   useEffect(() => {
     setMounted(true);
@@ -163,7 +153,6 @@ const PropertyReveal3D = () => {
       <div className="absolute inset-0 dark-gradient" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={sectionInView ? { opacity: 1, y: 0 } : {}}
@@ -180,7 +169,6 @@ const PropertyReveal3D = () => {
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* 3D Canvas */}
           <div className="relative h-[400px] lg:h-[500px] rounded-2xl overflow-hidden border border-white/10">
             {mounted && (
               <Canvas
@@ -192,11 +180,9 @@ const PropertyReveal3D = () => {
                 </Suspense>
               </Canvas>
             )}
-            {/* Glow effect */}
             <div className="absolute inset-0 pointer-events-none rounded-2xl ring-1 ring-inset ring-white/5" />
           </div>
 
-          {/* Steps indicator */}
           <div className="space-y-8">
             {steps.map((step, i) => (
               <motion.div
@@ -231,7 +217,6 @@ const PropertyReveal3D = () => {
               </motion.div>
             ))}
 
-            {/* Progress bar */}
             <div className="h-1 bg-white/10 rounded-full overflow-hidden">
               <motion.div
                 className="h-full rounded-full"
@@ -247,8 +232,5 @@ const PropertyReveal3D = () => {
     </section>
   );
 };
-
-// Fix: need useState import at top
-import { useState } from "react";
 
 export default PropertyReveal3D;
