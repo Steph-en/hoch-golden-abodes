@@ -1,14 +1,14 @@
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useInView } from "framer-motion";
-import { useRef } from "react";
-import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X } from "lucide-react";
+import { useState, useMemo, useRef, lazy, Suspense } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
+import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X, Map, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { properties, propertyTypes, locations, priceRanges } from "@/data/properties";
 import CompareButton from "@/components/CompareButton";
 import { useFavorites } from "@/hooks/useFavorites";
+
+const PropertyMap = lazy(() => import("@/components/PropertyMap"));
 
 const Explore = () => {
   const headerRef = useRef(null);
