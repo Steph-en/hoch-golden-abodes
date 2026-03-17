@@ -263,7 +263,7 @@ const Explore = () => {
             </AnimatePresence>
           </motion.div>
 
-          {filteredProperties.length === 0 && (
+          {filteredProperties.length === 0 && viewMode === "grid" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
               <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="w-8 h-8 text-muted-foreground" />
@@ -273,6 +273,14 @@ const Explore = () => {
               <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
             </motion.div>
           )}
+          )}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Explore;
         </div>
       </section>
     </div>
