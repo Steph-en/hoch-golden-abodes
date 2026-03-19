@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageSquare, User, Settings, MapPin, Bed, Bath, Square, Trash2, ArrowRight } from "lucide-react";
+import { Heart, MessageSquare, User, Settings, MapPin, Bed, Bath, Square, Trash2, ArrowRight, Clock, CheckCircle2, Eye, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { properties } from "@/data/properties";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import EnquiryDetailModal from "@/components/EnquiryDetailModal";
 
 const Dashboard = () => {
   const { user, profile, loading, updateProfile } = useAuth();
