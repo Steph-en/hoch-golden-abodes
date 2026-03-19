@@ -58,7 +58,25 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  const fetchInquiries = async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("inquiries")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    setInquiries(data || []);
+  };
+
   const favoriteProperties = properties.filter((p) => favorites.includes(p.id));
+
+  // Filtered & sorted inquiries
+  const filteredInquiries = inquiries
+    .filter((i: any) => inquiryFilter === "all" || i.status === inquiryFilter)
+    .sort((a: any, b: any) => {
+      if (inquirySort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
 
   const handleSaveProfile = async () => {
     setSaving(true);
