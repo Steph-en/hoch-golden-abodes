@@ -27,6 +27,9 @@ const Dashboard = () => {
     bio: "",
   });
   const [saving, setSaving] = useState(false);
+  const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+  const [inquiryFilter, setInquiryFilter] = useState("all");
+  const [inquirySort, setInquirySort] = useState("newest");
 
   useEffect(() => {
     if (!loading && !user) {
