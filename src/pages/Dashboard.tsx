@@ -204,37 +204,78 @@ const Dashboard = () => {
                 <div className="text-center py-20">
                   <MessageSquare className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-foreground mb-2">No inquiries yet</h3>
-                  <p className="text-muted-foreground">Your property inquiries will appear here</p>
+                  <p className="text-muted-foreground mb-6">Your property inquiries will appear here</p>
+                  <Button asChild variant="outline">
+                    <Link to="/explore">Browse Properties</Link>
+                  </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {inquiries.map((inquiry: any) => {
-                    const prop = properties.find((p) => p.id === inquiry.property_id);
-                    return (
-                      <div key={inquiry.id} className="bg-card rounded-xl p-5 border border-border flex flex-col md:flex-row md:items-center gap-4">
-                        {prop && (
-                          <img src={prop.image} alt={prop.title} className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-foreground">{prop?.title || "General Inquiry"}</h4>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{inquiry.message}</p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(inquiry.created_at).toLocaleDateString()}
-                          </p>
+                <>
+                  {/* Filters */}
+                  <div className="flex flex-wrap gap-3 mb-6">
+                    <Select value={inquiryFilter} onValueChange={setInquiryFilter}>
+                      <SelectTrigger className="w-36">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="responded">Responded</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={inquirySort} onValueChange={setInquirySort}>
+                      <SelectTrigger className="w-36">
+                        <SelectValue placeholder="Sort" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="oldest">Oldest First</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-4">
+                    {filteredInquiries.map((inquiry: any) => {
+                      const prop = properties.find((p) => p.id === inquiry.property_id);
+                      return (
+                        <div
+                          key={inquiry.id}
+                          onClick={() => setSelectedInquiry(inquiry)}
+                          className="bg-card rounded-xl p-5 border border-border flex flex-col md:flex-row md:items-center gap-4 cursor-pointer hover:shadow-md transition-shadow"
+                        >
+                          {prop && (
+                            <img src={prop.image} alt={prop.title} className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-foreground">{prop?.title || "General Inquiry"}</h4>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{inquiry.message}</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {new Date(inquiry.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              inquiry.status === "pending"
+                                ? "bg-amber-500/10 text-amber-600"
+                                : inquiry.status === "responded"
+                                ? "bg-emerald-500/10 text-emerald-600"
+                                : "bg-muted text-muted-foreground"
+                            }`}>
+                              {inquiry.status}
+                            </span>
+                            <Eye className="w-4 h-4 text-muted-foreground" />
+                          </div>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                          inquiry.status === "pending"
-                            ? "bg-primary/10 text-primary"
-                            : inquiry.status === "responded"
-                            ? "bg-success/10 text-success"
-                            : "bg-muted text-muted-foreground"
-                        }`}>
-                          {inquiry.status}
-                        </span>
+                      );
+                    })}
+                    {filteredInquiries.length === 0 && (
+                      <div className="text-center py-10 text-muted-foreground">
+                        No enquiries match your filters
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           )}
