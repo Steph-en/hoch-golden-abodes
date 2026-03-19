@@ -17,28 +17,46 @@ import {
   X,
   Phone,
   Mail,
-  MessageSquare
+  MessageSquare,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getPropertyById, properties } from "@/data/properties";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/hooks/useActivityLog";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [property, setProperty] = useState(getPropertyById(Number(id)));
   const [currentImage, setCurrentImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     message: "",
   });
+
+  // Pre-fill form if logged in
+  useEffect(() => {
+    if (user && profile) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || profile.display_name || "",
+        email: prev.email || user.email || "",
+        phone: prev.phone || profile.phone || "",
+      }));
+    }
+  }, [user, profile]);
 
   useEffect(() => {
     const prop = getPropertyById(Number(id));
@@ -62,13 +80,30 @@ const PropertyDetail = () => {
     setCurrentImage((prev) => (prev - 1 + property.images.length) % property.images.length);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Inquiry Sent!",
-      description: "We'll get back to you within 24 hours.",
+    setSubmitting(true);
+    
+    const { error } = await (supabase as any).from("inquiries").insert({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone || null,
+      message: formData.message || null,
+      property_id: property.id,
+      user_id: user?.id || null,
+      status: "pending",
     });
-    setFormData({ name: "", email: "", phone: "", message: "" });
+
+    if (error) {
+      toast({ title: "Failed to send inquiry", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Inquiry Sent!", description: "We'll get back to you within 24 hours." });
+      setFormData({ name: "", email: "", phone: "", message: "" });
+      if (user) {
+        logActivity(user.id, "inquiry_submitted", { property_id: property.id, property_title: property.title });
+      }
+    }
+    setSubmitting(false);
   };
 
   const similarProperties = properties.filter(p => p.id !== property.id && p.type === property.type).slice(0, 3);
@@ -335,9 +370,9 @@ const PropertyDetail = () => {
                     className="bg-muted border-0 resize-none"
                   />
                 </div>
-                <Button type="submit" className="w-full btn-primary py-6">
-                  <MessageSquare className="w-5 h-5 mr-2" />
-                  Send Inquiry
+                <Button type="submit" className="w-full btn-primary py-6" disabled={submitting}>
+                  {submitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <MessageSquare className="w-5 h-5 mr-2" />}
+                  {submitting ? "Sending..." : "Send Inquiry"}
                 </Button>
               </form>
 
