@@ -19,6 +19,7 @@ import Contact from "./pages/Contact";
 import PropertyDetail from "./pages/PropertyDetail";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
