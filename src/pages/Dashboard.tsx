@@ -48,14 +48,7 @@ const Dashboard = () => {
   }, [profile]);
 
   useEffect(() => {
-    if (user) {
-      (supabase as any)
-        .from("inquiries")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .then(({ data }: any) => setInquiries(data || []));
-    }
+    fetchInquiries();
   }, [user]);
 
   const fetchInquiries = async () => {
