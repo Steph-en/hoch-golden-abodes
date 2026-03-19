@@ -33,16 +33,30 @@ const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile } = useAuth();
   const [property, setProperty] = useState(getPropertyById(Number(id)));
   const [currentImage, setCurrentImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     message: "",
   });
+
+  // Pre-fill form if logged in
+  useEffect(() => {
+    if (user && profile) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || profile.display_name || "",
+        email: prev.email || user.email || "",
+        phone: prev.phone || profile.phone || "",
+      }));
+    }
+  }, [user, profile]);
 
   useEffect(() => {
     const prop = getPropertyById(Number(id));
