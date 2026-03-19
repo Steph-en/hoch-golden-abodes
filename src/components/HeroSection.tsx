@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
@@ -7,97 +7,77 @@ import heroProperty2 from "@/assets/hero-property-2.jpg";
 import heroProperty3 from "@/assets/hero-property-3.jpg";
 import PropertySearch from "./PropertySearch";
 
+const heroImages = [
+  {
+    src: heroProperty1,
+    lines: ["Welcome to", "Hoch", "Where Luxury Meets Home"],
+    description: "Discover luxury properties and exclusive real estate opportunities across Accra's most prestigious neighborhoods",
+  },
+  {
+    src: heroProperty2,
+    lines: ["Premium Living", "Redefined", "Experience True Elegance"],
+    description: "Contemporary apartments and penthouses with panoramic city views and world-class amenities",
+  },
+  {
+    src: heroProperty3,
+    lines: ["Invest in", "Excellence", "Build Lasting Wealth"],
+    description: "Strategic real estate investments with exceptional returns in Ghana's thriving property market",
+  },
+];
+
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [textRevealed, setTextRevealed] = useState(false);
+  const [initialAnimDone, setInitialAnimDone] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
+  const textContainerRef = useRef<HTMLDivElement>(null);
 
-  const heroImages = [
-    {
-      src: heroProperty1,
-      lines: ["Welcome to", "Hoch", "Where Luxury Meets Home"],
-      description: "Discover luxury properties and exclusive real estate opportunities across Accra's most prestigious neighborhoods",
-    },
-    {
-      src: heroProperty2,
-      lines: ["Premium Living", "Redefined", "Experience True Elegance"],
-      description: "Contemporary apartments and penthouses with panoramic city views and world-class amenities",
-    },
-    {
-      src: heroProperty3,
-      lines: ["Invest in", "Excellence", "Build Lasting Wealth"],
-      description: "Strategic real estate investments with exceptional returns in Ghana's thriving property market",
-    },
-  ];
-
-  // Dramatic hero entrance with word-by-word reveal
+  // Initial entrance animation (runs once)
   useEffect(() => {
     if (!heroRef.current) return;
 
     const tl = gsap.timeline({ delay: 0.5 });
 
-    // Badge entrance
-    tl.fromTo(
-      ".hero-badge",
-      { y: 40, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }
-    );
+    tl.fromTo(".hero-badge", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" });
 
-    // Word-by-word title reveal with dramatic pauses
     const words = heroRef.current.querySelectorAll(".hero-word");
     words.forEach((word, i) => {
       tl.fromTo(
         word,
-        {
-          y: 120,
-          opacity: 0,
-          rotateX: -45,
-          skewY: 3,
-        },
-        {
-          y: 0,
-          opacity: 1,
-          rotateX: 0,
-          skewY: 0,
-          duration: 1,
-          ease: "power4.out",
-        },
+        { y: 120, opacity: 0, rotateX: -45, skewY: 3 },
+        { y: 0, opacity: 1, rotateX: 0, skewY: 0, duration: 1, ease: "power4.out" },
         i === 0 ? "+=0.1" : "-=0.4"
       );
     });
 
-    // Description fade in
-    tl.fromTo(
-      ".hero-description",
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
-      "-=0.5"
-    );
+    tl.fromTo(".hero-description", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }, "-=0.5");
+    tl.fromTo(".hero-search", { y: 60, opacity: 0, scale: 0.95 }, { y: 0, opacity: 1, scale: 1, duration: 1, ease: "power3.out" }, "-=0.4");
+    tl.fromTo(".hero-stat", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: 0.15, ease: "power3.out" }, "-=0.5");
+    tl.call(() => setInitialAnimDone(true));
 
-    // Search bar slides up
-    tl.fromTo(
-      ".hero-search",
-      { y: 60, opacity: 0, scale: 0.95 },
-      { y: 0, opacity: 1, scale: 1, duration: 1, ease: "power3.out" },
-      "-=0.4"
-    );
-
-    // Stats stagger in
-    tl.fromTo(
-      ".hero-stat",
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, stagger: 0.15, ease: "power3.out" },
-      "-=0.5"
-    );
-
-    tl.call(() => setTextRevealed(true));
-
-    return () => {
-      tl.kill();
-    };
+    return () => { tl.kill(); };
   }, []);
 
+  // Animate text on slide change (after initial animation)
+  useEffect(() => {
+    if (!initialAnimDone || !textContainerRef.current) return;
+
+    const words = textContainerRef.current.querySelectorAll(".hero-word");
+    const desc = textContainerRef.current.querySelector(".hero-description");
+
+    // Animate words in
+    gsap.fromTo(
+      words,
+      { y: 60, opacity: 0, rotateX: -30 },
+      { y: 0, opacity: 1, rotateX: 0, duration: 0.8, ease: "power3.out", stagger: 0.12 }
+    );
+
+    // Animate description
+    if (desc) {
+      gsap.fromTo(desc, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", delay: 0.3 });
+    }
+  }, [currentSlide, initialAnimDone]);
+
+  // Auto-advance
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
@@ -105,37 +85,34 @@ const HeroSection = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  const nextSlide = useCallback(() => setCurrentSlide((prev) => (prev + 1) % heroImages.length), []);
+  const prevSlide = useCallback(() => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length), []);
+
+  const slide = heroImages[currentSlide];
 
   return (
     <section ref={heroRef} className="relative h-screen min-h-[750px] overflow-hidden">
-      {/* Background Image with Ken Burns effect */}
+      {/* Background Images — crossfade (no mode="wait") */}
       <div className="absolute inset-0">
-        <AnimatePresence mode="wait">
-          {heroImages.map(
-            (image, index) =>
-              index === currentSlide && (
-                <motion.div
-                  key={index}
-                  initial={{ scale: 1.15, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 1.05, opacity: 0 }}
-                  transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
-                  className="absolute inset-0"
-                >
-                  <img
-                    src={image.src}
-                    alt="Luxury property"
-                    className="w-full h-full object-cover"
-                  />
-                </motion.div>
-              )
-          )}
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, scale: [1.08, 1] }}
+            exit={{ opacity: 0 }}
+            transition={{ opacity: { duration: 1.2, ease: "easeInOut" }, scale: { duration: 6, ease: "easeOut" } }}
+            className="absolute inset-0"
+          >
+            <img
+              src={slide.src}
+              alt="Luxury property"
+              className="w-full h-full object-cover"
+            />
+          </motion.div>
         </AnimatePresence>
         {/* Cinematic overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/80 z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent z-[1]" />
       </div>
 
       {/* Decorative lines */}
@@ -176,36 +153,28 @@ const HeroSection = () => {
               </span>
             </div>
 
-            {/* Cinematic Title — word by word */}
-            <div ref={titleRef} className="mb-6" style={{ perspective: "1000px" }}>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentSlide}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {heroImages[currentSlide].lines.map((line, lineIdx) => (
-                    <div key={lineIdx} className="overflow-hidden">
-                      <h1
-                        className={`hero-word font-display leading-[0.95] tracking-tight opacity-0 ${
-                          lineIdx === 1
-                            ? "text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-gradient my-2"
-                            : "text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-white"
-                        }`}
-                      >
-                        {line}
-                      </h1>
-                    </div>
-                  ))}
-                </motion.div>
-              </AnimatePresence>
+            {/* Title + Description — keyed to re-mount on slide change after initial anim */}
+            <div ref={textContainerRef} key={initialAnimDone ? currentSlide : "initial"} className="mb-6" style={{ perspective: "1000px" }}>
+              {slide.lines.map((line, lineIdx) => (
+                <div key={lineIdx} className="overflow-hidden">
+                  <h1
+                    className={`hero-word font-display leading-[0.95] tracking-tight ${
+                      initialAnimDone ? "" : "opacity-0"
+                    } ${
+                      lineIdx === 1
+                        ? "text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-gradient my-2"
+                        : "text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-white"
+                    }`}
+                  >
+                    {line}
+                  </h1>
+                </div>
+              ))}
             </div>
 
             {/* Description */}
-            <p className="hero-description text-lg md:text-xl text-white/60 mb-10 max-w-xl leading-relaxed opacity-0">
-              {heroImages[currentSlide].description}
+            <p className={`hero-description text-lg md:text-xl text-white/60 mb-10 max-w-xl leading-relaxed ${initialAnimDone ? "" : "opacity-0"}`}>
+              {slide.description}
             </p>
 
             {/* Search */}
@@ -246,6 +215,7 @@ const HeroSection = () => {
           >
             {index === currentSlide && (
               <motion.div
+                key={`indicator-${currentSlide}`}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: 7, ease: "linear" }}
