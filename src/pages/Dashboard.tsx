@@ -319,6 +319,13 @@ const Dashboard = () => {
           )}
         </motion.div>
       </div>
+
+      <EnquiryDetailModal
+        inquiry={selectedInquiry}
+        open={!!selectedInquiry}
+        onClose={() => setSelectedInquiry(null)}
+        onStatusChange={fetchInquiries}
+      />
     </div>
   );
 };
