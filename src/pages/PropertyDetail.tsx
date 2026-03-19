@@ -370,9 +370,9 @@ const PropertyDetail = () => {
                     className="bg-muted border-0 resize-none"
                   />
                 </div>
-                <Button type="submit" className="w-full btn-primary py-6">
-                  <MessageSquare className="w-5 h-5 mr-2" />
-                  Send Inquiry
+                <Button type="submit" className="w-full btn-primary py-6" disabled={submitting}>
+                  {submitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <MessageSquare className="w-5 h-5 mr-2" />}
+                  {submitting ? "Sending..." : "Send Inquiry"}
                 </Button>
               </form>
 
