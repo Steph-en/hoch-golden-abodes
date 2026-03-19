@@ -80,13 +80,30 @@ const PropertyDetail = () => {
     setCurrentImage((prev) => (prev - 1 + property.images.length) % property.images.length);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Inquiry Sent!",
-      description: "We'll get back to you within 24 hours.",
+    setSubmitting(true);
+    
+    const { error } = await (supabase as any).from("inquiries").insert({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone || null,
+      message: formData.message || null,
+      property_id: property.id,
+      user_id: user?.id || null,
+      status: "pending",
     });
-    setFormData({ name: "", email: "", phone: "", message: "" });
+
+    if (error) {
+      toast({ title: "Failed to send inquiry", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Inquiry Sent!", description: "We'll get back to you within 24 hours." });
+      setFormData({ name: "", email: "", phone: "", message: "" });
+      if (user) {
+        logActivity(user.id, "inquiry_submitted", { property_id: property.id, property_title: property.title });
+      }
+    }
+    setSubmitting(false);
   };
 
   const similarProperties = properties.filter(p => p.id !== property.id && p.type === property.type).slice(0, 3);
