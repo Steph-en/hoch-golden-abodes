@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import HeroSection from "@/components/HeroSection";
 import ScrollVideoHero from "@/components/ScrollVideoHero";
 import ServicesSection from "@/components/ServicesSection";
@@ -9,13 +10,18 @@ import CinematicBreak from "@/components/CinematicBreak";
 import StorytellingSection from "@/components/StorytellingSection";
 import CinematicTypography from "@/components/CinematicTypography";
 import PropertyReveal3D from "@/components/PropertyReveal3D";
+import Preloader from "@/components/Preloader";
 import heroProperty1 from "@/assets/hero-property-1.jpg";
 import heroProperty2 from "@/assets/hero-property-2.jpg";
 import heroProperty3 from "@/assets/hero-property-3.jpg";
 
 const Index = () => {
+  const [loaded, setLoaded] = useState(false);
+  const handlePreloaderComplete = useCallback(() => setLoaded(true), []);
+
   return (
     <div className="overflow-x-hidden">
+      {!loaded && <Preloader onComplete={handlePreloaderComplete} />}
       <HeroSection />
 
       {/* Scroll-controlled cinematic video */}
