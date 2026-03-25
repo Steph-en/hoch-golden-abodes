@@ -4,12 +4,14 @@ import { Menu, X, Phone, ArrowRight, User, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdmin } from "@/hooks/useAdmin";
 import logo from "@/assets/logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const location = useLocation();
 
   const navigation = [
@@ -17,7 +19,8 @@ const Header = () => {
     { name: "About", href: "/about" },
     { name: "Properties", href: "/explore" },
     { name: "Services", href: "/services" },
-    { name: "Contact", href: "/contact" }
+    { name: "Contact", href: "/contact" },
+    ...(isAdmin ? [{ name: "Admin", href: "/admin" }] : []),
   ];
 
   useEffect(() => {
