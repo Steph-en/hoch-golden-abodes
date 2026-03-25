@@ -11,6 +11,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const location = useLocation();
 
   const navigation = [
@@ -18,7 +19,8 @@ const Header = () => {
     { name: "About", href: "/about" },
     { name: "Properties", href: "/explore" },
     { name: "Services", href: "/services" },
-    { name: "Contact", href: "/contact" }
+    { name: "Contact", href: "/contact" },
+    ...(isAdmin ? [{ name: "Admin", href: "/admin" }] : []),
   ];
 
   useEffect(() => {
