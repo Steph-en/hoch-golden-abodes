@@ -38,6 +38,56 @@ export type Database = {
         }
         Relationships: []
       }
+      agreements: {
+        Row: {
+          admin_notes: string | null
+          approval_status: string
+          created_at: string
+          document_url: string | null
+          id: string
+          property_id: number
+          signature_type: string | null
+          signature_url: string | null
+          signed_document_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approval_status?: string
+          created_at?: string
+          document_url?: string | null
+          id?: string
+          property_id: number
+          signature_type?: string | null
+          signature_url?: string | null
+          signed_document_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approval_status?: string
+          created_at?: string
+          document_url?: string | null
+          id?: string
+          property_id?: number
+          signature_type?: string | null
+          signature_url?: string | null
+          signed_document_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreements_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enquiry_responses: {
         Row: {
           created_at: string
@@ -127,6 +177,94 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount_paid: number
+          balance: number
+          created_at: string
+          id: string
+          invoice_pdf_url: string | null
+          property_id: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number
+          balance: number
+          created_at?: string
+          id?: string
+          invoice_pdf_url?: string | null
+          property_id: number
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          balance?: number
+          created_at?: string
+          id?: string
+          invoice_pdf_url?: string | null
+          property_id?: number
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          id: string
+          payment_date: string
+          property_id: number
+          receipt_url: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          payment_date?: string
+          property_id: number
+          receipt_url?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_date?: string
+          property_id?: number
+          receipt_url?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -154,6 +292,75 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          amenities: string[] | null
+          area: string | null
+          baths: number
+          beds: number
+          created_at: string
+          description: string | null
+          featured: boolean
+          id: number
+          image_url: string | null
+          images: string[] | null
+          location: string
+          parking: number | null
+          price: string
+          price_value: number
+          sqft: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          year_built: number | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          area?: string | null
+          baths?: number
+          beds?: number
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: number
+          image_url?: string | null
+          images?: string[] | null
+          location: string
+          parking?: number | null
+          price: string
+          price_value?: number
+          sqft?: string | null
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+          year_built?: number | null
+        }
+        Update: {
+          amenities?: string[] | null
+          area?: string | null
+          baths?: number
+          beds?: number
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: number
+          image_url?: string | null
+          images?: string[] | null
+          location?: string
+          parking?: number | null
+          price?: string
+          price_value?: number
+          sqft?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          year_built?: number | null
         }
         Relationships: []
       }
