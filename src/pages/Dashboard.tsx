@@ -117,6 +117,27 @@ const Dashboard = () => {
     setSaving(false);
   };
 
+  const handleDownloadInvoice = async (invoiceId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-invoice-pdf", {
+        body: { invoice_id: invoiceId },
+      });
+      if (error || !data?.html) {
+        toast({ title: "Failed to generate invoice", variant: "destructive" });
+        return;
+      }
+      // Open invoice HTML in new tab for printing/saving as PDF
+      const blob = new Blob([data.html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank");
+      if (win) {
+        win.onload = () => { win.print(); };
+      }
+    } catch {
+      toast({ title: "Failed to generate invoice", variant: "destructive" });
+    }
+  };
+
   const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedPropertyId || !paymentAmount) return;
