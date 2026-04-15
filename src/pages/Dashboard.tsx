@@ -484,11 +484,11 @@ const Dashboard = () => {
                               </div>
                               <Progress value={progress} className="h-2 mt-3" />
                             </div>
-                            {inv.invoice_pdf_url && (
-                              <a href={inv.invoice_pdf_url} target="_blank" rel="noreferrer">
-                                <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-1" /> PDF</Button>
-                              </a>
-                            )}
+                            <div className="flex gap-2 flex-shrink-0">
+                              <Button variant="outline" size="sm" onClick={() => handleDownloadInvoice(inv.id)}>
+                                <Download className="w-4 h-4 mr-1" /> Download Invoice
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
