@@ -14,9 +14,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { properties } from "@/data/properties";
+import { properties as staticProperties } from "@/data/properties";
 import EnquiryDetailModal from "@/components/EnquiryDetailModal";
 import { useToast } from "@/hooks/use-toast";
+
+const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
@@ -24,17 +26,19 @@ const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "enquiries" | "agreements" | "payments" | "activity">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "enquiries" | "properties" | "agreements" | "payments" | "activity">("overview");
   const [allProfiles, setAllProfiles] = useState<any[]>([]);
   const [allInquiries, setAllInquiries] = useState<any[]>([]);
   const [allAgreements, setAllAgreements] = useState<any[]>([]);
   const [allPayments, setAllPayments] = useState<any[]>([]);
   const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [dbProperties, setDbProperties] = useState<any[]>([]);
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
 
   const [userSearch, setUserSearch] = useState("");
   const [inquiryStatusFilter, setInquiryStatusFilter] = useState("all");
   const [inquiryPropertyFilter, setInquiryPropertyFilter] = useState("all");
+  const [propertyStatusFilter, setPropertyStatusFilter] = useState("all");
 
   // Agreement creation
   const [newAgrUserId, setNewAgrUserId] = useState("");
@@ -54,7 +58,6 @@ const Admin = () => {
     fetchData();
   }, [isAdmin]);
 
-  // Realtime
   useEffect(() => {
     if (!isAdmin) return;
     const channel = supabase
@@ -62,33 +65,34 @@ const Admin = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "agreements" }, fetchData)
       .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, fetchData)
       .on("postgres_changes", { event: "*", schema: "public", table: "invoices" }, fetchData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "properties" }, fetchData)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [isAdmin]);
 
   const fetchData = async () => {
-    const [profilesRes, inquiriesRes, agreementsRes, paymentsRes, activityRes] = await Promise.all([
+    const [profilesRes, inquiriesRes, agreementsRes, paymentsRes, activityRes, propsRes] = await Promise.all([
       (supabase as any).from("profiles").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("inquiries").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("agreements").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("payments").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("activity_logs").select("*").order("created_at", { ascending: false }).limit(100),
+      (supabase as any).from("properties").select("*").order("id"),
     ]);
     setAllProfiles(profilesRes.data || []);
     setAllInquiries(inquiriesRes.data || []);
     setAllAgreements(agreementsRes.data || []);
     setAllPayments(paymentsRes.data || []);
     setActivityLogs(activityRes.data || []);
+    setDbProperties(propsRes.data || []);
   };
 
   if (authLoading || adminLoading || !isAdmin) return null;
 
   const totalUsers = allProfiles.length;
   const totalInquiries = allInquiries.length;
-  const pendingInquiries = allInquiries.filter((i) => i.status === "pending").length;
   const pendingAgreements = allAgreements.filter((a) => a.approval_status === "Pending" && a.signature_url).length;
   const pendingPayments = allPayments.filter((p) => p.status === "Pending").length;
-  const recentRegistrations = allProfiles.filter((p) => new Date(p.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length;
 
   const filteredUsers = allProfiles.filter((p) =>
     !userSearch || (p.display_name || "").toLowerCase().includes(userSearch.toLowerCase()) || p.id.includes(userSearch)
@@ -100,14 +104,36 @@ const Admin = () => {
     return true;
   });
 
+  const filteredProperties = dbProperties.filter((p) =>
+    propertyStatusFilter === "all" || p.status === propertyStatusFilter
+  );
+
   const userInquiryCounts: Record<string, number> = {};
   allInquiries.forEach((i) => { if (i.user_id) userInquiryCounts[i.user_id] = (userInquiryCounts[i.user_id] || 0) + 1; });
 
   const topProperties = Object.entries(
     allInquiries.reduce((acc: Record<number, number>, i) => { if (i.property_id) acc[i.property_id] = (acc[i.property_id] || 0) + 1; return acc; }, {})
-  ).sort(([, a], [, b]) => (b as number) - (a as number)).slice(0, 5).map(([id, count]) => ({ property: properties.find((p) => p.id === Number(id)), count }));
+  ).sort(([, a], [, b]) => (b as number) - (a as number)).slice(0, 5).map(([id, count]) => {
+    const prop = dbProperties.find((p: any) => p.id === Number(id)) || staticProperties.find((p) => p.id === Number(id));
+    return { property: prop, count };
+  });
 
   const getProfile = (userId: string) => allProfiles.find(p => p.id === userId);
+  const getPropDisplay = (propId: number) => {
+    const dbProp = dbProperties.find((p: any) => p.id === propId);
+    const staticProp = staticProperties.find(p => p.id === propId);
+    return { title: dbProp?.title || staticProp?.title || `Property #${propId}`, image: staticProp?.image || dbProp?.image_url || "/placeholder.svg" };
+  };
+
+  const handleChangePropertyStatus = async (propertyId: number, newStatus: string) => {
+    const { error } = await (supabase as any).from("properties").update({ status: newStatus, updated_at: new Date().toISOString() }).eq("id", propertyId);
+    if (error) {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    } else {
+      toast({ title: `Property status changed to ${newStatus}` });
+      fetchData();
+    }
+  };
 
   const handleApproveAgreement = async (id: string) => {
     await (supabase as any).from("agreements").update({ approval_status: "Approved", updated_at: new Date().toISOString() }).eq("id", id);
@@ -163,10 +189,17 @@ const Admin = () => {
     { id: "overview" as const, label: "Overview", icon: BarChart3 },
     { id: "users" as const, label: "Users", icon: Users },
     { id: "enquiries" as const, label: "Enquiries", icon: MessageSquare },
+    { id: "properties" as const, label: "Properties", icon: Building2 },
     { id: "agreements" as const, label: "Agreements", icon: FileSignature, badge: pendingAgreements },
     { id: "payments" as const, label: "Payments", icon: CreditCard, badge: pendingPayments },
     { id: "activity" as const, label: "Activity", icon: Activity },
   ];
+
+  const statusColors: Record<string, string> = {
+    Available: "bg-emerald-500/10 text-emerald-600",
+    Reserved: "bg-amber-500/10 text-amber-600",
+    Sold: "bg-red-500/10 text-red-600",
+  };
 
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
@@ -176,7 +209,7 @@ const Admin = () => {
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center"><Shield className="w-6 h-6 text-primary" /></div>
             <div>
               <h1 className="font-display text-3xl md:text-4xl font-semibold text-foreground">Admin Panel</h1>
-              <p className="text-muted-foreground">Manage users, agreements, payments, and platform activity</p>
+              <p className="text-muted-foreground">Manage users, properties, agreements, payments, and platform activity</p>
             </div>
           </div>
         </motion.div>
@@ -195,17 +228,18 @@ const Admin = () => {
           {/* Overview */}
           {activeTab === "overview" && (
             <div className="space-y-8">
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 {[
-                  { label: "Total Users", value: totalUsers, icon: Users, color: "primary" },
-                  { label: "Total Enquiries", value: totalInquiries, icon: MessageSquare, color: "primary" },
-                  { label: "Pending Agreements", value: pendingAgreements, icon: FileSignature, color: "amber-500" },
-                  { label: "Pending Payments", value: pendingPayments, icon: CreditCard, color: "amber-500" },
+                  { label: "Total Users", value: totalUsers, icon: Users },
+                  { label: "Total Enquiries", value: totalInquiries, icon: MessageSquare },
+                  { label: "Properties", value: dbProperties.length, icon: Building2 },
+                  { label: "Pending Agreements", value: pendingAgreements, icon: FileSignature },
+                  { label: "Pending Payments", value: pendingPayments, icon: CreditCard },
                 ].map((stat, i) => (
                   <Card key={i}>
                     <CardContent className="pt-6">
                       <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-xl bg-${stat.color}/10`}><stat.icon className={`w-5 h-5 text-${stat.color}`} /></div>
+                        <div className="p-3 rounded-xl bg-primary/10"><stat.icon className="w-5 h-5 text-primary" /></div>
                         <div>
                           <p className="text-sm text-muted-foreground">{stat.label}</p>
                           <p className="text-2xl font-display font-semibold text-foreground">{stat.value}</p>
@@ -215,6 +249,23 @@ const Admin = () => {
                   </Card>
                 ))}
               </div>
+              {/* Property Status Summary */}
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> Property Status Summary</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    {PROPERTY_STATUSES.map(status => {
+                      const count = dbProperties.filter((p: any) => p.status === status).length;
+                      return (
+                        <div key={status} className="p-4 rounded-xl bg-muted/50 text-center">
+                          <p className="text-sm text-muted-foreground">{status}</p>
+                          <p className="text-2xl font-display font-semibold text-foreground">{count}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
               <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" /> Most Enquired Properties</CardTitle></CardHeader>
                 <CardContent>
@@ -222,10 +273,10 @@ const Admin = () => {
                     <div className="space-y-3">
                       {topProperties.map(({ property: prop, count }, i) => prop && (
                         <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-muted/50">
-                          <img src={prop.image} alt={prop.title} className="w-14 h-14 rounded-lg object-cover" />
+                          <img src={(prop as any).image || (prop as any).image_url || "/placeholder.svg"} alt={(prop as any).title} className="w-14 h-14 rounded-lg object-cover" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground truncate">{prop.title}</p>
-                            <p className="text-sm text-muted-foreground">{prop.location}</p>
+                            <p className="font-medium text-foreground truncate">{(prop as any).title}</p>
+                            <p className="text-sm text-muted-foreground">{(prop as any).location}</p>
                           </div>
                           <span className="text-sm font-semibold text-primary">{count as number} enquiries</span>
                         </div>
@@ -286,7 +337,7 @@ const Admin = () => {
                   <SelectTrigger className="w-52"><SelectValue placeholder="Property" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Properties</SelectItem>
-                    {properties.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
+                    {(dbProperties.length > 0 ? dbProperties : staticProperties).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -298,10 +349,10 @@ const Admin = () => {
                     </TableHeader>
                     <TableBody>
                       {filteredInquiries.map((inquiry) => {
-                        const prop = properties.find((p) => p.id === inquiry.property_id);
+                        const { title, image } = getPropDisplay(inquiry.property_id);
                         return (
                           <TableRow key={inquiry.id}>
-                            <TableCell><div className="flex items-center gap-3">{prop && <img src={prop.image} alt="" className="w-10 h-10 rounded-lg object-cover" />}<span className="text-sm font-medium text-foreground truncate max-w-[120px]">{prop?.title || "General"}</span></div></TableCell>
+                            <TableCell><div className="flex items-center gap-3"><img src={image} alt="" className="w-10 h-10 rounded-lg object-cover" /><span className="text-sm font-medium text-foreground truncate max-w-[120px]">{title}</span></div></TableCell>
                             <TableCell><div><p className="text-sm font-medium text-foreground">{inquiry.name}</p><p className="text-xs text-muted-foreground">{inquiry.email}</p></div></TableCell>
                             <TableCell className="max-w-[200px]"><p className="text-sm text-muted-foreground truncate">{inquiry.message}</p></TableCell>
                             <TableCell><span className={`px-2.5 py-1 rounded-full text-xs font-medium ${inquiry.status === "pending" ? "bg-amber-500/10 text-amber-600" : inquiry.status === "responded" ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>{inquiry.status}</span></TableCell>
@@ -318,10 +369,72 @@ const Admin = () => {
             </div>
           )}
 
+          {/* Properties Management */}
+          {activeTab === "properties" && (
+            <div className="space-y-6">
+              <div className="flex flex-wrap gap-3 items-center">
+                <Select value={propertyStatusFilter} onValueChange={setPropertyStatusFilter}>
+                  <SelectTrigger className="w-44"><SelectValue placeholder="Filter by status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {PROPERTY_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground ml-auto">{filteredProperties.length} properties</p>
+              </div>
+              <div className="grid gap-4">
+                {filteredProperties.map((prop: any) => {
+                  const staticProp = staticProperties.find(p => p.id === prop.id);
+                  const image = staticProp?.image || prop.image_url || "/placeholder.svg";
+                  const enquiryCount = allInquiries.filter(i => i.property_id === prop.id).length;
+                  const agreementCount = allAgreements.filter(a => a.property_id === prop.id).length;
+                  return (
+                    <Card key={prop.id}>
+                      <CardContent className="p-4">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4">
+                          <img src={image} alt={prop.title} className="w-20 h-20 rounded-xl object-cover flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-1">
+                              <h4 className="font-semibold text-foreground truncate">{prop.title}</h4>
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[prop.status] || "bg-muted text-muted-foreground"}`}>{prop.status}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{prop.location} • {prop.price}</p>
+                            <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
+                              <span>{enquiryCount} enquiries</span>
+                              <span>{agreementCount} agreements</span>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <Select value={prop.status} onValueChange={(val) => handleChangePropertyStatus(prop.id, val)}>
+                              <SelectTrigger className="w-36">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {PROPERTY_STATUSES.map(s => (
+                                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+                {filteredProperties.length === 0 && (
+                  <div className="text-center py-20">
+                    <Building2 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-foreground mb-2">No properties found</h3>
+                    <p className="text-muted-foreground">No properties match the selected filter</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Agreements */}
           {activeTab === "agreements" && (
             <div className="space-y-8">
-              {/* Create Agreement */}
               <Card>
                 <CardHeader><CardTitle>Create Agreement</CardTitle></CardHeader>
                 <CardContent>
@@ -335,7 +448,7 @@ const Admin = () => {
                     <Select value={newAgrPropertyId} onValueChange={setNewAgrPropertyId}>
                       <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
                       <SelectContent>
-                        {properties.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
+                        {(dbProperties.length > 0 ? dbProperties : staticProperties).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <Input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setNewAgrDoc(e.target.files?.[0] || null)} />
@@ -346,7 +459,6 @@ const Admin = () => {
                 </CardContent>
               </Card>
 
-              {/* Pending Approvals */}
               <Card>
                 <CardHeader><CardTitle>Pending Approvals ({pendingAgreements})</CardTitle></CardHeader>
                 <CardContent>
@@ -355,12 +467,12 @@ const Admin = () => {
                   ) : (
                     <div className="space-y-4">
                       {allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).map(agr => {
-                        const prop = properties.find(p => p.id === agr.property_id);
+                        const { title } = getPropDisplay(agr.property_id);
                         const profile = getProfile(agr.user_id);
                         return (
                           <div key={agr.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl">
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-foreground">{prop?.title || "Property"}</p>
+                              <p className="font-medium text-foreground">{title}</p>
                               <p className="text-sm text-muted-foreground">User: {profile?.display_name || agr.user_id.slice(0, 8)}</p>
                               {agr.signature_url && <img src={agr.signature_url} alt="Signature" className="h-12 mt-2 border border-border rounded" />}
                             </div>
@@ -376,7 +488,6 @@ const Admin = () => {
                 </CardContent>
               </Card>
 
-              {/* All Agreements */}
               <Card>
                 <CardHeader><CardTitle>All Agreements</CardTitle></CardHeader>
                 <CardContent className="p-0">
@@ -386,11 +497,11 @@ const Admin = () => {
                     </TableHeader>
                     <TableBody>
                       {allAgreements.map(agr => {
-                        const prop = properties.find(p => p.id === agr.property_id);
+                        const { title } = getPropDisplay(agr.property_id);
                         const profile = getProfile(agr.user_id);
                         return (
                           <TableRow key={agr.id}>
-                            <TableCell className="font-medium text-foreground">{prop?.title || "—"}</TableCell>
+                            <TableCell className="font-medium text-foreground">{title}</TableCell>
                             <TableCell className="text-muted-foreground">{profile?.display_name || agr.user_id.slice(0, 8)}</TableCell>
                             <TableCell><span className={`px-2.5 py-1 rounded-full text-xs font-medium ${agr.approval_status === "Approved" ? "bg-emerald-500/10 text-emerald-600" : agr.approval_status === "Rejected" ? "bg-red-500/10 text-red-600" : "bg-amber-500/10 text-amber-600"}`}>{agr.approval_status}</span></TableCell>
                             <TableCell>{agr.signature_url ? "✓" : "—"}</TableCell>
@@ -416,12 +527,12 @@ const Admin = () => {
                   ) : (
                     <div className="space-y-4">
                       {allPayments.filter(p => p.status === "Pending").map(pay => {
-                        const prop = properties.find(p => p.id === pay.property_id);
+                        const { title } = getPropDisplay(pay.property_id);
                         const profile = getProfile(pay.user_id);
                         return (
                           <div key={pay.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl">
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-foreground">{prop?.title || "Property"} — ${pay.amount?.toLocaleString()}</p>
+                              <p className="font-medium text-foreground">{title} — ${pay.amount?.toLocaleString()}</p>
                               <p className="text-sm text-muted-foreground">By: {profile?.display_name || pay.user_id.slice(0, 8)} • {new Date(pay.payment_date).toLocaleDateString()}</p>
                               {pay.receipt_url && <a href={pay.receipt_url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">View Receipt</a>}
                             </div>
@@ -446,11 +557,11 @@ const Admin = () => {
                     </TableHeader>
                     <TableBody>
                       {allPayments.map(pay => {
-                        const prop = properties.find(p => p.id === pay.property_id);
+                        const { title } = getPropDisplay(pay.property_id);
                         const profile = getProfile(pay.user_id);
                         return (
                           <TableRow key={pay.id}>
-                            <TableCell className="font-medium text-foreground">{prop?.title || "—"}</TableCell>
+                            <TableCell className="font-medium text-foreground">{title}</TableCell>
                             <TableCell className="text-muted-foreground">{profile?.display_name || pay.user_id.slice(0, 8)}</TableCell>
                             <TableCell className="font-semibold text-foreground">${pay.amount?.toLocaleString()}</TableCell>
                             <TableCell><span className={`px-2.5 py-1 rounded-full text-xs font-medium ${pay.status === "Confirmed" ? "bg-emerald-500/10 text-emerald-600" : pay.status === "Rejected" ? "bg-red-500/10 text-red-600" : "bg-amber-500/10 text-amber-600"}`}>{pay.status}</span></TableCell>
