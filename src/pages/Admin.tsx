@@ -88,6 +88,23 @@ const Admin = () => {
     setDbProperties(propsRes.data || []);
   };
 
+  const toggleSuspendUser = async (profile: any) => {
+    const nextSuspended = !profile.suspended;
+    const { error } = await (supabase as any)
+      .from("profiles")
+      .update({ suspended: nextSuspended, suspended_at: nextSuspended ? new Date().toISOString() : null })
+      .eq("id", profile.id);
+    if (error) {
+      toast({ title: "Action failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: nextSuspended ? "User suspended" : "User reactivated",
+      description: profile.display_name || profile.id.slice(0, 8),
+    });
+    fetchData();
+  };
+
   if (authLoading || adminLoading || !isAdmin) return null;
 
   const totalUsers = allProfiles.length;
