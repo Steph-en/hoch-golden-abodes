@@ -35,6 +35,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .select("*")
       .eq("id", userId)
       .single();
+    if (data?.suspended) {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      if (typeof window !== "undefined") {
+        window.location.href = "/auth?suspended=1";
+      }
+      return;
+    }
     setProfile(data);
   };
 
