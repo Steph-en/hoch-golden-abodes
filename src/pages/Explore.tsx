@@ -1,34 +1,50 @@
-import { useState, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useMemo, useRef, lazy, Suspense, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X, Map, LayoutGrid } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X, Map, LayoutGrid, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { properties, propertyTypes, locations, priceRanges } from "@/data/properties";
+import { Link, useSearchParams } from "react-router-dom";
+import { propertyTypes, locations, priceRanges } from "@/data/properties";
 import CompareButton from "@/components/CompareButton";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useProperties } from "@/hooks/useProperties";
 
 const PropertyMap = lazy(() => import("@/components/PropertyMap"));
+
+const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
 
 const Explore = () => {
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true });
+  const { properties, loading } = useProperties();
+  const [searchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [selectedPriceRange, setSelectedPriceRange] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const { toggleFavorite, isFavorite } = useFavorites();
 
+  useEffect(() => {
+    const loc = searchParams.get("location");
+    const type = searchParams.get("type");
+    const price = searchParams.get("price");
+    if (loc) setSelectedLocation(loc);
+    if (type) setSelectedType(type);
+    if (price) setSelectedPriceRange(price);
+  }, [searchParams]);
+
   const filteredProperties = useMemo(() => {
-    return properties.filter((property) => {
+    return properties.filter((property: any) => {
       const matchesSearch =
         property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         property.location.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = !selectedType || property.type === selectedType;
       const matchesLocation = !selectedLocation || property.location.includes(selectedLocation);
+      const matchesStatus = !selectedStatus || property.status === selectedStatus;
 
       let matchesPrice = true;
       if (selectedPriceRange) {
@@ -38,18 +54,19 @@ const Explore = () => {
         }
       }
 
-      return matchesSearch && matchesType && matchesLocation && matchesPrice;
+      return matchesSearch && matchesType && matchesLocation && matchesPrice && matchesStatus;
     });
-  }, [searchQuery, selectedType, selectedLocation, selectedPriceRange]);
+  }, [properties, searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus]);
 
   const clearFilters = () => {
     setSelectedType(null);
     setSelectedLocation(null);
     setSelectedPriceRange(null);
+    setSelectedStatus(null);
     setSearchQuery("");
   };
 
-  const hasActiveFilters = selectedType || selectedLocation || selectedPriceRange || searchQuery;
+  const hasActiveFilters = selectedType || selectedLocation || selectedPriceRange || selectedStatus || searchQuery;
 
   return (
     <div className="min-h-screen bg-background">
@@ -167,6 +184,25 @@ const Explore = () => {
                     ))}
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <div className="flex flex-wrap gap-2">
+                    {PROPERTY_STATUSES.map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
+                        className={`px-4 py-2 rounded-full text-sm transition-all ${
+                          selectedStatus === status
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
+                        }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {hasActiveFilters && (
@@ -208,7 +244,12 @@ const Explore = () => {
             </div>
           </div>
 
-          {viewMode === "map" ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+              <p>Loading properties...</p>
+            </div>
+          ) : viewMode === "map" ? (
             <Suspense
               fallback={<div className="h-[500px] bg-muted rounded-2xl animate-pulse" />}
             >
@@ -259,10 +300,19 @@ const Explore = () => {
                           </div>
                         </div>
 
-                        <div className="absolute top-4 left-4">
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
                             {property.type}
                           </span>
+                          {(property as any).status && (property as any).status !== "Available" && (
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              (property as any).status === "Sold"
+                                ? "bg-destructive text-destructive-foreground"
+                                : "bg-secondary text-secondary-foreground"
+                            }`}>
+                              {(property as any).status}
+                            </span>
+                          )}
                         </div>
                       </div>
 
