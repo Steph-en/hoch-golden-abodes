@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useNavigate } from "react-router-dom";
@@ -301,18 +302,50 @@ const Admin = () => {
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
-                      <TableRow><TableHead>User</TableHead><TableHead>Phone</TableHead><TableHead>Registered</TableHead><TableHead>Enquiries</TableHead></TableRow>
+                      <TableRow><TableHead>User</TableHead><TableHead>Phone</TableHead><TableHead>Registered</TableHead><TableHead>Enquiries</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredUsers.map((profile) => (
-                        <TableRow key={profile.id}>
+                        <TableRow key={profile.id} className={profile.suspended ? "opacity-60" : ""}>
                           <TableCell><div><p className="font-medium text-foreground">{profile.display_name || "—"}</p><p className="text-xs text-muted-foreground">{profile.id.slice(0, 8)}...</p></div></TableCell>
                           <TableCell className="text-muted-foreground">{profile.phone || "—"}</TableCell>
                           <TableCell className="text-muted-foreground">{new Date(profile.created_at).toLocaleDateString()}</TableCell>
                           <TableCell><span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">{userInquiryCounts[profile.id] || 0}</span></TableCell>
+                          <TableCell>
+                            {profile.suspended ? (
+                              <span className="px-2.5 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-medium">Suspended</span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-medium">Active</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant={profile.suspended ? "outline" : "destructive"} size="sm">
+                                  {profile.suspended ? "Reactivate" : "Suspend"}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>{profile.suspended ? "Reactivate user?" : "Suspend user?"}</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {profile.suspended
+                                      ? `${profile.display_name || "This user"} will regain access to their account.`
+                                      : `${profile.display_name || "This user"} will be signed out on their next request and prevented from accessing their dashboard.`}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => toggleSuspendUser(profile)}>
+                                    {profile.suspended ? "Reactivate" : "Suspend"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
                         </TableRow>
                       ))}
-                      {filteredUsers.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">No users found</TableCell></TableRow>}
+                      {filteredUsers.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No users found</TableCell></TableRow>}
                     </TableBody>
                   </Table>
                 </CardContent>
