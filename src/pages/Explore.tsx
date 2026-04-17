@@ -300,10 +300,19 @@ const Explore = () => {
                           </div>
                         </div>
 
-                        <div className="absolute top-4 left-4">
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
                             {property.type}
                           </span>
+                          {(property as any).status && (property as any).status !== "Available" && (
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              (property as any).status === "Sold"
+                                ? "bg-destructive text-destructive-foreground"
+                                : "bg-secondary text-secondary-foreground"
+                            }`}>
+                              {(property as any).status}
+                            </span>
+                          )}
                         </div>
                       </div>
 
