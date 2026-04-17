@@ -184,6 +184,25 @@ const Explore = () => {
                     ))}
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <div className="flex flex-wrap gap-2">
+                    {PROPERTY_STATUSES.map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
+                        className={`px-4 py-2 rounded-full text-sm transition-all ${
+                          selectedStatus === status
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
+                        }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {hasActiveFilters && (
