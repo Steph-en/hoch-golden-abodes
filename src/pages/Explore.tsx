@@ -244,7 +244,12 @@ const Explore = () => {
             </div>
           </div>
 
-          {viewMode === "map" ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+              <p>Loading properties...</p>
+            </div>
+          ) : viewMode === "map" ? (
             <Suspense
               fallback={<div className="h-[500px] bg-muted rounded-2xl animate-pulse" />}
             >
