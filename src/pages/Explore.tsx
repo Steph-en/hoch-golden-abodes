@@ -1,34 +1,50 @@
-import { useState, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useMemo, useRef, lazy, Suspense, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X, Map, LayoutGrid } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X, Map, LayoutGrid, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
-import { properties, propertyTypes, locations, priceRanges } from "@/data/properties";
+import { Link, useSearchParams } from "react-router-dom";
+import { propertyTypes, locations, priceRanges } from "@/data/properties";
 import CompareButton from "@/components/CompareButton";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useProperties } from "@/hooks/useProperties";
 
 const PropertyMap = lazy(() => import("@/components/PropertyMap"));
+
+const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
 
 const Explore = () => {
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true });
+  const { properties, loading } = useProperties();
+  const [searchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [selectedPriceRange, setSelectedPriceRange] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const { toggleFavorite, isFavorite } = useFavorites();
 
+  useEffect(() => {
+    const loc = searchParams.get("location");
+    const type = searchParams.get("type");
+    const price = searchParams.get("price");
+    if (loc) setSelectedLocation(loc);
+    if (type) setSelectedType(type);
+    if (price) setSelectedPriceRange(price);
+  }, [searchParams]);
+
   const filteredProperties = useMemo(() => {
-    return properties.filter((property) => {
+    return properties.filter((property: any) => {
       const matchesSearch =
         property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         property.location.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = !selectedType || property.type === selectedType;
       const matchesLocation = !selectedLocation || property.location.includes(selectedLocation);
+      const matchesStatus = !selectedStatus || property.status === selectedStatus;
 
       let matchesPrice = true;
       if (selectedPriceRange) {
@@ -38,18 +54,19 @@ const Explore = () => {
         }
       }
 
-      return matchesSearch && matchesType && matchesLocation && matchesPrice;
+      return matchesSearch && matchesType && matchesLocation && matchesPrice && matchesStatus;
     });
-  }, [searchQuery, selectedType, selectedLocation, selectedPriceRange]);
+  }, [properties, searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus]);
 
   const clearFilters = () => {
     setSelectedType(null);
     setSelectedLocation(null);
     setSelectedPriceRange(null);
+    setSelectedStatus(null);
     setSearchQuery("");
   };
 
-  const hasActiveFilters = selectedType || selectedLocation || selectedPriceRange || searchQuery;
+  const hasActiveFilters = selectedType || selectedLocation || selectedPriceRange || selectedStatus || searchQuery;
 
   return (
     <div className="min-h-screen bg-background">
