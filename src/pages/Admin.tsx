@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Users, MessageSquare, Activity, Shield, Search, Eye, Clock, CheckCircle2, TrendingUp,
-  UserPlus, BarChart3, FileSignature, CreditCard, XCircle, Upload, Building2
+  UserPlus, BarChart3, FileSignature, CreditCard, XCircle, Upload, Building2, Plus, Pencil, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +17,18 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { properties as staticProperties } from "@/data/properties";
 import EnquiryDetailModal from "@/components/EnquiryDetailModal";
+import PropertyFormDialog from "@/components/admin/PropertyFormDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
+
+const sendNotification = async (payload: any) => {
+  try {
+    await supabase.functions.invoke("send-notification-email", { body: payload });
+  } catch (e) {
+    console.error("notification email failed", e);
+  }
+};
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
@@ -46,6 +55,10 @@ const Admin = () => {
   const [newAgrPropertyId, setNewAgrPropertyId] = useState("");
   const [newAgrDoc, setNewAgrDoc] = useState<File | null>(null);
   const [creatingAgr, setCreatingAgr] = useState(false);
+
+  // Property CRUD
+  const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<any | null>(null);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -153,9 +166,12 @@ const Admin = () => {
     }
   };
 
-  const handleApproveAgreement = async (id: string) => {
-    await (supabase as any).from("agreements").update({ approval_status: "Approved", updated_at: new Date().toISOString() }).eq("id", id);
+  const handleApproveAgreement = async (agr: any) => {
+    await (supabase as any).from("agreements").update({ approval_status: "Approved", updated_at: new Date().toISOString() }).eq("id", agr.id);
     toast({ title: "Agreement approved!" });
+    const profile = getProfile(agr.user_id);
+    const { title } = getPropDisplay(agr.property_id);
+    sendNotification({ type: "agreement_approved", userId: agr.user_id, recipientName: profile?.display_name, propertyTitle: title });
     fetchData();
   };
 
@@ -165,9 +181,12 @@ const Admin = () => {
     fetchData();
   };
 
-  const handleConfirmPayment = async (id: string) => {
-    await (supabase as any).from("payments").update({ status: "Confirmed" }).eq("id", id);
+  const handleConfirmPayment = async (pay: any) => {
+    await (supabase as any).from("payments").update({ status: "Confirmed" }).eq("id", pay.id);
     toast({ title: "Payment confirmed!" });
+    const profile = getProfile(pay.user_id);
+    const { title } = getPropDisplay(pay.property_id);
+    sendNotification({ type: "payment_confirmed", userId: pay.user_id, recipientName: profile?.display_name, propertyTitle: title, amount: pay.amount });
     fetchData();
   };
 
@@ -189,18 +208,28 @@ const Admin = () => {
         docUrl = urlData.publicUrl;
       }
     }
+    const propId = parseInt(newAgrPropertyId);
     await (supabase as any).from("agreements").insert({
       user_id: newAgrUserId,
-      property_id: parseInt(newAgrPropertyId),
+      property_id: propId,
       document_url: docUrl,
       approval_status: "Pending",
     });
     toast({ title: "Agreement created!" });
+    const profile = getProfile(newAgrUserId);
+    const { title } = getPropDisplay(propId);
+    sendNotification({ type: "agreement_created", userId: newAgrUserId, recipientName: profile?.display_name, propertyTitle: title });
     setNewAgrUserId("");
     setNewAgrPropertyId("");
     setNewAgrDoc(null);
     fetchData();
     setCreatingAgr(false);
+  };
+
+  const handleDeleteProperty = async (id: number) => {
+    const { error } = await (supabase as any).from("properties").delete().eq("id", id);
+    if (error) toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+    else { toast({ title: "Property deleted" }); fetchData(); }
   };
 
   const tabs = [
@@ -431,11 +460,14 @@ const Admin = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground ml-auto">{filteredProperties.length} properties</p>
+                <Button onClick={() => { setEditingProperty(null); setPropertyDialogOpen(true); }}>
+                  <Plus className="w-4 h-4 mr-1" /> New property
+                </Button>
               </div>
               <div className="grid gap-4">
                 {filteredProperties.map((prop: any) => {
                   const staticProp = staticProperties.find(p => p.id === prop.id);
-                  const image = staticProp?.image || prop.image_url || "/placeholder.svg";
+                  const image = prop.image_url || staticProp?.image || "/placeholder.svg";
                   const enquiryCount = allInquiries.filter(i => i.property_id === prop.id).length;
                   const agreementCount = allAgreements.filter(a => a.property_id === prop.id).length;
                   return (
@@ -454,9 +486,9 @@ const Admin = () => {
                               <span>{agreementCount} agreements</span>
                             </div>
                           </div>
-                          <div className="flex-shrink-0">
+                          <div className="flex flex-wrap gap-2 flex-shrink-0">
                             <Select value={prop.status} onValueChange={(val) => handleChangePropertyStatus(prop.id, val)}>
-                              <SelectTrigger className="w-36">
+                              <SelectTrigger className="w-32">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -465,6 +497,26 @@ const Admin = () => {
                                 ))}
                               </SelectContent>
                             </Select>
+                            <Button variant="outline" size="icon" onClick={() => { setEditingProperty(prop); setPropertyDialogOpen(true); }}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="icon"><Trash2 className="w-4 h-4" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete property?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    "{prop.title}" will be permanently removed. Existing agreements, payments, and invoices for this property may break.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteProperty(prop.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       </CardContent>
@@ -527,7 +579,7 @@ const Admin = () => {
                               {agr.signature_url && <img src={agr.signature_url} alt="Signature" className="h-12 mt-2 border border-border rounded" />}
                             </div>
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleApproveAgreement(agr.id)}><CheckCircle2 className="w-4 h-4 mr-1" /> Approve</Button>
+                              <Button size="sm" onClick={() => handleApproveAgreement(agr)}><CheckCircle2 className="w-4 h-4 mr-1" /> Approve</Button>
                               <Button size="sm" variant="destructive" onClick={() => handleRejectAgreement(agr.id)}><XCircle className="w-4 h-4 mr-1" /> Reject</Button>
                             </div>
                           </div>
@@ -587,7 +639,7 @@ const Admin = () => {
                               {pay.receipt_url && <a href={pay.receipt_url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">View Receipt</a>}
                             </div>
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleConfirmPayment(pay.id)}><CheckCircle2 className="w-4 h-4 mr-1" /> Confirm</Button>
+                              <Button size="sm" onClick={() => handleConfirmPayment(pay)}><CheckCircle2 className="w-4 h-4 mr-1" /> Confirm</Button>
                               <Button size="sm" variant="destructive" onClick={() => handleRejectPayment(pay.id)}><XCircle className="w-4 h-4 mr-1" /> Reject</Button>
                             </div>
                           </div>
@@ -663,6 +715,12 @@ const Admin = () => {
       </div>
 
       <EnquiryDetailModal inquiry={selectedInquiry} open={!!selectedInquiry} onClose={() => setSelectedInquiry(null)} onStatusChange={fetchData} />
+      <PropertyFormDialog
+        open={propertyDialogOpen}
+        onClose={() => setPropertyDialogOpen(false)}
+        property={editingProperty}
+        onSaved={fetchData}
+      />
     </div>
   );
 };

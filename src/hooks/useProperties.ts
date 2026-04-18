@@ -44,8 +44,10 @@ export const mergeWithStaticImages = (dbProp: DBProperty): StaticProperty & { st
     amenities: dbProp.amenities || [],
     yearBuilt: dbProp.year_built || 0,
     parking: dbProp.parking,
-    image: staticProp?.image || dbProp.image_url || "/placeholder.svg",
-    images: staticProp?.images || (dbProp.image_url ? [dbProp.image_url] : ["/placeholder.svg"]),
+    image: dbProp.image_url || staticProp?.image || "/placeholder.svg",
+    images: (dbProp.images && dbProp.images.length > 0)
+      ? dbProp.images
+      : (dbProp.image_url ? [dbProp.image_url] : (staticProp?.images || ["/placeholder.svg"])),
     status: dbProp.status,
   };
 };
