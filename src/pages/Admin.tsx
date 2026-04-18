@@ -715,6 +715,12 @@ const Admin = () => {
       </div>
 
       <EnquiryDetailModal inquiry={selectedInquiry} open={!!selectedInquiry} onClose={() => setSelectedInquiry(null)} onStatusChange={fetchData} />
+      <PropertyFormDialog
+        open={propertyDialogOpen}
+        onClose={() => setPropertyDialogOpen(false)}
+        property={editingProperty}
+        onSaved={fetchData}
+      />
     </div>
   );
 };

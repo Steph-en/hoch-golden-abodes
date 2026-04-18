@@ -1,8 +1,9 @@
 import { useState, useMemo, useRef, lazy, Suspense, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X, Map, LayoutGrid, Loader2 } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X, Map, LayoutGrid, Loader2, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useSearchParams } from "react-router-dom";
 import { propertyTypes, locations, priceRanges } from "@/data/properties";
 import CompareButton from "@/components/CompareButton";
@@ -13,32 +14,46 @@ const PropertyMap = lazy(() => import("@/components/PropertyMap"));
 
 const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest" },
+  { value: "price_asc", label: "Price: Low to High" },
+  { value: "price_desc", label: "Price: High to Low" },
+  { value: "beds_desc", label: "Most bedrooms" },
+] as const;
+
+type SortKey = typeof SORT_OPTIONS[number]["value"];
+
 const Explore = () => {
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true });
   const { properties, loading } = useProperties();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [selectedPriceRange, setSelectedPriceRange] = useState<string | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  // Initialize state directly from URL so it's shareable
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [selectedType, setSelectedType] = useState<string | null>(searchParams.get("type"));
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(searchParams.get("location"));
+  const [selectedPriceRange, setSelectedPriceRange] = useState<string | null>(searchParams.get("price"));
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(searchParams.get("status"));
+  const [sortBy, setSortBy] = useState<SortKey>((searchParams.get("sort") as SortKey) || "newest");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const { toggleFavorite, isFavorite } = useFavorites();
 
+  // Sync state -> URL
   useEffect(() => {
-    const loc = searchParams.get("location");
-    const type = searchParams.get("type");
-    const price = searchParams.get("price");
-    if (loc) setSelectedLocation(loc);
-    if (type) setSelectedType(type);
-    if (price) setSelectedPriceRange(price);
-  }, [searchParams]);
+    const params: Record<string, string> = {};
+    if (searchQuery) params.q = searchQuery;
+    if (selectedType) params.type = selectedType;
+    if (selectedLocation) params.location = selectedLocation;
+    if (selectedPriceRange) params.price = selectedPriceRange;
+    if (selectedStatus) params.status = selectedStatus;
+    if (sortBy && sortBy !== "newest") params.sort = sortBy;
+    setSearchParams(params, { replace: true });
+  }, [searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus, sortBy, setSearchParams]);
 
   const filteredProperties = useMemo(() => {
-    return properties.filter((property: any) => {
+    const filtered = properties.filter((property: any) => {
       const matchesSearch =
         property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         property.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -49,14 +64,22 @@ const Explore = () => {
       let matchesPrice = true;
       if (selectedPriceRange) {
         const range = priceRanges.find((r) => r.label === selectedPriceRange);
-        if (range) {
-          matchesPrice = property.priceValue >= range.min && property.priceValue <= range.max;
-        }
+        if (range) matchesPrice = property.priceValue >= range.min && property.priceValue <= range.max;
       }
 
       return matchesSearch && matchesType && matchesLocation && matchesPrice && matchesStatus;
     });
-  }, [properties, searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus]);
+
+    const sorted = [...filtered];
+    switch (sortBy) {
+      case "price_asc": sorted.sort((a, b) => a.priceValue - b.priceValue); break;
+      case "price_desc": sorted.sort((a, b) => b.priceValue - a.priceValue); break;
+      case "beds_desc": sorted.sort((a, b) => b.beds - a.beds); break;
+      case "newest":
+      default: sorted.sort((a, b) => b.id - a.id); break;
+    }
+    return sorted;
+  }, [properties, searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus, sortBy]);
 
   const clearFilters = () => {
     setSelectedType(null);
@@ -64,6 +87,7 @@ const Explore = () => {
     setSelectedPriceRange(null);
     setSelectedStatus(null);
     setSearchQuery("");
+    setSortBy("newest");
   };
 
   const hasActiveFilters = selectedType || selectedLocation || selectedPriceRange || selectedStatus || searchQuery;
@@ -130,15 +154,8 @@ const Explore = () => {
                   <label className="text-sm font-medium text-muted-foreground">Type</label>
                   <div className="flex flex-wrap gap-2">
                     {propertyTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setSelectedType(selectedType === type ? null : type)}
-                        className={`px-4 py-2 rounded-full text-sm transition-all ${
-                          selectedType === type
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
-                        }`}
-                      >
+                      <button key={type} onClick={() => setSelectedType(selectedType === type ? null : type)}
+                        className={`px-4 py-2 rounded-full text-sm transition-all ${selectedType === type ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"}`}>
                         {type}
                       </button>
                     ))}
@@ -149,15 +166,8 @@ const Explore = () => {
                   <label className="text-sm font-medium text-muted-foreground">Location</label>
                   <div className="flex flex-wrap gap-2">
                     {locations.map((loc) => (
-                      <button
-                        key={loc}
-                        onClick={() => setSelectedLocation(selectedLocation === loc ? null : loc)}
-                        className={`px-4 py-2 rounded-full text-sm transition-all ${
-                          selectedLocation === loc
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
-                        }`}
-                      >
+                      <button key={loc} onClick={() => setSelectedLocation(selectedLocation === loc ? null : loc)}
+                        className={`px-4 py-2 rounded-full text-sm transition-all ${selectedLocation === loc ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"}`}>
                         {loc}
                       </button>
                     ))}
@@ -168,17 +178,8 @@ const Explore = () => {
                   <label className="text-sm font-medium text-muted-foreground">Price</label>
                   <div className="flex flex-wrap gap-2">
                     {priceRanges.map((range) => (
-                      <button
-                        key={range.label}
-                        onClick={() =>
-                          setSelectedPriceRange(selectedPriceRange === range.label ? null : range.label)
-                        }
-                        className={`px-4 py-2 rounded-full text-sm transition-all ${
-                          selectedPriceRange === range.label
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
-                        }`}
-                      >
+                      <button key={range.label} onClick={() => setSelectedPriceRange(selectedPriceRange === range.label ? null : range.label)}
+                        className={`px-4 py-2 rounded-full text-sm transition-all ${selectedPriceRange === range.label ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"}`}>
                         {range.label}
                       </button>
                     ))}
@@ -189,15 +190,8 @@ const Explore = () => {
                   <label className="text-sm font-medium text-muted-foreground">Status</label>
                   <div className="flex flex-wrap gap-2">
                     {PROPERTY_STATUSES.map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
-                        className={`px-4 py-2 rounded-full text-sm transition-all ${
-                          selectedStatus === status
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"
-                        }`}
-                      >
+                      <button key={status} onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
+                        className={`px-4 py-2 rounded-full text-sm transition-all ${selectedStatus === status ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-primary/10 hover:text-primary"}`}>
                         {status}
                       </button>
                     ))}
@@ -206,10 +200,7 @@ const Explore = () => {
               </div>
 
               {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="mt-4 text-sm text-primary hover:underline flex items-center gap-1"
-                >
+                <button onClick={clearFilters} className="mt-4 text-sm text-primary hover:underline flex items-center gap-1">
                   <X className="w-4 h-4" /> Clear all filters
                 </button>
               )}
@@ -221,24 +212,26 @@ const Explore = () => {
       {/* Results */}
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
             <p className="text-muted-foreground">
-              <span className="font-semibold text-foreground">{filteredProperties.length}</span>{" "}
-              properties found
+              <span className="font-semibold text-foreground">{filteredProperties.length}</span> properties found
             </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-              >
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortKey)}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")}>
                 <LayoutGrid className="w-4 h-4 mr-1" /> Grid
               </Button>
-              <Button
-                variant={viewMode === "map" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("map")}
-              >
+              <Button variant={viewMode === "map" ? "default" : "outline"} size="sm" onClick={() => setViewMode("map")}>
                 <Map className="w-4 h-4 mr-1" /> Map
               </Button>
             </div>
@@ -250,9 +243,7 @@ const Explore = () => {
               <p>Loading properties...</p>
             </div>
           ) : viewMode === "map" ? (
-            <Suspense
-              fallback={<div className="h-[500px] bg-muted rounded-2xl animate-pulse" />}
-            >
+            <Suspense fallback={<div className="h-[500px] bg-muted rounded-2xl animate-pulse" />}>
               <PropertyMap />
             </Suspense>
           ) : (
@@ -271,26 +262,13 @@ const Explore = () => {
                       className="group bg-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-border"
                     >
                       <div className="relative aspect-[4/3] overflow-hidden">
-                        <img
-                          src={property.image}
-                          alt={property.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
+                        <img src={property.image} alt={property.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                         <div className="absolute top-4 right-4 flex gap-2">
                           <CompareButton property={property} />
-                          <button
-                            onClick={() => toggleFavorite(property.id)}
-                            className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
-                          >
-                            <Heart
-                              className={`w-5 h-5 transition-colors ${
-                                isFavorite(property.id)
-                                  ? "text-red-500 fill-red-500"
-                                  : "text-foreground"
-                              }`}
-                            />
+                          <button onClick={() => toggleFavorite(property.id)} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors">
+                            <Heart className={`w-5 h-5 transition-colors ${isFavorite(property.id) ? "text-red-500 fill-red-500" : "text-foreground"}`} />
                           </button>
                         </div>
 
@@ -301,15 +279,9 @@ const Explore = () => {
                         </div>
 
                         <div className="absolute top-4 left-4 flex flex-col gap-2">
-                          <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
-                            {property.type}
-                          </span>
+                          <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">{property.type}</span>
                           {(property as any).status && (property as any).status !== "Available" && (
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              (property as any).status === "Sold"
-                                ? "bg-destructive text-destructive-foreground"
-                                : "bg-secondary text-secondary-foreground"
-                            }`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${(property as any).status === "Sold" ? "bg-destructive text-destructive-foreground" : "bg-secondary text-secondary-foreground"}`}>
                               {(property as any).status}
                             </span>
                           )}
@@ -317,33 +289,20 @@ const Explore = () => {
                       </div>
 
                       <div className="p-5">
-                        <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-1">
-                          {property.title}
-                        </h3>
+                        <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-1">{property.title}</h3>
                         <div className="flex items-center text-muted-foreground text-sm mb-4">
                           <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
                           <span className="line-clamp-1">{property.location}</span>
                         </div>
 
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-5 border-t border-border pt-4">
-                          <div className="flex items-center gap-1.5">
-                            <Bed className="w-4 h-4" />
-                            <span>{property.beds}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Bath className="w-4 h-4" />
-                            <span>{property.baths}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Square className="w-4 h-4" />
-                            <span>{property.sqft} sqft</span>
-                          </div>
+                          <div className="flex items-center gap-1.5"><Bed className="w-4 h-4" /><span>{property.beds}</span></div>
+                          <div className="flex items-center gap-1.5"><Bath className="w-4 h-4" /><span>{property.baths}</span></div>
+                          <div className="flex items-center gap-1.5"><Square className="w-4 h-4" /><span>{property.sqft} sqft</span></div>
                         </div>
 
                         <Link to={`/property/${property.id}`}>
-                          <Button className="w-full" variant="outline">
-                            View Details
-                          </Button>
+                          <Button className="w-full" variant="outline">View Details</Button>
                         </Link>
                       </div>
                     </motion.div>
@@ -352,21 +311,13 @@ const Explore = () => {
               </motion.div>
 
               {filteredProperties.length === 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-20"
-                >
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
                   <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                     <Search className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">No properties found</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Try adjusting your filters or search query
-                  </p>
-                  <Button onClick={clearFilters} variant="outline">
-                    Clear Filters
-                  </Button>
+                  <p className="text-muted-foreground mb-6">Try adjusting your filters or search query</p>
+                  <Button onClick={clearFilters} variant="outline">Clear Filters</Button>
                 </motion.div>
               )}
             </>
