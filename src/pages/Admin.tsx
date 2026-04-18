@@ -460,11 +460,14 @@ const Admin = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground ml-auto">{filteredProperties.length} properties</p>
+                <Button onClick={() => { setEditingProperty(null); setPropertyDialogOpen(true); }}>
+                  <Plus className="w-4 h-4 mr-1" /> New property
+                </Button>
               </div>
               <div className="grid gap-4">
                 {filteredProperties.map((prop: any) => {
                   const staticProp = staticProperties.find(p => p.id === prop.id);
-                  const image = staticProp?.image || prop.image_url || "/placeholder.svg";
+                  const image = prop.image_url || staticProp?.image || "/placeholder.svg";
                   const enquiryCount = allInquiries.filter(i => i.property_id === prop.id).length;
                   const agreementCount = allAgreements.filter(a => a.property_id === prop.id).length;
                   return (
@@ -483,9 +486,9 @@ const Admin = () => {
                               <span>{agreementCount} agreements</span>
                             </div>
                           </div>
-                          <div className="flex-shrink-0">
+                          <div className="flex flex-wrap gap-2 flex-shrink-0">
                             <Select value={prop.status} onValueChange={(val) => handleChangePropertyStatus(prop.id, val)}>
-                              <SelectTrigger className="w-36">
+                              <SelectTrigger className="w-32">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -494,6 +497,26 @@ const Admin = () => {
                                 ))}
                               </SelectContent>
                             </Select>
+                            <Button variant="outline" size="icon" onClick={() => { setEditingProperty(prop); setPropertyDialogOpen(true); }}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="icon"><Trash2 className="w-4 h-4" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete property?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    "{prop.title}" will be permanently removed. Existing agreements, payments, and invoices for this property may break.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteProperty(prop.id)}>Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       </CardContent>
