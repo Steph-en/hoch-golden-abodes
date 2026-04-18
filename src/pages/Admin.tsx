@@ -556,7 +556,7 @@ const Admin = () => {
                               {agr.signature_url && <img src={agr.signature_url} alt="Signature" className="h-12 mt-2 border border-border rounded" />}
                             </div>
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleApproveAgreement(agr.id)}><CheckCircle2 className="w-4 h-4 mr-1" /> Approve</Button>
+                              <Button size="sm" onClick={() => handleApproveAgreement(agr)}><CheckCircle2 className="w-4 h-4 mr-1" /> Approve</Button>
                               <Button size="sm" variant="destructive" onClick={() => handleRejectAgreement(agr.id)}><XCircle className="w-4 h-4 mr-1" /> Reject</Button>
                             </div>
                           </div>
@@ -616,7 +616,7 @@ const Admin = () => {
                               {pay.receipt_url && <a href={pay.receipt_url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">View Receipt</a>}
                             </div>
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleConfirmPayment(pay.id)}><CheckCircle2 className="w-4 h-4 mr-1" /> Confirm</Button>
+                              <Button size="sm" onClick={() => handleConfirmPayment(pay)}><CheckCircle2 className="w-4 h-4 mr-1" /> Confirm</Button>
                               <Button size="sm" variant="destructive" onClick={() => handleRejectPayment(pay.id)}><XCircle className="w-4 h-4 mr-1" /> Reject</Button>
                             </div>
                           </div>
