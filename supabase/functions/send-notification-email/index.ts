@@ -1,4 +1,5 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
@@ -9,11 +10,12 @@ type NotificationType =
 
 interface RequestBody {
   type: NotificationType;
-  to: string;
+  to?: string;          // optional - if not provided, lookup by userId
+  userId?: string;      // when provided, email is fetched from auth.users
   recipientName?: string;
   propertyTitle?: string;
   amount?: number;
-  fromAddress?: string; // e.g. "Tropical Estates <noreply@yourdomain.com>"
+  fromAddress?: string;
 }
 
 const buildEmail = (b: RequestBody) => {
@@ -59,14 +61,29 @@ Deno.serve(async (req) => {
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
     const body = (await req.json()) as RequestBody;
-    if (!body?.to || !body?.type) {
-      return new Response(JSON.stringify({ error: "Missing 'to' or 'type'" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!body?.type) {
+      return new Response(JSON.stringify({ error: "Missing 'type'" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let to = body.to;
+    if (!to && body.userId) {
+      const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+      const { data, error } = await admin.auth.admin.getUserById(body.userId);
+      if (error) console.error("getUserById error:", error);
+      to = data?.user?.email || undefined;
+    }
+
+    if (!to) {
+      return new Response(JSON.stringify({ error: "No recipient email available" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -80,7 +97,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "X-Connection-Api-Key": RESEND_API_KEY,
       },
-      body: JSON.stringify({ from, to: [body.to], subject, html }),
+      body: JSON.stringify({ from, to: [to], subject, html }),
     });
 
     const data = await res.json();
@@ -99,8 +116,7 @@ Deno.serve(async (req) => {
     console.error("send-notification-email error:", err);
     const msg = err instanceof Error ? err.message : "Unknown error";
     return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
