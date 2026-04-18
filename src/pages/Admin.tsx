@@ -171,9 +171,7 @@ const Admin = () => {
     toast({ title: "Agreement approved!" });
     const profile = getProfile(agr.user_id);
     const { title } = getPropDisplay(agr.property_id);
-    const { data: userData } = await (supabase as any).auth.admin?.getUserById?.(agr.user_id) || { data: null };
-    const email = userData?.user?.email;
-    if (email) sendNotification({ type: "agreement_approved", to: email, recipientName: profile?.display_name, propertyTitle: title });
+    sendNotification({ type: "agreement_approved", userId: agr.user_id, recipientName: profile?.display_name, propertyTitle: title });
     fetchData();
   };
 
@@ -188,9 +186,7 @@ const Admin = () => {
     toast({ title: "Payment confirmed!" });
     const profile = getProfile(pay.user_id);
     const { title } = getPropDisplay(pay.property_id);
-    const { data: userData } = await (supabase as any).auth.admin?.getUserById?.(pay.user_id) || { data: null };
-    const email = userData?.user?.email;
-    if (email) sendNotification({ type: "payment_confirmed", to: email, recipientName: profile?.display_name, propertyTitle: title, amount: pay.amount });
+    sendNotification({ type: "payment_confirmed", userId: pay.user_id, recipientName: profile?.display_name, propertyTitle: title, amount: pay.amount });
     fetchData();
   };
 
@@ -222,9 +218,7 @@ const Admin = () => {
     toast({ title: "Agreement created!" });
     const profile = getProfile(newAgrUserId);
     const { title } = getPropDisplay(propId);
-    const { data: userData } = await (supabase as any).auth.admin?.getUserById?.(newAgrUserId) || { data: null };
-    const email = userData?.user?.email;
-    if (email) sendNotification({ type: "agreement_created", to: email, recipientName: profile?.display_name, propertyTitle: title });
+    sendNotification({ type: "agreement_created", userId: newAgrUserId, recipientName: profile?.display_name, propertyTitle: title });
     setNewAgrUserId("");
     setNewAgrPropertyId("");
     setNewAgrDoc(null);
