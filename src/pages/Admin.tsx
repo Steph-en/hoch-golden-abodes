@@ -166,9 +166,14 @@ const Admin = () => {
     }
   };
 
-  const handleApproveAgreement = async (id: string) => {
-    await (supabase as any).from("agreements").update({ approval_status: "Approved", updated_at: new Date().toISOString() }).eq("id", id);
+  const handleApproveAgreement = async (agr: any) => {
+    await (supabase as any).from("agreements").update({ approval_status: "Approved", updated_at: new Date().toISOString() }).eq("id", agr.id);
     toast({ title: "Agreement approved!" });
+    const profile = getProfile(agr.user_id);
+    const { title } = getPropDisplay(agr.property_id);
+    const { data: userData } = await (supabase as any).auth.admin?.getUserById?.(agr.user_id) || { data: null };
+    const email = userData?.user?.email;
+    if (email) sendNotification({ type: "agreement_approved", to: email, recipientName: profile?.display_name, propertyTitle: title });
     fetchData();
   };
 
@@ -178,9 +183,14 @@ const Admin = () => {
     fetchData();
   };
 
-  const handleConfirmPayment = async (id: string) => {
-    await (supabase as any).from("payments").update({ status: "Confirmed" }).eq("id", id);
+  const handleConfirmPayment = async (pay: any) => {
+    await (supabase as any).from("payments").update({ status: "Confirmed" }).eq("id", pay.id);
     toast({ title: "Payment confirmed!" });
+    const profile = getProfile(pay.user_id);
+    const { title } = getPropDisplay(pay.property_id);
+    const { data: userData } = await (supabase as any).auth.admin?.getUserById?.(pay.user_id) || { data: null };
+    const email = userData?.user?.email;
+    if (email) sendNotification({ type: "payment_confirmed", to: email, recipientName: profile?.display_name, propertyTitle: title, amount: pay.amount });
     fetchData();
   };
 
@@ -202,18 +212,30 @@ const Admin = () => {
         docUrl = urlData.publicUrl;
       }
     }
+    const propId = parseInt(newAgrPropertyId);
     await (supabase as any).from("agreements").insert({
       user_id: newAgrUserId,
-      property_id: parseInt(newAgrPropertyId),
+      property_id: propId,
       document_url: docUrl,
       approval_status: "Pending",
     });
     toast({ title: "Agreement created!" });
+    const profile = getProfile(newAgrUserId);
+    const { title } = getPropDisplay(propId);
+    const { data: userData } = await (supabase as any).auth.admin?.getUserById?.(newAgrUserId) || { data: null };
+    const email = userData?.user?.email;
+    if (email) sendNotification({ type: "agreement_created", to: email, recipientName: profile?.display_name, propertyTitle: title });
     setNewAgrUserId("");
     setNewAgrPropertyId("");
     setNewAgrDoc(null);
     fetchData();
     setCreatingAgr(false);
+  };
+
+  const handleDeleteProperty = async (id: number) => {
+    const { error } = await (supabase as any).from("properties").delete().eq("id", id);
+    if (error) toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+    else { toast({ title: "Property deleted" }); fetchData(); }
   };
 
   const tabs = [
