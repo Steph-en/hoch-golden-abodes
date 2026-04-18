@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Users, MessageSquare, Activity, Shield, Search, Eye, Clock, CheckCircle2, TrendingUp,
-  UserPlus, BarChart3, FileSignature, CreditCard, XCircle, Upload, Building2
+  UserPlus, BarChart3, FileSignature, CreditCard, XCircle, Upload, Building2, Plus, Pencil, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +17,18 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { properties as staticProperties } from "@/data/properties";
 import EnquiryDetailModal from "@/components/EnquiryDetailModal";
+import PropertyFormDialog from "@/components/admin/PropertyFormDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
+
+const sendNotification = async (payload: any) => {
+  try {
+    await supabase.functions.invoke("send-notification-email", { body: payload });
+  } catch (e) {
+    console.error("notification email failed", e);
+  }
+};
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
@@ -46,6 +55,10 @@ const Admin = () => {
   const [newAgrPropertyId, setNewAgrPropertyId] = useState("");
   const [newAgrDoc, setNewAgrDoc] = useState<File | null>(null);
   const [creatingAgr, setCreatingAgr] = useState(false);
+
+  // Property CRUD
+  const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<any | null>(null);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
