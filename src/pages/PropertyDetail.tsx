@@ -23,18 +23,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { getPropertyById, properties } from "@/data/properties";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/hooks/useActivityLog";
+import { useProperties } from "@/hooks/useProperties";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useAuth();
-  const [property, setProperty] = useState(getPropertyById(Number(id)));
+  const { properties, loading } = useProperties();
+  const property = properties.find((p) => p.id === Number(id));
   const [currentImage, setCurrentImage] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
@@ -59,16 +60,15 @@ const PropertyDetail = () => {
   }, [user, profile]);
 
   useEffect(() => {
-    const prop = getPropertyById(Number(id));
-    if (!prop) {
+    if (loading) return;
+    if (!property) {
       navigate("/explore");
     } else {
-      setProperty(prop);
       window.scrollTo(0, 0);
     }
-  }, [id, navigate]);
+  }, [id, navigate, loading, property]);
 
-  if (!property) {
+  if (loading || !property) {
     return null;
   }
 
