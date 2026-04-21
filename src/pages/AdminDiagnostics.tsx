@@ -16,8 +16,8 @@ interface CheckResult {
 
 const StatusIcon = ({ status }: { status: CheckStatus }) => {
   if (status === "pending") return <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />;
-  if (status === "pass") return <CheckCircle2 className="w-5 h-5 text-green-500" />;
-  if (status === "warn") return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+  if (status === "pass") return <CheckCircle2 className="w-5 h-5 text-primary" />;
+  if (status === "warn") return <AlertTriangle className="w-5 h-5 text-muted-foreground" />;
   return <XCircle className="w-5 h-5 text-destructive" />;
 };
 
