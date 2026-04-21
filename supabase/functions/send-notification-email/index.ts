@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     }
 
     const { subject, html } = buildEmail(body);
-    const from = body.fromAddress || "Tropical Estates <onboarding@resend.dev>";
+    const from = body.fromAddress || "Hoch <noreply@hochonline.org>";
 
     const res = await fetch(`${GATEWAY_URL}/emails`, {
       method: "POST",

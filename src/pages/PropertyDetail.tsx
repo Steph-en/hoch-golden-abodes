@@ -60,16 +60,47 @@ const PropertyDetail = () => {
   }, [user, profile]);
 
   useEffect(() => {
-    if (loading) return;
-    if (!property) {
-      navigate("/explore");
-    } else {
-      window.scrollTo(0, 0);
-    }
-  }, [id, navigate, loading, property]);
+    if (!loading && property) window.scrollTo(0, 0);
+  }, [id, loading, property]);
 
-  if (loading || !property) {
-    return null;
+  const numericId = Number(id);
+  const invalidId = !id || Number.isNaN(numericId);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="h-[60vh] lg:h-[70vh] bg-muted animate-pulse" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-10 w-2/3 bg-muted rounded animate-pulse" />
+            <div className="h-6 w-1/3 bg-muted rounded animate-pulse" />
+            <div className="h-32 bg-muted rounded-2xl animate-pulse" />
+            <div className="h-48 bg-muted rounded-2xl animate-pulse" />
+          </div>
+          <div className="h-96 bg-muted rounded-2xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (invalidId || !property) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <h1 className="font-display text-3xl font-semibold text-foreground mb-3">
+            Property not found
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            {invalidId
+              ? "This property link looks invalid."
+              : "This property may have been removed or is no longer available."}
+          </p>
+          <Button onClick={() => navigate("/explore")} className="btn-primary">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Explore
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const nextImage = () => {
@@ -106,7 +137,17 @@ const PropertyDetail = () => {
     setSubmitting(false);
   };
 
-  const similarProperties = properties.filter(p => p.id !== property.id && p.type === property.type).slice(0, 3);
+  const minPrice = property.priceValue * 0.75;
+  const maxPrice = property.priceValue * 1.25;
+  const similarProperties = properties
+    .filter(
+      (p) =>
+        p.id !== property.id &&
+        p.type === property.type &&
+        p.priceValue >= minPrice &&
+        p.priceValue <= maxPrice
+    )
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
