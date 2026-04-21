@@ -60,16 +60,15 @@ const PropertyDetail = () => {
   }, [user, profile]);
 
   useEffect(() => {
-    const prop = getPropertyById(Number(id));
-    if (!prop) {
+    if (loading) return;
+    if (!property) {
       navigate("/explore");
     } else {
-      setProperty(prop);
       window.scrollTo(0, 0);
     }
-  }, [id, navigate]);
+  }, [id, navigate, loading, property]);
 
-  if (!property) {
+  if (loading || !property) {
     return null;
   }
 
