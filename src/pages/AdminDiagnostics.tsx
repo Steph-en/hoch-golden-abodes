@@ -194,10 +194,13 @@ const AdminDiagnostics = () => {
               {passCount} passed · {warnCount} warnings · {failCount} failed
             </p>
           </div>
-          <Button onClick={runDiagnostics} disabled={running} variant="outline">
-            <RefreshCw className={`w-4 h-4 mr-2 ${running ? "animate-spin" : ""}`} />
-            Re-run
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/admin/roles")} variant="outline">Manage roles</Button>
+            <Button onClick={runDiagnostics} disabled={running} variant="outline">
+              <RefreshCw className={`w-4 h-4 mr-2 ${running ? "animate-spin" : ""}`} />
+              Re-run
+            </Button>
+          </div>
         </div>
 
         <Card>
