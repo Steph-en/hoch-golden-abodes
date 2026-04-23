@@ -86,6 +86,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agreements_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       enquiry_responses: {
@@ -219,6 +226,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invoices_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       payments: {
@@ -261,6 +275,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties_public"
             referencedColumns: ["id"]
           },
         ]
@@ -423,7 +444,75 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      properties_public: {
+        Row: {
+          amenities: string[] | null
+          area: string | null
+          baths: number | null
+          beds: number | null
+          created_at: string | null
+          description: string | null
+          featured: boolean | null
+          id: number | null
+          image_url: string | null
+          images: string[] | null
+          location: string | null
+          parking: number | null
+          price: string | null
+          price_value: number | null
+          sqft: string | null
+          status: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+          year_built: number | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          area?: string | null
+          baths?: number | null
+          beds?: number | null
+          created_at?: string | null
+          description?: string | null
+          featured?: boolean | null
+          id?: number | null
+          image_url?: string | null
+          images?: string[] | null
+          location?: string | null
+          parking?: number | null
+          price?: string | null
+          price_value?: number | null
+          sqft?: string | null
+          status?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          year_built?: number | null
+        }
+        Update: {
+          amenities?: string[] | null
+          area?: string | null
+          baths?: number | null
+          beds?: number | null
+          created_at?: string | null
+          description?: string | null
+          featured?: boolean | null
+          id?: number | null
+          image_url?: string | null
+          images?: string[] | null
+          location?: string | null
+          parking?: number | null
+          price?: string | null
+          price_value?: number | null
+          sqft?: string | null
+          status?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          year_built?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       assign_role: {
@@ -433,12 +522,42 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_admin_count: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      list_admin_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          email: string
+          last_sign_in_at: string
+          user_id: string
+        }[]
+      }
+      list_role_audit_log: {
+        Args: {
+          _action?: string
+          _from?: string
+          _limit?: number
+          _role?: Database["public"]["Enums"]["app_role"]
+          _to?: string
+        }
+        Returns: {
+          action: string
+          created_at: string
+          id: string
+          performed_by: string
+          performed_by_email: string
+          role: Database["public"]["Enums"]["app_role"]
+          target_email: string
+          target_user_id: string
+        }[]
       }
       list_users_with_roles: {
         Args: never
