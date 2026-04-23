@@ -370,6 +370,39 @@ export type Database = {
         }
         Relationships: []
       }
+      role_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          performed_by: string | null
+          performed_by_email: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          target_email: string | null
+          target_user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          performed_by?: string | null
+          performed_by_email?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          target_email?: string | null
+          target_user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          performed_by?: string | null
+          performed_by_email?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          target_email?: string | null
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -393,12 +426,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      list_users_with_roles: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          email: string
+          roles: Database["public"]["Enums"]["app_role"][]
+          user_id: string
+        }[]
+      }
+      revoke_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

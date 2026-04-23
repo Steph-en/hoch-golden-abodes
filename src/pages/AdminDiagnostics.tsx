@@ -147,6 +147,23 @@ const AdminDiagnostics = () => {
       setCheck("Triggers: invoices table accessible", "fail", e.message);
     }
 
+    // 10. Server-side RLS probe suite (admin only)
+    try {
+      const { data, error } = await supabase.functions.invoke("rls-check", { body: {} });
+      if (error) throw error;
+      const probes = data?.probes || [];
+      const failed = probes.filter((p: any) => !p.pass);
+      setCheck(
+        "RLS suite: anon denied on protected tables",
+        failed.length === 0 ? "pass" : "fail",
+        failed.length === 0
+          ? `All ${probes.length} probes passed`
+          : `${failed.length} failed: ${failed.map((f: any) => f.name).join(", ")}`
+      );
+    } catch (e: any) {
+      setCheck("RLS suite: anon denied on protected tables", "fail", e.message || "rls-check function failed");
+    }
+
     setRunning(false);
   };
 
@@ -177,10 +194,13 @@ const AdminDiagnostics = () => {
               {passCount} passed · {warnCount} warnings · {failCount} failed
             </p>
           </div>
-          <Button onClick={runDiagnostics} disabled={running} variant="outline">
-            <RefreshCw className={`w-4 h-4 mr-2 ${running ? "animate-spin" : ""}`} />
-            Re-run
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/admin/roles")} variant="outline">Manage roles</Button>
+            <Button onClick={runDiagnostics} disabled={running} variant="outline">
+              <RefreshCw className={`w-4 h-4 mr-2 ${running ? "animate-spin" : ""}`} />
+              Re-run
+            </Button>
+          </div>
         </div>
 
         <Card>
