@@ -147,6 +147,23 @@ const AdminDiagnostics = () => {
       setCheck("Triggers: invoices table accessible", "fail", e.message);
     }
 
+    // 10. Server-side RLS probe suite (admin only)
+    try {
+      const { data, error } = await supabase.functions.invoke("rls-check", { body: {} });
+      if (error) throw error;
+      const probes = data?.probes || [];
+      const failed = probes.filter((p: any) => !p.pass);
+      setCheck(
+        "RLS suite: anon denied on protected tables",
+        failed.length === 0 ? "pass" : "fail",
+        failed.length === 0
+          ? `All ${probes.length} probes passed`
+          : `${failed.length} failed: ${failed.map((f: any) => f.name).join(", ")}`
+      );
+    } catch (e: any) {
+      setCheck("RLS suite: anon denied on protected tables", "fail", e.message || "rls-check function failed");
+    }
+
     setRunning(false);
   };
 
