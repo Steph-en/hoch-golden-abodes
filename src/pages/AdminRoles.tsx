@@ -455,10 +455,13 @@ const AdminRoles = () => {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
               <CardTitle className="flex items-center gap-2">
                 <History className="w-5 h-5" /> Audit log
               </CardTitle>
+              <Button variant="outline" size="sm" onClick={exportAuditCsv} disabled={audit.length === 0}>
+                <Download className="w-4 h-4 mr-1" /> Export CSV
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
