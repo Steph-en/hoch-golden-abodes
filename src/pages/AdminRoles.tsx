@@ -74,6 +74,17 @@ const AdminRoles = () => {
 
   const [selectedRole, setSelectedRole] = useState<Record<string, AppRole>>({});
 
+  // Last role-change email status (for on-screen indicator + retry)
+  type EmailStatus = "idle" | "sending" | "success" | "failed";
+  const [lastEmail, setLastEmail] = useState<{
+    status: EmailStatus;
+    targetUserId: string;
+    targetEmail: string;
+    role: AppRole;
+    action: "granted" | "revoked";
+    error?: string;
+  } | null>(null);
+
   useEffect(() => {
     if (!authLoading && !adminLoading) {
       if (!user) navigate("/auth");
