@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Loader2, Search, Shield, ShieldCheck, ShieldOff, History, AlertTriangle, FilterX,
+  Mail, MailCheck, MailX, RotateCw, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
