@@ -177,22 +177,42 @@ const AdminRoles = () => {
 
   const sendNotificationEmail = async (
     targetUserId: string,
+    targetEmail: string,
     role: AppRole,
     action: "granted" | "revoked"
   ) => {
+    setLastEmail({ status: "sending", targetUserId, targetEmail, role, action });
     try {
       const { error } = await supabase.functions.invoke("send-role-change-email", {
-        body: {
-          action,
-          role,
-          targetUserId,
-          performedByEmail: user?.email,
-        },
+        body: { action, role, targetUserId, performedByEmail: user?.email },
       });
-      if (error) console.warn("Notification email failed:", error.message);
+      if (error) {
+        console.warn("Notification email failed:", error.message);
+        setLastEmail({ status: "failed", targetUserId, targetEmail, role, action, error: error.message });
+        return false;
+      }
+      setLastEmail({ status: "success", targetUserId, targetEmail, role, action });
+      return true;
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
       console.warn("Notification email error:", e);
+      setLastEmail({ status: "failed", targetUserId, targetEmail, role, action, error: msg });
+      return false;
     }
+  };
+
+  const retryLastEmail = async () => {
+    if (!lastEmail) return;
+    const ok = await sendNotificationEmail(
+      lastEmail.targetUserId, lastEmail.targetEmail, lastEmail.role, lastEmail.action,
+    );
+    toast({
+      title: ok ? "Email sent" : "Email retry failed",
+      description: ok
+        ? `Notification re-sent to ${lastEmail.targetEmail}`
+        : "Check edge function logs for details.",
+      variant: ok ? "default" : "destructive",
+    });
   };
 
   const handleConfirm = async () => {
