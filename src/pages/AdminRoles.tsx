@@ -320,6 +320,36 @@ const AdminRoles = () => {
             </Alert>
           )}
 
+          {lastEmail && lastEmail.status !== "idle" && (
+            <Alert
+              variant={lastEmail.status === "failed" ? "destructive" : "default"}
+              className={lastEmail.status === "success" ? "border-primary/30" : undefined}
+            >
+              {lastEmail.status === "sending" && <Loader2 className="h-4 w-4 animate-spin" />}
+              {lastEmail.status === "success" && <MailCheck className="h-4 w-4" />}
+              {lastEmail.status === "failed" && <MailX className="h-4 w-4" />}
+              <AlertTitle className="flex items-center justify-between gap-3">
+                <span>
+                  {lastEmail.status === "sending" && "Sending notification email…"}
+                  {lastEmail.status === "success" && "Notification email sent"}
+                  {lastEmail.status === "failed" && "Notification email failed"}
+                </span>
+                {lastEmail.status === "failed" && (
+                  <Button size="sm" variant="outline" onClick={retryLastEmail}>
+                    <RotateCw className="w-4 h-4 mr-1" /> Retry email
+                  </Button>
+                )}
+              </AlertTitle>
+              <AlertDescription>
+                Role <strong>{lastEmail.action}</strong> · <strong>{lastEmail.role}</strong> · recipient{" "}
+                <strong>{lastEmail.targetEmail}</strong>
+                {lastEmail.status === "failed" && lastEmail.error && (
+                  <span className="block text-xs mt-1 opacity-80">Error: {lastEmail.error}</span>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Users</CardTitle>
