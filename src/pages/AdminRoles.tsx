@@ -258,6 +258,32 @@ const AdminRoles = () => {
     setToDate("");
   };
 
+  const exportAuditCsv = () => {
+    if (audit.length === 0) {
+      toast({ title: "Nothing to export", description: "No audit entries match these filters." });
+      return;
+    }
+    const escape = (v: unknown) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const headers = ["created_at", "action", "role", "target_email", "performed_by_email", "id"];
+    const rows = audit.map((a) =>
+      [a.created_at, a.action, a.role, a.target_email ?? "", a.performed_by_email ?? "", a.id]
+        .map(escape).join(","),
+    );
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `role-audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (authLoading || adminLoading || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
