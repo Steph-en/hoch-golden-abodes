@@ -233,17 +233,19 @@ const AdminRoles = () => {
       return;
     }
 
-    // Fire-and-forget email
-    await sendNotificationEmail(
+    const action: "granted" | "revoked" = pending.action === "grant" ? "granted" : "revoked";
+    const emailOk = await sendNotificationEmail(
       pending.target.user_id,
+      pending.target.email,
       pending.role,
-      pending.action === "grant" ? "granted" : "revoked"
+      action,
     );
 
     setSubmitting(false);
     toast({
       title: pending.action === "grant" ? "Role granted" : "Role revoked",
-      description: `${pending.role} ${pending.action === "grant" ? "→" : "✗"} ${pending.target.email} (notification email sent)`,
+      description: `${pending.role} ${pending.action === "grant" ? "→" : "✗"} ${pending.target.email}${emailOk ? " (notification email sent)" : " — email failed, see status banner"}`,
+      variant: emailOk ? "default" : "destructive",
     });
     setPending(null);
     await Promise.all([fetchUsers(), fetchAudit()]);
