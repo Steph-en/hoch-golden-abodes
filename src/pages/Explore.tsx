@@ -9,6 +9,7 @@ import { propertyTypes, locations, priceRanges } from "@/data/properties";
 import CompareButton from "@/components/CompareButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProperties } from "@/hooks/useProperties";
+import SEO, { breadcrumbLd } from "@/components/SEO";
 
 const PropertyMap = lazy(() => import("@/components/PropertyMap"));
 
@@ -94,6 +95,15 @@ const Explore = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Explore Properties | Luxury Homes in Accra"
+        description="Browse luxury villas, apartments and premium properties for sale in East Legon and across Accra, Ghana. Filter by price, beds, location and more."
+        path="/explore"
+        jsonLd={breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Properties", path: "/explore" },
+        ])}
+      />
       {/* Header */}
       <section ref={headerRef} className="relative py-20 px-4 bg-gradient-to-b from-muted to-background">
         <div className="max-w-6xl mx-auto">

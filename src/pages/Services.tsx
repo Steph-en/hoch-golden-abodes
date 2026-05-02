@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Building2, PenTool, Users, Home, Palette, Calculator, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import SEO, { breadcrumbLd } from "@/components/SEO";
 
 const Services = () => {
   const heroRef = useRef(null);
@@ -52,6 +53,15 @@ const Services = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
+      <SEO
+        title="Services | Real Estate Development & Architecture"
+        description="End-to-end luxury real estate services: development, architecture, interior design, sales and project management across Accra, Ghana."
+        path="/services"
+        jsonLd={breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Services", path: "/services" },
+        ])}
+      />
       {/* Hero Section */}
       <section 
         ref={heroRef}

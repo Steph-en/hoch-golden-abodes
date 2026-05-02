@@ -28,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity } from "@/hooks/useActivityLog";
 import { useProperties } from "@/hooks/useProperties";
+import SEO, { breadcrumbLd, SITE_URL } from "@/components/SEO";
 
 const PropertyDetail = () => {
   const { id } = useParams();
@@ -149,8 +150,45 @@ const PropertyDetail = () => {
     )
     .slice(0, 3);
 
+  const seoTitle = `${property.title} — ${property.location}`;
+  const seoDesc = (property.description || `${property.beds} bed, ${property.baths} bath ${property.type} in ${property.location}. ${property.price}.`).slice(0, 160);
+  const seoImage = property.images?.[0] || property.image_url;
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={seoTitle.slice(0, 65)}
+        description={seoDesc}
+        path={`/property/${property.id}`}
+        type="product"
+        image={seoImage}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: property.title,
+            description: seoDesc,
+            image: property.images?.length ? property.images : seoImage,
+            url: `${SITE_URL}/property/${property.id}`,
+            category: property.type,
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "GHS",
+              price: property.priceValue,
+              availability:
+                property.status === "Available"
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/SoldOut",
+              url: `${SITE_URL}/property/${property.id}`,
+            },
+          },
+          breadcrumbLd([
+            { name: "Home", path: "/" },
+            { name: "Properties", path: "/explore" },
+            { name: property.title, path: `/property/${property.id}` },
+          ]),
+        ]}
+      />
       {/* Full Screen Gallery Modal */}
       <AnimatePresence>
         {showGallery && (

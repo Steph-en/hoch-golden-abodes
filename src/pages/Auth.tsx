@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { lovable } from "@/integrations/lovable/index";
+import SEO from "@/components/SEO";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -68,6 +69,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 pt-24">
+      <SEO
+        title={isLogin ? "Sign In | Hoch Online" : "Create Account | Hoch Online"}
+        description="Sign in or create an account to save favourite properties, manage enquiries and track your real estate journey with Hoch Online."
+        path="/auth"
+        noIndex
+      />
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
