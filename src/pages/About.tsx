@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Users, Award, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import SEO, { breadcrumbLd } from "@/components/SEO";
 
 const About = () => {
   const heroRef = useRef(null);
@@ -50,6 +51,15 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
+      <SEO
+        title="About Hoch Online | Luxury Real Estate in Ghana"
+        description="Hoch Online is a premier East Legon real estate firm delivering luxury villas, bespoke development and architecture in Accra, Ghana since 2009."
+        path="/about"
+        jsonLd={breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "About", path: "/about" },
+        ])}
+      />
       {/* Hero Section */}
       <section 
         ref={heroRef}

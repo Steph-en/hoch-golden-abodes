@@ -11,6 +11,7 @@ import StorytellingSection from "@/components/StorytellingSection";
 import CinematicTypography from "@/components/CinematicTypography";
 import PropertyReveal3D from "@/components/PropertyReveal3D";
 import Preloader from "@/components/Preloader";
+import SEO from "@/components/SEO";
 import heroProperty1 from "@/assets/hero-property-1.jpg";
 import heroProperty2 from "@/assets/hero-property-2.jpg";
 import heroProperty3 from "@/assets/hero-property-3.jpg";
@@ -21,6 +22,22 @@ const Index = () => {
 
   return (
     <div className="overflow-x-hidden">
+      <SEO
+        title="Hoch Online | Luxury Real Estate in East Legon, Accra"
+        description="Discover luxury homes, villas and premium real estate in East Legon, Accra. Bespoke development, architecture and sales by Hoch Online."
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Hoch Online Real Estate",
+          url: "https://www.hochonline.org",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://www.hochonline.org/explore?search={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        }}
+      />
       {!loaded && <Preloader onComplete={handlePreloaderComplete} />}
       <HeroSection />
 

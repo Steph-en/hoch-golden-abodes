@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import SEO, { breadcrumbLd } from "@/components/SEO";
 
 const Contact = () => {
   const heroRef = useRef(null);
@@ -55,6 +56,15 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
+      <SEO
+        title="Contact Hoch Online | Luxury Real Estate Accra"
+        description="Get in touch with Hoch Online for luxury real estate enquiries in East Legon, Accra. Call, email or send us a message — we respond within 24 hours."
+        path="/contact"
+        jsonLd={breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Contact", path: "/contact" },
+        ])}
+      />
       {/* Hero Section */}
       <section 
         ref={heroRef}
