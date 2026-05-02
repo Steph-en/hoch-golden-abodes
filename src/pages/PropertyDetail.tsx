@@ -152,7 +152,7 @@ const PropertyDetail = () => {
 
   const seoTitle = `${property.title} — ${property.location}`;
   const seoDesc = (property.description || `${property.beds} bed, ${property.baths} bath ${property.type} in ${property.location}. ${property.price}.`).slice(0, 160);
-  const seoImage = property.images?.[0] || property.image_url;
+  const seoImage = property.images?.[0] || (property as any).image_url || (property as any).image;
 
   return (
     <div className="min-h-screen bg-background">
