@@ -55,6 +55,10 @@ const Explore = () => {
 
   const filteredProperties = useMemo(() => {
     const filtered = properties.filter((property: any) => {
+      // Explore page is the sales catalogue. Rental/hotel listings live under /stays.
+      const isSale = !property.listing_kind || property.listing_kind === "sale";
+      if (!isSale) return false;
+
       const matchesSearch =
         property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         property.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -119,6 +123,12 @@ const Explore = () => {
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
               Discover exceptional homes in Ghana's most prestigious locations
             </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm">
+              <span className="px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium">For Sale</span>
+              <Link to="/stays?kind=hotel" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Hotels & Short Stay</Link>
+              <Link to="/stays?kind=rental_property" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Apartments for Rent</Link>
+              <Link to="/stays?kind=commercial_rental" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Commercial Rentals</Link>
+            </div>
           </motion.div>
 
           <motion.div
