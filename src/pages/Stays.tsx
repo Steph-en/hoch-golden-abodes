@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MapPin, Loader2, Hotel, Building2, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,13 @@ const KIND_TABS = [
 ] as const;
 
 const Stays = () => {
-  const [kind, setKind] = useState<string>("all");
+  const [params, setParams] = useSearchParams();
+  const [kind, setKind] = useState<string>(params.get("kind") || "all");
+  const handleKindChange = (v: string) => {
+    setKind(v);
+    if (v === "all") setParams({}, { replace: true });
+    else setParams({ kind: v }, { replace: true });
+  };
   const { stays, loading } = useStays(kind);
 
   const list = useMemo(() => stays, [stays]);
@@ -46,7 +52,7 @@ const Stays = () => {
 
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <Tabs value={kind} onValueChange={setKind} className="mb-10">
+          <Tabs value={kind} onValueChange={handleKindChange} className="mb-10">
             <TabsList className="flex flex-wrap h-auto p-1">
               {KIND_TABS.map((t) => (
                 <TabsTrigger key={t.value} value={t.value} className="gap-2">
