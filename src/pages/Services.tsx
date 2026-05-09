@@ -59,7 +59,7 @@ const Services = () => {
       >
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&h=1080&fit=crop"
+            src="src/assets/2.png"
             alt="Architecture"
             className="w-full h-full object-cover"
           />

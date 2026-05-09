@@ -1,9 +1,66 @@
-import property1 from "@/assets/property-1.jpg";
-import property2 from "@/assets/property-2.jpg";
-import property3 from "@/assets/property-3.jpg";
-import property4 from "@/assets/property-4.jpg";
-import property5 from "@/assets/property-5.jpg";
-import property6 from "@/assets/property-6.jpg";
+import room1007_1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847728/A_A-84_jwjidu.jpg";
+import room1007_2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847725/A_A-100_sygfjb.jpg";
+import room1007_3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847727/A_A-110_gljzjn.jpg";
+import room1007_4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847727/A_A-113_yajogy.jpg";
+import room1007_5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847728/A_A-91_uxvyxl.jpg";
+import room1007_6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847729/A_A-96_wj6sg6.jpg";
+import room1007_7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847729/A_A-97_y1xaoj.jpg";
+import room1007_8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847733/A_A-124_q5tztk.jpg";
+import room1007_9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847726/A_A-128_xapmob.jpg";
+import room1007_10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847733/A_A-130_ex9xds.jpg";
+import Megaville1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356562/236_uu6k1d.jpg";
+import Megaville2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356562/43_qncvgo.jpg";
+import Megaville3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356563/240_pwrtjv.jpg";
+import Megaville4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356565/38_asqmpm.jpg";
+import Megaville5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356563/238_eoxeax.jpg";
+import Megaville6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356561/234_menff6.jpg";
+import Megaville7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356559/75_rpqldq.jpg";
+import Megaville8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356568/53_nfnclx.jpg";
+import Megaville9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356780/78_qd0hbv.jpg";
+import Megaville10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356769/84_ize9sp.jpg";
+import CityHomes1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356509/3_rfhjjl.jpg";
+import CityHomes2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356506/1_mxhngg.jpg";
+import CityHomes3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356508/4_mfhycd.jpg";
+import CityHomes4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356508/2_piniku.jpg";
+import CityHomes5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356510/5_xa99aw.jpg";
+import CityHomes6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/6_ipnsub.jpg";
+import CityHomes7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/8_vn5c3v.jpg";
+import CityHomes8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/7_rbo70e.jpg";
+import CityHomes9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356516/9_fgkxzd.jpg";
+import CityHomes10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356528/10_frxleo.jpg";
+import CityHomes11 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356528/11_gfud43.jpg";
+import CityHomes12 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356531/13_yxm1ip.jpg";
+import CityHomes13 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356531/14_fhhgze.jpg";
+import CityHomes14 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356532/12_wg7ine.jpg";
+import CityHomes15 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356532/15_qhorgj.jpg";
+import CityHomes16 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356533/16_glrswz.jpg";
+import CityHomes17 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356534/17_bmgtwa.jpg";
+import CityHomes18 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356535/18_vxsdcq.jpg";
+import CityHomes19 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356536/19_dyhqnb.jpg";
+import CityHomes20 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356537/20_h17uij.jpg";
+import CityHomes21 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356538/21_bznn8p.jpg";
+import CityHomes22 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356539/22_f4jdx7.jpg";
+import CityHomes23 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356540/23_qt57e5.jpg";
+import ManorVillas1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356409/4_g3vwy9.jpg";
+import ManorVillas2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/2_xa1b36.jpg";
+import ManorVillas3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356407/5_h0akdm.jpg";
+import ManorVillas4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356407/3_izqxwc.jpg";
+import ManorVillas5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356406/1_luq02j.jpg";
+import ManorVillas6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356409/9_kn7ntt.jpg";
+import ManorVillas7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/8_s37t6m.jpg";
+import ManorVillas8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/7_qxuhj1.jpg";
+import ManorVillas9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/6_oyutuv.jpg";
+import ManorVillas10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/7_qxuhj1.jpg";
+import GardenVillas1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356461/1_vlbhzc.jpg";
+import GardenVillas2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356462/3_tcp3nw.jpg";
+import GardenVillas3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356462/2_c0iq8c.jpg";
+import GardenVillas4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356463/4_zqz9c2.jpg";
+import GardenVillas5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356463/5_oddvlq.jpg";
+import GardenVillas6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356464/6_kcu4wn.jpg";
+import GardenVillas7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356464/6_kcu4wn.jpg";
+import GardenVillas8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356466/7_smzkkn.jpg";
+import GardenVillas9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356466/8_nfyvwt.jpg";
+import GardenVillas10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356467/9_ef4d5f.jpg";
 
 export interface Property {
   id: number;
@@ -29,30 +86,11 @@ export interface Property {
 export const properties: Property[] = [
   {
     id: 1,
-    image: property1,
-    images: [property1, property2, property3],
-    title: "Tropical Villa Retreat",
+    image: Megaville1,
+    images: [Megaville2, Megaville3, Megaville4, Megaville5, Megaville6, Megaville7, Megaville8, Megaville9, Megaville10],
+    title: "Megaville",
     location: "East Legon, Accra",
     area: "East Legon",
-    price: "$850,000",
-    priceValue: 850000,
-    beds: 5,
-    baths: 4,
-    sqft: "4,200",
-    type: "Villa",
-    featured: true,
-    description: "Experience luxury living in this magnificent tropical villa nestled in the heart of East Legon. This stunning property features expansive living spaces, a private pool, and lush gardens. The modern architecture seamlessly blends with traditional Ghanaian elements, creating a unique and sophisticated atmosphere.",
-    amenities: ["Swimming Pool", "Garden", "Smart Home", "Security System", "Generator", "Staff Quarters"],
-    yearBuilt: 2022,
-    parking: 4,
-  },
-  {
-    id: 2,
-    image: property2,
-    images: [property2, property1, property4],
-    title: "Modern City Apartment",
-    location: "Airport Residential, Accra",
-    area: "Airport Residential",
     price: "$320,000",
     priceValue: 320000,
     beds: 3,
@@ -60,35 +98,35 @@ export const properties: Property[] = [
     sqft: "1,800",
     type: "Apartment",
     featured: false,
-    description: "Sleek contemporary apartment in the prestigious Airport Residential area. Enjoy panoramic city views, premium finishes, and access to world-class amenities. Perfect for professionals seeking modern urban living with convenience at their doorstep.",
+    description: "Located in the heart of East Legon, our beautifully crafted 6-unit luxurious properties are designed to bring comfort, uniquely crafted with elegance and a touch of prestige.",
     amenities: ["Gym", "Concierge", "Rooftop Terrace", "Underground Parking", "24/7 Security"],
     yearBuilt: 2023,
     parking: 2,
   },
   {
-    id: 3,
-    image: property3,
-    images: [property3, property5, property6],
-    title: "Executive Townhouse",
-    location: "Cantonments, Accra",
+    id: 2,
+    image: CityHomes1,
+    images: [CityHomes2, CityHomes3, CityHomes4, CityHomes5, CityHomes6, CityHomes7, CityHomes8, CityHomes9, CityHomes10, CityHomes11, CityHomes12, CityHomes13, CityHomes14, CityHomes15, CityHomes16, CityHomes17, CityHomes18, CityHomes19, CityHomes20, CityHomes21, CityHomes22, CityHomes23],
+    title: "City Homes",
+    location: "East Cantonments, Accra",
     area: "Cantonments",
-    price: "$520,000",
-    priceValue: 520000,
-    beds: 4,
-    baths: 3,
-    sqft: "2,600",
-    type: "Townhouse",
+    price: "$850,000",
+    priceValue: 850000,
+    beds: 1,
+    baths: 1,
+    sqft: "4,200",
+    type: "Villa",
     featured: true,
-    description: "Elegant townhouse in the diplomatic enclave of Cantonments. This property offers sophisticated living with spacious interiors, a private courtyard, and proximity to embassies and international schools. Ideal for discerning families seeking privacy and prestige.",
-    amenities: ["Private Courtyard", "Home Office", "Backup Power", "Fiber Internet", "Air Conditioning"],
-    yearBuilt: 2021,
-    parking: 2,
+    description: "With modern architectural design, our property takes centre stage as a true masterpiece of regal charm and contemporary finesse. You will be captivated by the symphony of elegance and design that unfolds before you. ",
+    amenities: ["Swimming Pool", "Garden", "Smart Home", "Security System", "Generator", "Staff Quarters"],
+    yearBuilt: 2022,
+    parking: 4,
   },
   {
-    id: 4,
-    image: property4,
-    images: [property4, property1, property2],
-    title: "Beachfront Paradise",
+    id: 3,
+    image: ManorVillas1,
+    images: [ManorVillas2, ManorVillas3, ManorVillas4, ManorVillas5, ManorVillas6, ManorVillas7, ManorVillas8, ManorVillas9, ManorVillas10],
+    title: "Manor Villas",
     location: "Cape Coast",
     area: "Cape Coast",
     price: "$1,200,000",
@@ -104,10 +142,10 @@ export const properties: Property[] = [
     parking: 6,
   },
   {
-    id: 5,
-    image: property5,
-    images: [property5, property3, property6],
-    title: "Commercial Complex",
+    id: 4,
+    image: GardenVillas1,
+    images: [GardenVillas2, GardenVillas3, GardenVillas4, GardenVillas5, GardenVillas6, GardenVillas7, GardenVillas8, GardenVillas9, GardenVillas10],
+    title: "Garden Villas",
     location: "Osu, Accra",
     area: "Osu",
     price: "$2,500,000",
@@ -123,24 +161,43 @@ export const properties: Property[] = [
     parking: 20,
   },
   {
-    id: 6,
-    image: property6,
-    images: [property6, property4, property2],
-    title: "Skyline Penthouse",
-    location: "Ridge, Accra",
-    area: "Ridge",
-    price: "$780,000",
-    priceValue: 780000,
+    id: 5,
+    image: room1007_1,
+    images: [room1007_2, room1007_3, room1007_4, room1007_5, room1007_6, room1007_7, room1007_8, room1007_9, room1007_10],
+    title: "ESP Hotel Room 1007",
+    location: "Labone, Accra",
+    area: "Labone",
+    price: "$520,000",
+    priceValue: 520000,
     beds: 4,
     baths: 3,
-    sqft: "3,200",
-    type: "Penthouse",
+    sqft: "2,600",
+    type: "Townhouse",
     featured: true,
-    description: "Exclusive penthouse offering 360-degree views of Accra's skyline. This architectural masterpiece features floor-to-ceiling windows, designer finishes, and a private rooftop terrace. The epitome of luxury high-rise living.",
-    amenities: ["Private Elevator", "Rooftop Terrace", "Smart Home", "Wine Room", "Home Theater", "Sauna"],
-    yearBuilt: 2024,
-    parking: 3,
-  },
+    description: "ESP HEIGHTS, a contemporary 9-storey facility in Labone, Accra, offers modern amenities like shopping centers, suites, private gym, spa, restaurants, bars, and a pool. With its prime location and luxurious features, ESP HEIGHTS is the perfect choice for those seeking a vibrant lifestyle in the heart of Accra.",
+    amenities: ["Private Courtyard", "Home Office", "Backup Power", "Fiber Internet", "Air Conditioning"],
+    yearBuilt: 2021,
+    parking: 2,
+  }
+  // {
+  //   id: 6,
+  //   image: room1007_6,
+  //   images: [room1007_6, room1007_4, room1007_2],
+  //   title: "Skyline Penthouse",
+  //   location: "Ridge, Accra",
+  //   area: "Ridge",
+  //   price: "$780,000",
+  //   priceValue: 780000,
+  //   beds: 4,
+  //   baths: 3,
+  //   sqft: "3,200",
+  //   type: "Penthouse",
+  //   featured: true,
+  //   description: "Exclusive penthouse offering 360-degree views of Accra's skyline. This architectural masterpiece features floor-to-ceiling windows, designer finishes, and a private rooftop terrace. The epitome of luxury high-rise living.",
+  //   amenities: ["Private Elevator", "Rooftop Terrace", "Smart Home", "Wine Room", "Home Theater", "Sauna"],
+  //   yearBuilt: 2024,
+  //   parking: 3,
+  // },
 ];
 
 export const propertyTypes = ["All", "Villa", "Apartment", "Townhouse", "Penthouse", "Commercial"];

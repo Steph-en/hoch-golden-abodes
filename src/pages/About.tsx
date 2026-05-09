@@ -58,7 +58,7 @@ const About = () => {
         {/* Background Image */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&h=1080&fit=crop"
+            src="src/assets/1.png"
             alt="Luxury property"
             className="w-full h-full object-cover"
           />

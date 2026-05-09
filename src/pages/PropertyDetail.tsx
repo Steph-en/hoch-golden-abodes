@@ -208,14 +208,14 @@ const PropertyDetail = () => {
           alt={property.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
+        <div className="absolute inset-0 bg-gradient from-background via-transparent to-background/10" />
 
         {/* Navigation */}
         <div className="absolute top-24 left-0 right-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <Link
               to="/explore"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>Back to Properties</span>
@@ -224,7 +224,7 @@ const PropertyDetail = () => {
               <button
                 onClick={() => setIsLiked(!isLiked)}
                 className={`p-3 rounded-full backdrop-blur-sm transition-colors ${
-                  isLiked ? 'bg-red-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'
+                  isLiked ? 'bg-red-500 text-white' : 'bg-black/10 text-white hover:bg-white/20'
                 }`}
               >
                 <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
@@ -234,7 +234,7 @@ const PropertyDetail = () => {
                   navigator.clipboard.writeText(window.location.href);
                   toast({ title: "Link copied!", description: "Property link copied to clipboard." });
                 }}
-                className="p-3 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors"
+                className="p-3 rounded-full bg-black/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors"
               >
                 <Share2 className="w-5 h-5" />
               </button>
@@ -261,7 +261,7 @@ const PropertyDetail = () => {
             <Button
               onClick={() => setShowGallery(true)}
               variant="outline"
-              className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+              className="bg-black/10 backdrop-blur-sm border-whit/20 text-white hover:bg-white/20"
             >
               View All Photos
             </Button>
