@@ -16,25 +16,35 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data, error } = await supabase
-      .from("properties")
-      .select("id, updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(5000);
+    const [{ data: props, error: pErr }, { data: rooms, error: rErr }] = await Promise.all([
+      supabase.from("properties").select("id, updated_at, listing_kind").order("updated_at", { ascending: false }).limit(5000),
+      supabase.from("rooms").select("id, property_id, updated_at").eq("status", "active").limit(5000),
+    ]);
+    if (pErr) throw pErr;
+    if (rErr) throw rErr;
 
-    if (error) throw error;
-
-    const urls = (data ?? [])
-      .map((p) => {
-        const lastmod = p.updated_at ? new Date(p.updated_at).toISOString() : new Date().toISOString();
-        return `  <url>
-    <loc>${SITE_URL}/property/${p.id}</loc>
+    const propUrls = (props ?? []).map((p: any) => {
+      const lastmod = p.updated_at ? new Date(p.updated_at).toISOString() : new Date().toISOString();
+      const path = (!p.listing_kind || p.listing_kind === "sale") ? `/property/${p.id}` : `/stays/${p.id}`;
+      return `  <url>
+    <loc>${SITE_URL}${path}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`;
-      })
-      .join("\n");
+    });
+
+    const roomUrls = (rooms ?? []).map((r: any) => {
+      const lastmod = r.updated_at ? new Date(r.updated_at).toISOString() : new Date().toISOString();
+      return `  <url>
+    <loc>${SITE_URL}/stays/${r.property_id}/rooms/${r.id}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+    });
+
+    const urls = [...propUrls, ...roomUrls].join("\n");
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
