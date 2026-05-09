@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Loader2, Search, Shield, ShieldCheck, ShieldOff, History, AlertTriangle, FilterX,
+  Mail, MailCheck, MailX, RotateCw, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,17 @@ const AdminRoles = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const [selectedRole, setSelectedRole] = useState<Record<string, AppRole>>({});
+
+  // Last role-change email status (for on-screen indicator + retry)
+  type EmailStatus = "idle" | "sending" | "success" | "failed";
+  const [lastEmail, setLastEmail] = useState<{
+    status: EmailStatus;
+    targetUserId: string;
+    targetEmail: string;
+    role: AppRole;
+    action: "granted" | "revoked";
+    error?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -165,22 +177,42 @@ const AdminRoles = () => {
 
   const sendNotificationEmail = async (
     targetUserId: string,
+    targetEmail: string,
     role: AppRole,
     action: "granted" | "revoked"
   ) => {
+    setLastEmail({ status: "sending", targetUserId, targetEmail, role, action });
     try {
       const { error } = await supabase.functions.invoke("send-role-change-email", {
-        body: {
-          action,
-          role,
-          targetUserId,
-          performedByEmail: user?.email,
-        },
+        body: { action, role, targetUserId, performedByEmail: user?.email },
       });
-      if (error) console.warn("Notification email failed:", error.message);
+      if (error) {
+        console.warn("Notification email failed:", error.message);
+        setLastEmail({ status: "failed", targetUserId, targetEmail, role, action, error: error.message });
+        return false;
+      }
+      setLastEmail({ status: "success", targetUserId, targetEmail, role, action });
+      return true;
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
       console.warn("Notification email error:", e);
+      setLastEmail({ status: "failed", targetUserId, targetEmail, role, action, error: msg });
+      return false;
     }
+  };
+
+  const retryLastEmail = async () => {
+    if (!lastEmail) return;
+    const ok = await sendNotificationEmail(
+      lastEmail.targetUserId, lastEmail.targetEmail, lastEmail.role, lastEmail.action,
+    );
+    toast({
+      title: ok ? "Email sent" : "Email retry failed",
+      description: ok
+        ? `Notification re-sent to ${lastEmail.targetEmail}`
+        : "Check edge function logs for details.",
+      variant: ok ? "default" : "destructive",
+    });
   };
 
   const handleConfirm = async () => {
@@ -201,17 +233,19 @@ const AdminRoles = () => {
       return;
     }
 
-    // Fire-and-forget email
-    await sendNotificationEmail(
+    const action: "granted" | "revoked" = pending.action === "grant" ? "granted" : "revoked";
+    const emailOk = await sendNotificationEmail(
       pending.target.user_id,
+      pending.target.email,
       pending.role,
-      pending.action === "grant" ? "granted" : "revoked"
+      action,
     );
 
     setSubmitting(false);
     toast({
       title: pending.action === "grant" ? "Role granted" : "Role revoked",
-      description: `${pending.role} ${pending.action === "grant" ? "→" : "✗"} ${pending.target.email} (notification email sent)`,
+      description: `${pending.role} ${pending.action === "grant" ? "→" : "✗"} ${pending.target.email}${emailOk ? " (notification email sent)" : " — email failed, see status banner"}`,
+      variant: emailOk ? "default" : "destructive",
     });
     setPending(null);
     await Promise.all([fetchUsers(), fetchAudit()]);
@@ -222,6 +256,32 @@ const AdminRoles = () => {
     setRoleFilter("all");
     setFromDate("");
     setToDate("");
+  };
+
+  const exportAuditCsv = () => {
+    if (audit.length === 0) {
+      toast({ title: "Nothing to export", description: "No audit entries match these filters." });
+      return;
+    }
+    const escape = (v: unknown) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const headers = ["created_at", "action", "role", "target_email", "performed_by_email", "id"];
+    const rows = audit.map((a) =>
+      [a.created_at, a.action, a.role, a.target_email ?? "", a.performed_by_email ?? "", a.id]
+        .map(escape).join(","),
+    );
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `role-audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   if (authLoading || adminLoading || !isAdmin) {
@@ -256,6 +316,36 @@ const AdminRoles = () => {
               <AlertTitle>Only one admin remains</AlertTitle>
               <AlertDescription>
                 There is currently <strong>{adminCount}</strong> admin on the platform. Removing this admin would leave the system with no administrators, so the revoke action is blocked. Grant the admin role to another user before attempting to revoke this one.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {lastEmail && lastEmail.status !== "idle" && (
+            <Alert
+              variant={lastEmail.status === "failed" ? "destructive" : "default"}
+              className={lastEmail.status === "success" ? "border-primary/30" : undefined}
+            >
+              {lastEmail.status === "sending" && <Loader2 className="h-4 w-4 animate-spin" />}
+              {lastEmail.status === "success" && <MailCheck className="h-4 w-4" />}
+              {lastEmail.status === "failed" && <MailX className="h-4 w-4" />}
+              <AlertTitle className="flex items-center justify-between gap-3">
+                <span>
+                  {lastEmail.status === "sending" && "Sending notification email…"}
+                  {lastEmail.status === "success" && "Notification email sent"}
+                  {lastEmail.status === "failed" && "Notification email failed"}
+                </span>
+                {lastEmail.status === "failed" && (
+                  <Button size="sm" variant="outline" onClick={retryLastEmail}>
+                    <RotateCw className="w-4 h-4 mr-1" /> Retry email
+                  </Button>
+                )}
+              </AlertTitle>
+              <AlertDescription>
+                Role <strong>{lastEmail.action}</strong> · <strong>{lastEmail.role}</strong> · recipient{" "}
+                <strong>{lastEmail.targetEmail}</strong>
+                {lastEmail.status === "failed" && lastEmail.error && (
+                  <span className="block text-xs mt-1 opacity-80">Error: {lastEmail.error}</span>
+                )}
               </AlertDescription>
             </Alert>
           )}
@@ -365,10 +455,13 @@ const AdminRoles = () => {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
               <CardTitle className="flex items-center gap-2">
                 <History className="w-5 h-5" /> Audit log
               </CardTitle>
+              <Button variant="outline" size="sm" onClick={exportAuditCsv} disabled={audit.length === 0}>
+                <Download className="w-4 h-4 mr-1" /> Export CSV
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">

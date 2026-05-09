@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import EnquiryDetailModal from "@/components/EnquiryDetailModal";
 import SignaturePad from "@/components/SignaturePad";
+import SEO from "@/components/SEO";
 
 const Dashboard = () => {
   const { user, profile, loading, updateProfile } = useAuth();
@@ -224,6 +225,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
+      <SEO
+        title="Your Dashboard | Hoch Online"
+        description="Manage your favourite properties, enquiries, agreements and payments in your Hoch Online dashboard."
+        path="/dashboard"
+        noIndex
+      />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex items-center gap-4 mb-2">

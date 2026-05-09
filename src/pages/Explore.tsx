@@ -9,6 +9,7 @@ import { propertyTypes, locations, priceRanges } from "@/data/properties";
 import CompareButton from "@/components/CompareButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProperties } from "@/hooks/useProperties";
+import SEO, { breadcrumbLd } from "@/components/SEO";
 
 const PropertyMap = lazy(() => import("@/components/PropertyMap"));
 
@@ -54,6 +55,10 @@ const Explore = () => {
 
   const filteredProperties = useMemo(() => {
     const filtered = properties.filter((property: any) => {
+      // Explore page is the sales catalogue. Rental/hotel listings live under /stays.
+      const isSale = !property.listing_kind || property.listing_kind === "sale";
+      if (!isSale) return false;
+
       const matchesSearch =
         property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         property.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -94,6 +99,15 @@ const Explore = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Explore Properties | Luxury Homes in Accra"
+        description="Browse luxury villas, apartments and premium properties for sale in East Legon and across Accra, Ghana. Filter by price, beds, location and more."
+        path="/explore"
+        jsonLd={breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Properties", path: "/explore" },
+        ])}
+      />
       {/* Header */}
       <section ref={headerRef} className="relative py-20 px-4 bg-gradient-to-b from-muted to-background">
         <div className="max-w-6xl mx-auto">
@@ -109,6 +123,12 @@ const Explore = () => {
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
               Discover exceptional homes in Ghana's most prestigious locations
             </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm">
+              <span className="px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium">For Sale</span>
+              <Link to="/stays?kind=hotel" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Hotels & Short Stay</Link>
+              <Link to="/stays?kind=rental_property" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Apartments for Rent</Link>
+              <Link to="/stays?kind=commercial_rental" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Commercial Rentals</Link>
+            </div>
           </motion.div>
 
           <motion.div

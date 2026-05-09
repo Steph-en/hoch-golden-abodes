@@ -23,6 +23,9 @@ import Admin from "./pages/Admin";
 import AdminDiagnostics from "./pages/AdminDiagnostics";
 import AdminRoles from "./pages/AdminRoles";
 import AdminAdmins from "./pages/AdminAdmins";
+import Stays from "./pages/Stays";
+import StayDetail from "./pages/StayDetail";
+import RoomDetail from "./pages/RoomDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +50,9 @@ const App = () => (
                   <Route path="/services" element={<Services />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
+                  <Route path="/stays" element={<Stays />} />
+                  <Route path="/stays/:propertyId" element={<StayDetail />} />
+                  <Route path="/stays/:propertyId/rooms/:roomId" element={<RoomDetail />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/admin" element={<Admin />} />
