@@ -1,66 +1,75 @@
-import room1007_1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847728/A_A-84_jwjidu.jpg";
-import room1007_2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847725/A_A-100_sygfjb.jpg";
-import room1007_3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847727/A_A-110_gljzjn.jpg";
-import room1007_4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847727/A_A-113_yajogy.jpg";
-import room1007_5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847728/A_A-91_uxvyxl.jpg";
-import room1007_6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847729/A_A-96_wj6sg6.jpg";
-import room1007_7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847729/A_A-97_y1xaoj.jpg";
-import room1007_8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847733/A_A-124_q5tztk.jpg";
-import room1007_9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847726/A_A-128_xapmob.jpg";
-import room1007_10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847733/A_A-130_ex9xds.jpg";
-import Megaville1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356562/236_uu6k1d.jpg";
-import Megaville2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356562/43_qncvgo.jpg";
-import Megaville3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356563/240_pwrtjv.jpg";
-import Megaville4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356565/38_asqmpm.jpg";
-import Megaville5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356563/238_eoxeax.jpg";
-import Megaville6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356561/234_menff6.jpg";
-import Megaville7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356559/75_rpqldq.jpg";
-import Megaville8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356568/53_nfnclx.jpg";
-import Megaville9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356780/78_qd0hbv.jpg";
-import Megaville10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356769/84_ize9sp.jpg";
-import CityHomes1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356509/3_rfhjjl.jpg";
-import CityHomes2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356506/1_mxhngg.jpg";
-import CityHomes3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356508/4_mfhycd.jpg";
-import CityHomes4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356508/2_piniku.jpg";
-import CityHomes5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356510/5_xa99aw.jpg";
-import CityHomes6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/6_ipnsub.jpg";
-import CityHomes7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/8_vn5c3v.jpg";
-import CityHomes8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/7_rbo70e.jpg";
-import CityHomes9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356516/9_fgkxzd.jpg";
-import CityHomes10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356528/10_frxleo.jpg";
-import CityHomes11 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356528/11_gfud43.jpg";
-import CityHomes12 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356531/13_yxm1ip.jpg";
-import CityHomes13 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356531/14_fhhgze.jpg";
-import CityHomes14 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356532/12_wg7ine.jpg";
-import CityHomes15 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356532/15_qhorgj.jpg";
-import CityHomes16 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356533/16_glrswz.jpg";
-import CityHomes17 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356534/17_bmgtwa.jpg";
-import CityHomes18 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356535/18_vxsdcq.jpg";
-import CityHomes19 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356536/19_dyhqnb.jpg";
-import CityHomes20 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356537/20_h17uij.jpg";
-import CityHomes21 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356538/21_bznn8p.jpg";
-import CityHomes22 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356539/22_f4jdx7.jpg";
-import CityHomes23 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356540/23_qt57e5.jpg";
-import ManorVillas1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356409/4_g3vwy9.jpg";
-import ManorVillas2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/2_xa1b36.jpg";
-import ManorVillas3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356407/5_h0akdm.jpg";
-import ManorVillas4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356407/3_izqxwc.jpg";
-import ManorVillas5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356406/1_luq02j.jpg";
-import ManorVillas6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356409/9_kn7ntt.jpg";
-import ManorVillas7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/8_s37t6m.jpg";
-import ManorVillas8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/7_qxuhj1.jpg";
-import ManorVillas9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/6_oyutuv.jpg";
-import ManorVillas10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/7_qxuhj1.jpg";
-import GardenVillas1 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356461/1_vlbhzc.jpg";
-import GardenVillas2 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356462/3_tcp3nw.jpg";
-import GardenVillas3 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356462/2_c0iq8c.jpg";
-import GardenVillas4 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356463/4_zqz9c2.jpg";
-import GardenVillas5 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356463/5_oddvlq.jpg";
-import GardenVillas6 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356464/6_kcu4wn.jpg";
-import GardenVillas7 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356464/6_kcu4wn.jpg";
-import GardenVillas8 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356466/7_smzkkn.jpg";
-import GardenVillas9 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356466/8_nfyvwt.jpg";
-import GardenVillas10 from "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356467/9_ef4d5f.jpg";
+// Room 1007 (ESP Hotel)
+const room1007_1 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847728/A_A-84_jwjidu.jpg";
+const room1007_2 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847725/A_A-100_sygfjb.jpg";
+const room1007_3 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847727/A_A-110_gljzjn.jpg";
+const room1007_4 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847727/A_A-113_yajogy.jpg";
+const room1007_5 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847728/A_A-91_uxvyxl.jpg";
+const room1007_6 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847729/A_A-96_wj6sg6.jpg";
+const room1007_7 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847729/A_A-97_y1xaoj.jpg";
+const room1007_8 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847733/A_A-124_q5tztk.jpg";
+const room1007_9 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847726/A_A-128_xapmob.jpg";
+const room1007_10 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1773847733/A_A-130_ex9xds.jpg";
+
+// Megaville
+const Megaville1 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356562/236_uu6k1d.jpg";
+const Megaville2 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356562/43_qncvgo.jpg";
+const Megaville3 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356563/240_pwrtjv.jpg";
+const Megaville4 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356565/38_asqmpm.jpg";
+const Megaville5 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356563/238_eoxeax.jpg";
+const Megaville6 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356561/234_menff6.jpg";
+const Megaville7 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356559/75_rpqldq.jpg";
+const Megaville8 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356568/53_nfnclx.jpg";
+const Megaville9 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356780/78_qd0hbv.jpg";
+const Megaville10 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356769/84_ize9sp.jpg";
+
+// City Homes
+const CityHomes1 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356509/3_rfhjjl.jpg";
+const CityHomes2 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356506/1_mxhngg.jpg";
+const CityHomes3 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356508/4_mfhycd.jpg";
+const CityHomes4 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356508/2_piniku.jpg";
+const CityHomes5 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356510/5_xa99aw.jpg";
+const CityHomes6 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/6_ipnsub.jpg";
+const CityHomes7 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/8_vn5c3v.jpg";
+const CityHomes8 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356512/7_rbo70e.jpg";
+const CityHomes9 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356516/9_fgkxzd.jpg";
+const CityHomes10 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356528/10_frxleo.jpg";
+const CityHomes11 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356528/11_gfud43.jpg";
+const CityHomes12 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356531/13_yxm1ip.jpg";
+const CityHomes13 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356531/14_fhhgze.jpg";
+const CityHomes14 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356532/12_wg7ine.jpg";
+const CityHomes15 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356532/15_qhorgj.jpg";
+const CityHomes16 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356533/16_glrswz.jpg";
+const CityHomes17 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356534/17_bmgtwa.jpg";
+const CityHomes18 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356535/18_vxsdcq.jpg";
+const CityHomes19 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356536/19_dyhqnb.jpg";
+const CityHomes20 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356537/20_h17uij.jpg";
+const CityHomes21 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356538/21_bznn8p.jpg";
+const CityHomes22 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356539/22_f4jdx7.jpg";
+const CityHomes23 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356540/23_qt57e5.jpg";
+
+// Manor Villas
+const ManorVillas1 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356409/4_g3vwy9.jpg";
+const ManorVillas2 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/2_xa1b36.jpg";
+const ManorVillas3 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356407/5_h0akdm.jpg";
+const ManorVillas4 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356407/3_izqxwc.jpg";
+const ManorVillas5 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356406/1_luq02j.jpg";
+const ManorVillas6 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356409/9_kn7ntt.jpg";
+const ManorVillas7 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/8_s37t6m.jpg";
+const ManorVillas8 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/7_qxuhj1.jpg";
+const ManorVillas9 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/6_oyutuv.jpg";
+const ManorVillas10 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356408/7_qxuhj1.jpg";
+
+// Garden Villas
+const GardenVillas1 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356461/1_vlbhzc.jpg";
+const GardenVillas2 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356462/3_tcp3nw.jpg";
+const GardenVillas3 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356462/2_c0iq8c.jpg";
+const GardenVillas4 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356463/4_zqz9c2.jpg";
+const GardenVillas5 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356463/5_oddvlq.jpg";
+const GardenVillas6 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356464/6_kcu4wn.jpg";
+const GardenVillas7 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356464/6_kcu4wn.jpg";
+const GardenVillas8 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356466/7_smzkkn.jpg";
+const GardenVillas9 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356466/8_nfyvwt.jpg";
+const GardenVillas10 = "https://res.cloudinary.com/degd6ahfu/image/upload/v1778356467/9_ef4d5f.jpg";
 
 export interface Property {
   id: number;
@@ -160,25 +169,25 @@ export const properties: Property[] = [
     yearBuilt: 2019,
     parking: 20,
   },
-  {
-    id: 5,
-    image: room1007_1,
-    images: [room1007_2, room1007_3, room1007_4, room1007_5, room1007_6, room1007_7, room1007_8, room1007_9, room1007_10],
-    title: "ESP Hotel Room 1007",
-    location: "Labone, Accra",
-    area: "Labone",
-    price: "$520,000",
-    priceValue: 520000,
-    beds: 4,
-    baths: 3,
-    sqft: "2,600",
-    type: "Townhouse",
-    featured: true,
-    description: "ESP HEIGHTS, a contemporary 9-storey facility in Labone, Accra, offers modern amenities like shopping centers, suites, private gym, spa, restaurants, bars, and a pool. With its prime location and luxurious features, ESP HEIGHTS is the perfect choice for those seeking a vibrant lifestyle in the heart of Accra.",
-    amenities: ["Private Courtyard", "Home Office", "Backup Power", "Fiber Internet", "Air Conditioning"],
-    yearBuilt: 2021,
-    parking: 2,
-  }
+  // {
+  //   id: 5,
+  //   image: room1007_1,
+  //   images: [room1007_2, room1007_3, room1007_4, room1007_5, room1007_6, room1007_7, room1007_8, room1007_9, room1007_10],
+  //   title: "ESP Hotel Room 1007",
+  //   location: "Labone, Accra",
+  //   area: "Labone",
+  //   price: "$520,000",
+  //   priceValue: 520000,
+  //   beds: 4,
+  //   baths: 3,
+  //   sqft: "2,600",
+  //   type: "Townhouse",
+  //   featured: true,
+  //   description: "ESP HEIGHTS, a contemporary 9-storey facility in Labone, Accra, offers modern amenities like shopping centers, suites, private gym, spa, restaurants, bars, and a pool. With its prime location and luxurious features, ESP HEIGHTS is the perfect choice for those seeking a vibrant lifestyle in the heart of Accra.",
+  //   amenities: ["Private Courtyard", "Home Office", "Backup Power", "Fiber Internet", "Air Conditioning"],
+  //   yearBuilt: 2021,
+  //   parking: 2,
+  // },
   // {
   //   id: 6,
   //   image: room1007_6,
