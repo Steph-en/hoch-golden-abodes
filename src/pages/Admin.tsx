@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Users, MessageSquare, Activity, Shield, Search, Eye, Clock, CheckCircle2, TrendingUp,
-  UserPlus, BarChart3, FileSignature, CreditCard, XCircle, Upload, Building2, Plus, Pencil, Trash2
+  UserPlus, BarChart3, FileSignature, CreditCard, XCircle, Upload, Building2, Plus, Pencil, Trash2, BedDouble
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
