@@ -590,6 +590,50 @@ const Dashboard = () => {
             </div>
           )}
 
+          {/* Bookings Tab */}
+          {activeTab === "bookings" && (
+            <div className="space-y-8">
+              {myBookings.length === 0 ? (
+                <EmptyState icon={BedDouble} title="No bookings yet" description="Reserve a stay to see your reservations here" actionLabel="Browse Stays" actionTo="/stays" />
+              ) : (
+                <>
+                  {[
+                    { title: "Upcoming & current", items: upcomingBookings, allowCancel: true },
+                    { title: "Past & cancelled", items: pastBookings, allowCancel: false },
+                  ].map((section) => (
+                    <Card key={section.title}>
+                      <CardHeader><CardTitle className="flex items-center gap-2"><CalendarRange className="w-5 h-5 text-primary" /> {section.title} ({section.items.length})</CardTitle></CardHeader>
+                      <CardContent>
+                        {section.items.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Nothing here yet.</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {section.items.map((b: any) => (
+                              <div key={b.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 rounded-xl bg-muted/30">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-foreground">Booking #{b.id.slice(0, 8)}</p>
+                                  <p className="text-sm text-muted-foreground">{b.check_in} → {b.check_out} · {b.nights} night(s) · {b.guests} guest(s)</p>
+                                </div>
+                                <p className="font-display font-semibold text-foreground">{b.currency} {Number(b.total_amount).toLocaleString()}</p>
+                                <StatusBadge status={b.status} />
+                                <Link to={`/stays/${b.property_id}/rooms/${b.room_id}`}>
+                                  <Button size="sm" variant="outline">View</Button>
+                                </Link>
+                                {section.allowCancel && b.status !== "cancelled" && (
+                                  <Button size="sm" variant="destructive" onClick={() => cancelBooking(b.id)}>Cancel</Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
           {/* Profile Tab */}
           {activeTab === "profile" && (
             <div className="max-w-lg">
