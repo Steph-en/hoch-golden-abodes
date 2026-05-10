@@ -23,6 +23,7 @@ import Admin from "./pages/Admin";
 import AdminDiagnostics from "./pages/AdminDiagnostics";
 import AdminRoles from "./pages/AdminRoles";
 import AdminAdmins from "./pages/AdminAdmins";
+import AdminStays from "./pages/AdminStays";
 import Stays from "./pages/Stays";
 import StayDetail from "./pages/StayDetail";
 import RoomDetail from "./pages/RoomDetail";
@@ -59,6 +60,7 @@ const App = () => (
                   <Route path="/admin/diagnostics" element={<AdminDiagnostics />} />
                   <Route path="/admin/roles" element={<AdminRoles />} />
                   <Route path="/admin/admins" element={<AdminAdmins />} />
+                  <Route path="/admin/stays" element={<AdminStays />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
