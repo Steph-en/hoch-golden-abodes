@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Heart, MessageSquare, User, Settings, MapPin, Bed, Bath, Square, Trash2, ArrowRight,
-  Eye, Building2, FileSignature, CreditCard, Receipt, Download, Upload, Loader2, Filter
+  Eye, Building2, FileSignature, CreditCard, Receipt, Download, Upload, Loader2, Filter, BedDouble, CalendarRange
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,13 +20,15 @@ import { useToast } from "@/hooks/use-toast";
 import EnquiryDetailModal from "@/components/EnquiryDetailModal";
 import SignaturePad from "@/components/SignaturePad";
 import SEO from "@/components/SEO";
+import { useMyBookings } from "@/hooks/useRentals";
 
 const Dashboard = () => {
   const { user, profile, loading, updateProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { favorites, toggleFavorite } = useFavorites();
-  const [activeTab, setActiveTab] = useState<"favorites" | "properties" | "agreements" | "payments" | "invoices" | "inquiries" | "profile">("favorites");
+  const [activeTab, setActiveTab] = useState<"favorites" | "properties" | "agreements" | "payments" | "invoices" | "inquiries" | "bookings" | "profile">("favorites");
+  const { bookings: myBookings, refetch: refetchBookings } = useMyBookings(user?.id);
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [agreements, setAgreements] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
@@ -216,12 +218,23 @@ const Dashboard = () => {
   const tabs = [
     { id: "favorites" as const, label: "Favorites", icon: Heart, count: favoriteProperties.length },
     { id: "properties" as const, label: "My Properties", icon: Building2, count: myProperties.length },
+    { id: "bookings" as const, label: "My Bookings", icon: BedDouble, count: myBookings.length },
     { id: "agreements" as const, label: "Agreements", icon: FileSignature, count: agreements.length },
     { id: "payments" as const, label: "Payments", icon: CreditCard, count: payments.length },
     { id: "invoices" as const, label: "Invoices", icon: Receipt, count: invoices.length },
     { id: "inquiries" as const, label: "Inquiries", icon: MessageSquare, count: inquiries.length },
     { id: "profile" as const, label: "Profile", icon: Settings },
   ];
+
+  const cancelBooking = async (id: string) => {
+    const { error } = await (supabase as any).from("bookings").update({ status: "cancelled" }).eq("id", id);
+    toast(error ? { title: "Cancel failed", variant: "destructive" as const } : { title: "Booking cancelled" });
+    refetchBookings();
+  };
+
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingBookings = myBookings.filter(b => b.check_out >= today && b.status !== "cancelled");
+  const pastBookings = myBookings.filter(b => b.check_out < today || b.status === "cancelled");
 
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
@@ -572,6 +585,50 @@ const Dashboard = () => {
                     })}
                     {filteredInquiries.length === 0 && <p className="text-center py-10 text-muted-foreground">No enquiries match your filters</p>}
                   </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Bookings Tab */}
+          {activeTab === "bookings" && (
+            <div className="space-y-8">
+              {myBookings.length === 0 ? (
+                <EmptyState icon={BedDouble} title="No bookings yet" description="Reserve a stay to see your reservations here" actionLabel="Browse Stays" actionTo="/stays" />
+              ) : (
+                <>
+                  {[
+                    { title: "Upcoming & current", items: upcomingBookings, allowCancel: true },
+                    { title: "Past & cancelled", items: pastBookings, allowCancel: false },
+                  ].map((section) => (
+                    <Card key={section.title}>
+                      <CardHeader><CardTitle className="flex items-center gap-2"><CalendarRange className="w-5 h-5 text-primary" /> {section.title} ({section.items.length})</CardTitle></CardHeader>
+                      <CardContent>
+                        {section.items.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">Nothing here yet.</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {section.items.map((b: any) => (
+                              <div key={b.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 rounded-xl bg-muted/30">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-foreground">Booking #{b.id.slice(0, 8)}</p>
+                                  <p className="text-sm text-muted-foreground">{b.check_in} → {b.check_out} · {b.nights} night(s) · {b.guests} guest(s)</p>
+                                </div>
+                                <p className="font-display font-semibold text-foreground">{b.currency} {Number(b.total_amount).toLocaleString()}</p>
+                                <StatusBadge status={b.status} />
+                                <Link to={`/stays/${b.property_id}/rooms/${b.room_id}`}>
+                                  <Button size="sm" variant="outline">View</Button>
+                                </Link>
+                                {section.allowCancel && b.status !== "cancelled" && (
+                                  <Button size="sm" variant="destructive" onClick={() => cancelBooking(b.id)}>Cancel</Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
                 </>
               )}
             </div>
