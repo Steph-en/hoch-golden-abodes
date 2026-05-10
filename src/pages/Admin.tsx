@@ -251,13 +251,17 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center"><Shield className="w-6 h-6 text-primary" /></div>
             <div>
               <h1 className="font-display text-3xl md:text-4xl font-semibold text-foreground">Admin Panel</h1>
               <p className="text-muted-foreground">Manage users, properties, agreements, payments, and platform activity</p>
             </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button asChild variant="outline" size="sm"><a href="/admin/stays"><BedDouble className="w-4 h-4 mr-2" />Manage Stays</a></Button>
+            <Button asChild variant="outline" size="sm"><a href="/admin/roles"><Shield className="w-4 h-4 mr-2" />Roles</a></Button>
           </div>
         </motion.div>
 
