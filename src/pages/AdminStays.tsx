@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Building2, BedDouble, CalendarRange, Plus, Pencil, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { Building2, BedDouble, CalendarRange, Plus, Pencil, Trash2, Loader2, ArrowLeft, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,6 +51,22 @@ const AdminStays = () => {
 
   const [blockForm, setBlockForm] = useState({ room_id: "", start_date: "", end_date: "", notes: "" });
   const [savingBlock, setSavingBlock] = useState(false);
+
+  // ----- Filters -----
+  const [roomSearch, setRoomSearch] = useState("");
+  const [roomFilterProperty, setRoomFilterProperty] = useState("all");
+  const [roomFilterType, setRoomFilterType] = useState("all");
+  const [roomFilterStatus, setRoomFilterStatus] = useState("all");
+
+  const [bookingSearch, setBookingSearch] = useState("");
+  const [bookingFilterProperty, setBookingFilterProperty] = useState("all");
+  const [bookingFilterStatus, setBookingFilterStatus] = useState("all");
+  const [bookingFilterPayment, setBookingFilterPayment] = useState("all");
+  const [bookingFrom, setBookingFrom] = useState("");
+  const [bookingTo, setBookingTo] = useState("");
+
+  const PAYMENT_STATUSES = ["unpaid", "pending", "paid", "refunded", "failed"];
+  const BOOKING_STATUSES = ["pending", "confirmed", "cancelled", "completed"];
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -126,9 +142,41 @@ const AdminStays = () => {
 
   // ---------- Bookings ----------
   const updateBooking = async (id: string, patch: Record<string, any>) => {
+    const prev = bookings.find(x => x.id === id);
     const { error } = await (supabase as any).from("bookings").update(patch).eq("id", id);
-    if (error) toast({ title: "Update failed", description: error.message, variant: "destructive" });
-    else { toast({ title: "Booking updated" }); fetchAll(); }
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Booking updated" });
+    if (prev) {
+      const isStatusChange = patch.status && patch.status !== prev.status;
+      const isPaymentChange = patch.payment_status && patch.payment_status !== prev.payment_status;
+      const typeMap: Record<string, any> = {
+        confirmed: "booking_confirmed",
+        cancelled: "booking_cancelled",
+        completed: "booking_updated",
+        pending: "booking_updated",
+      };
+      const type = isStatusChange ? typeMap[patch.status] : isPaymentChange ? "booking_payment_status" : null;
+      if (type) {
+        supabase.functions.invoke("send-notification-email", {
+          body: {
+            type,
+            to: prev.guest_email,
+            recipientName: prev.guest_name,
+            propertyTitle: propTitle(prev.property_id),
+            roomName: roomName(prev.room_id),
+            checkIn: prev.check_in,
+            checkOut: prev.check_out,
+            nights: prev.nights,
+            guests: prev.guests,
+            total: prev.total_amount,
+            currency: prev.currency,
+            status: patch.status || prev.status,
+            paymentStatus: patch.payment_status || prev.payment_status,
+          },
+        }).catch(() => {});
+      }
+    }
+    fetchAll();
   };
   const deleteBooking = async (id: string) => {
     const { error } = await (supabase as any).from("bookings").delete().eq("id", id);
@@ -185,7 +233,41 @@ const AdminStays = () => {
 
           {/* Rooms */}
           <TabsContent value="rooms" className="mt-6 space-y-4">
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-end gap-3 justify-between">
+              <div className="flex flex-wrap items-end gap-2 flex-1">
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={roomSearch} onChange={e => setRoomSearch(e.target.value)} placeholder="Search rooms..." className="pl-9" />
+                </div>
+                <Select value={roomFilterProperty} onValueChange={setRoomFilterProperty}>
+                  <SelectTrigger className="w-[180px]"><SelectValue placeholder="Property" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All properties</SelectItem>
+                    {stayProps.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={roomFilterType} onValueChange={setRoomFilterType}>
+                  <SelectTrigger className="w-[150px]"><SelectValue placeholder="Type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All types</SelectItem>
+                    {Array.from(new Set(rooms.map(r => r.room_type).filter(Boolean))).map(t => (
+                      <SelectItem key={t as string} value={t as string}>{t as string}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={roomFilterStatus} onValueChange={setRoomFilterStatus}>
+                  <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All status</SelectItem>
+                    {["active","inactive","maintenance"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {(roomSearch || roomFilterProperty !== "all" || roomFilterType !== "all" || roomFilterStatus !== "all") && (
+                  <Button variant="ghost" size="sm" onClick={() => { setRoomSearch(""); setRoomFilterProperty("all"); setRoomFilterType("all"); setRoomFilterStatus("all"); }}>
+                    <X className="w-3 h-3 mr-1" />Reset
+                  </Button>
+                )}
+              </div>
               <Button onClick={openCreateRoom}><Plus className="w-4 h-4 mr-2" />New room</Button>
             </div>
             <Card><CardContent className="p-0">
@@ -196,36 +278,86 @@ const AdminStays = () => {
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {rooms.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No rooms yet</TableCell></TableRow>
-                  )}
-                  {rooms.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium">{r.name}</TableCell>
-                      <TableCell>{propTitle(r.property_id)}</TableCell>
-                      <TableCell>{r.room_type || "—"}</TableCell>
-                      <TableCell>{r.capacity}</TableCell>
-                      <TableCell>{r.currency} {Number(r.nightly_price).toLocaleString()}</TableCell>
-                      <TableCell><span className="text-xs px-2 py-1 rounded-full bg-muted">{r.status}</span></TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => openEditRoom(r)}><Pencil className="w-3 h-3" /></Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild><Button size="sm" variant="destructive"><Trash2 className="w-3 h-3" /></Button></AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Delete room?</AlertDialogTitle><AlertDialogDescription>This will permanently remove "{r.name}".</AlertDialogDescription></AlertDialogHeader>
-                            <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteRoom(r.id)}>Delete</AlertDialogAction></AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {(() => {
+                    const filtered = rooms.filter(r => {
+                      const q = roomSearch.toLowerCase();
+                      const matchesQ = !q || r.name?.toLowerCase().includes(q) || r.room_type?.toLowerCase().includes(q) || propTitle(r.property_id).toLowerCase().includes(q);
+                      const matchesProp = roomFilterProperty === "all" || String(r.property_id) === roomFilterProperty;
+                      const matchesType = roomFilterType === "all" || r.room_type === roomFilterType;
+                      const matchesStatus = roomFilterStatus === "all" || r.status === roomFilterStatus;
+                      return matchesQ && matchesProp && matchesType && matchesStatus;
+                    });
+                    if (filtered.length === 0) {
+                      return <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No rooms match your filters</TableCell></TableRow>;
+                    }
+                    return filtered.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">{r.name}</TableCell>
+                        <TableCell>{propTitle(r.property_id)}</TableCell>
+                        <TableCell>{r.room_type || "—"}</TableCell>
+                        <TableCell>{r.capacity}</TableCell>
+                        <TableCell>{r.currency} {Number(r.nightly_price).toLocaleString()}</TableCell>
+                        <TableCell><span className="text-xs px-2 py-1 rounded-full bg-muted">{r.status}</span></TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button size="sm" variant="outline" onClick={() => openEditRoom(r)}><Pencil className="w-3 h-3" /></Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild><Button size="sm" variant="destructive"><Trash2 className="w-3 h-3" /></Button></AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader><AlertDialogTitle>Delete room?</AlertDialogTitle><AlertDialogDescription>This will permanently remove "{r.name}".</AlertDialogDescription></AlertDialogHeader>
+                              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteRoom(r.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ));
+                  })()}
                 </TableBody>
               </Table>
             </CardContent></Card>
           </TabsContent>
 
           {/* Bookings */}
-          <TabsContent value="bookings" className="mt-6">
+          <TabsContent value="bookings" className="mt-6 space-y-4">
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input value={bookingSearch} onChange={e => setBookingSearch(e.target.value)} placeholder="Search guest, email..." className="pl-9" />
+              </div>
+              <Select value={bookingFilterProperty} onValueChange={setBookingFilterProperty}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Property" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All properties</SelectItem>
+                  {stayProps.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={bookingFilterStatus} onValueChange={setBookingFilterStatus}>
+                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All status</SelectItem>
+                  {BOOKING_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={bookingFilterPayment} onValueChange={setBookingFilterPayment}>
+                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Payment" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All payments</SelectItem>
+                  {PAYMENT_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="space-y-1">
+                <Label className="text-xs">From</Label>
+                <Input type="date" value={bookingFrom} onChange={e => setBookingFrom(e.target.value)} className="w-[150px]" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">To</Label>
+                <Input type="date" value={bookingTo} onChange={e => setBookingTo(e.target.value)} className="w-[150px]" />
+              </div>
+              {(bookingSearch || bookingFilterProperty !== "all" || bookingFilterStatus !== "all" || bookingFilterPayment !== "all" || bookingFrom || bookingTo) && (
+                <Button variant="ghost" size="sm" onClick={() => { setBookingSearch(""); setBookingFilterProperty("all"); setBookingFilterStatus("all"); setBookingFilterPayment("all"); setBookingFrom(""); setBookingTo(""); }}>
+                  <X className="w-3 h-3 mr-1" />Reset
+                </Button>
+              )}
+            </div>
             <Card><CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow>
@@ -235,31 +367,58 @@ const AdminStays = () => {
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {bookings.length === 0 && (
-                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No bookings yet</TableCell></TableRow>
-                  )}
-                  {bookings.map((b) => (
-                    <TableRow key={b.id}>
-                      <TableCell>
-                        <div className="font-medium">{b.guest_name}</div>
-                        <div className="text-xs text-muted-foreground">{b.guest_email}</div>
-                      </TableCell>
-                      <TableCell>{roomName(b.room_id)}</TableCell>
-                      <TableCell>{propTitle(b.property_id)}</TableCell>
-                      <TableCell className="text-xs">{b.check_in} → {b.check_out}<div className="text-muted-foreground">{b.nights}n · {b.guests} guest(s)</div></TableCell>
-                      <TableCell>{b.currency} {Number(b.total_amount).toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Select value={b.status} onValueChange={(v) => updateBooking(b.id, { status: v })}>
-                          <SelectTrigger className="h-8 w-[120px]"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {["pending","confirmed","cancelled","completed"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={b.payment_status} onValueChange={(v) => updateBooking(b.id, { payment_status: v })}>
-                          <SelectTrigger className="h-8 w-[110px]"><SelectValue /></SelectTrigger>
-                          <SelectContent>
+                  {(() => {
+                    const filtered = bookings.filter(b => {
+                      const q = bookingSearch.toLowerCase();
+                      const matchesQ = !q || b.guest_name?.toLowerCase().includes(q) || b.guest_email?.toLowerCase().includes(q) || roomName(b.room_id).toLowerCase().includes(q);
+                      const matchesProp = bookingFilterProperty === "all" || String(b.property_id) === bookingFilterProperty;
+                      const matchesStatus = bookingFilterStatus === "all" || b.status === bookingFilterStatus;
+                      const matchesPay = bookingFilterPayment === "all" || b.payment_status === bookingFilterPayment;
+                      const matchesFrom = !bookingFrom || b.check_out >= bookingFrom;
+                      const matchesTo = !bookingTo || b.check_in <= bookingTo;
+                      return matchesQ && matchesProp && matchesStatus && matchesPay && matchesFrom && matchesTo;
+                    });
+                    if (filtered.length === 0) {
+                      return <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No bookings match your filters</TableCell></TableRow>;
+                    }
+                    return filtered.map((b) => (
+                      <TableRow key={b.id}>
+                        <TableCell>
+                          <div className="font-medium">{b.guest_name}</div>
+                          <div className="text-xs text-muted-foreground">{b.guest_email}</div>
+                        </TableCell>
+                        <TableCell>{roomName(b.room_id)}</TableCell>
+                        <TableCell>{propTitle(b.property_id)}</TableCell>
+                        <TableCell className="text-xs">{b.check_in} → {b.check_out}<div className="text-muted-foreground">{b.nights}n · {b.guests} guest(s)</div></TableCell>
+                        <TableCell>{b.currency} {Number(b.total_amount).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Select value={b.status} onValueChange={(v) => updateBooking(b.id, { status: v })}>
+                            <SelectTrigger className="h-8 w-[120px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {BOOKING_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select value={b.payment_status} onValueChange={(v) => updateBooking(b.id, { payment_status: v })}>
+                            <SelectTrigger className="h-8 w-[120px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {PAYMENT_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild><Button size="sm" variant="destructive"><Trash2 className="w-3 h-3" /></Button></AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader><AlertDialogTitle>Delete booking?</AlertDialogTitle><AlertDialogDescription>This permanently removes the booking.</AlertDialogDescription></AlertDialogHeader>
+                              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteBooking(b.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ));
+                  })()}
                             {["unpaid","paid","refunded"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                           </SelectContent>
                         </Select>

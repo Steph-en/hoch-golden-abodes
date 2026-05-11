@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoom, checkAvailability, createBooking } from "@/hooks/useRentals";
+import { supabase } from "@/integrations/supabase/client";
 import SEO, { breadcrumbLd, SITE_URL } from "@/components/SEO";
 
 const RoomDetail = () => {
@@ -92,6 +93,22 @@ const RoomDetail = () => {
         notes: notes.trim() || undefined,
       });
       setBookingId(id);
+      // Fire-and-forget confirmation email (won't block UX on failure)
+      supabase.functions.invoke("send-notification-email", {
+        body: {
+          type: "booking_created",
+          to: email.trim(),
+          recipientName: name.trim(),
+          propertyTitle: property?.title,
+          roomName: room.name,
+          checkIn: fmt(range.from),
+          checkOut: fmt(range.to),
+          nights,
+          guests,
+          total,
+          currency: room.currency,
+        },
+      }).catch(() => {});
       toast.success("Reservation created!");
     } catch (err: any) {
       toast.error(err?.message || "Could not create booking");

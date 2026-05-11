@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import logo from "@/assets/logo.png";
+import NotificationBell from "@/components/NotificationBell";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -96,7 +97,8 @@ const Header = () => {
             </a>
 
             {user ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <NotificationBell variant={isScrolled ? "dark" : "light"} />
                 <Link
                   to="/dashboard"
                   className={`flex items-center gap-2 text-sm font-medium transition-colors ${
