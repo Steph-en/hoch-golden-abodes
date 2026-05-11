@@ -142,9 +142,41 @@ const AdminStays = () => {
 
   // ---------- Bookings ----------
   const updateBooking = async (id: string, patch: Record<string, any>) => {
+    const prev = bookings.find(x => x.id === id);
     const { error } = await (supabase as any).from("bookings").update(patch).eq("id", id);
-    if (error) toast({ title: "Update failed", description: error.message, variant: "destructive" });
-    else { toast({ title: "Booking updated" }); fetchAll(); }
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Booking updated" });
+    if (prev) {
+      const isStatusChange = patch.status && patch.status !== prev.status;
+      const isPaymentChange = patch.payment_status && patch.payment_status !== prev.payment_status;
+      const typeMap: Record<string, any> = {
+        confirmed: "booking_confirmed",
+        cancelled: "booking_cancelled",
+        completed: "booking_updated",
+        pending: "booking_updated",
+      };
+      const type = isStatusChange ? typeMap[patch.status] : isPaymentChange ? "booking_payment_status" : null;
+      if (type) {
+        supabase.functions.invoke("send-notification-email", {
+          body: {
+            type,
+            to: prev.guest_email,
+            recipientName: prev.guest_name,
+            propertyTitle: propTitle(prev.property_id),
+            roomName: roomName(prev.room_id),
+            checkIn: prev.check_in,
+            checkOut: prev.check_out,
+            nights: prev.nights,
+            guests: prev.guests,
+            total: prev.total_amount,
+            currency: prev.currency,
+            status: patch.status || prev.status,
+            paymentStatus: patch.payment_status || prev.payment_status,
+          },
+        }).catch(() => {});
+      }
+    }
+    fetchAll();
   };
   const deleteBooking = async (id: string) => {
     const { error } = await (supabase as any).from("bookings").delete().eq("id", id);
