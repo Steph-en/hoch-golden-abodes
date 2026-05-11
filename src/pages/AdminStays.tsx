@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Building2, BedDouble, CalendarRange, Plus, Pencil, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { Building2, BedDouble, CalendarRange, Plus, Pencil, Trash2, Loader2, ArrowLeft, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,6 +51,22 @@ const AdminStays = () => {
 
   const [blockForm, setBlockForm] = useState({ room_id: "", start_date: "", end_date: "", notes: "" });
   const [savingBlock, setSavingBlock] = useState(false);
+
+  // ----- Filters -----
+  const [roomSearch, setRoomSearch] = useState("");
+  const [roomFilterProperty, setRoomFilterProperty] = useState("all");
+  const [roomFilterType, setRoomFilterType] = useState("all");
+  const [roomFilterStatus, setRoomFilterStatus] = useState("all");
+
+  const [bookingSearch, setBookingSearch] = useState("");
+  const [bookingFilterProperty, setBookingFilterProperty] = useState("all");
+  const [bookingFilterStatus, setBookingFilterStatus] = useState("all");
+  const [bookingFilterPayment, setBookingFilterPayment] = useState("all");
+  const [bookingFrom, setBookingFrom] = useState("");
+  const [bookingTo, setBookingTo] = useState("");
+
+  const PAYMENT_STATUSES = ["unpaid", "pending", "paid", "refunded", "failed"];
+  const BOOKING_STATUSES = ["pending", "confirmed", "cancelled", "completed"];
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
