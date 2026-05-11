@@ -615,7 +615,10 @@ const Dashboard = () => {
                                   <p className="text-sm text-muted-foreground">{b.check_in} → {b.check_out} · {b.nights} night(s) · {b.guests} guest(s)</p>
                                 </div>
                                 <p className="font-display font-semibold text-foreground">{b.currency} {Number(b.total_amount).toLocaleString()}</p>
-                                <StatusBadge status={b.status} />
+                                <div className="flex items-center gap-2">
+                                  <StatusBadge status={b.status} />
+                                  <PaymentBadge status={b.payment_status} />
+                                </div>
                                 <Link to={`/stays/${b.property_id}/rooms/${b.room_id}`}>
                                   <Button size="sm" variant="outline">View</Button>
                                 </Link>
