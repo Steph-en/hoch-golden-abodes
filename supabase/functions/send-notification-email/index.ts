@@ -6,16 +6,31 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 type NotificationType =
   | "agreement_created"
   | "agreement_approved"
-  | "payment_confirmed";
+  | "payment_confirmed"
+  | "booking_created"
+  | "booking_confirmed"
+  | "booking_cancelled"
+  | "booking_updated"
+  | "booking_payment_status";
 
 interface RequestBody {
   type: NotificationType;
-  to?: string;          // optional - if not provided, lookup by userId
-  userId?: string;      // when provided, email is fetched from auth.users
+  to?: string;
+  userId?: string;
   recipientName?: string;
   propertyTitle?: string;
   amount?: number;
   fromAddress?: string;
+  // booking fields
+  roomName?: string;
+  checkIn?: string;
+  checkOut?: string;
+  nights?: number;
+  guests?: number;
+  total?: number;
+  currency?: string;
+  status?: string;
+  paymentStatus?: string;
 }
 
 const buildEmail = (b: RequestBody) => {
