@@ -227,8 +227,21 @@ const Dashboard = () => {
   ];
 
   const cancelBooking = async (id: string) => {
+    const booking = myBookings.find(x => x.id === id);
     const { error } = await (supabase as any).from("bookings").update({ status: "cancelled" }).eq("id", id);
     toast(error ? { title: "Cancel failed", variant: "destructive" as const } : { title: "Booking cancelled" });
+    if (!error && booking) {
+      supabase.functions.invoke("send-notification-email", {
+        body: {
+          type: "booking_cancelled",
+          to: booking.guest_email,
+          recipientName: booking.guest_name,
+          checkIn: booking.check_in,
+          checkOut: booking.check_out,
+          status: "cancelled",
+        },
+      }).catch(() => {});
+    }
     refetchBookings();
   };
 
@@ -684,6 +697,22 @@ const StatusBadge = ({ status }: { status: string }) => {
   return (
     <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status] || "bg-muted text-muted-foreground"}`}>
       {status}
+    </span>
+  );
+};
+
+const PaymentBadge = ({ status }: { status?: string }) => {
+  const s = (status || "unpaid").toLowerCase();
+  const styles: Record<string, string> = {
+    unpaid: "bg-muted text-muted-foreground",
+    pending: "bg-amber-500/10 text-amber-600",
+    paid: "bg-emerald-500/10 text-emerald-600",
+    refunded: "bg-blue-500/10 text-blue-600",
+    failed: "bg-red-500/10 text-red-600",
+  };
+  return (
+    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[s] || styles.unpaid}`}>
+      {s}
     </span>
   );
 };
