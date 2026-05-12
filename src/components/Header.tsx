@@ -83,16 +83,16 @@ const Header = () => {
           </nav>
 
           <div className="hidden lg:flex items-center space-x-4">
-            <a 
-              href="tel:+233123456789" 
+            <a
+              href="tel:+233592763541"
               className={`flex items-center space-x-2 text-sm font-medium transition-colors duration-300 ${
-                isScrolled 
-                  ? "text-muted-foreground hover:text-primary" 
+                isScrolled
+                  ? "text-muted-foreground hover:text-primary"
                   : "text-white/80 hover:text-white"
               }`}
             >
               <Phone className="w-4 h-4" />
-              <span>+233 123 456 789</span>
+              <span>+233 59 276 3541</span>
             </a>
 
             {user ? (

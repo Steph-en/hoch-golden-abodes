@@ -76,7 +76,7 @@ const ConsultationButton = () => {
                 value={formData.phone}
                 onChange={handleInputChange}
                 required
-                placeholder="+233 123 456 789"
+placeholder="+233 59 276 3541"
               />
             </div>
           </div>
@@ -135,14 +135,14 @@ const ConsultationButton = () => {
               <p className="text-sm text-muted-foreground mb-3">Or contact us directly:</p>
               <div className="flex justify-center space-x-6">
                 <a 
-                  href="tel:+233123456789" 
+href="tel:+233592763541"
                   className="flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
                 >
                   <Phone className="w-4 h-4 mr-1" />
                   Call Now
                 </a>
                 <a 
-                  href="mailto:info@hochonline.com" 
+href="mailto:info@thehochgroup.com"
                   className="flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
                 >
                   <Mail className="w-4 h-4 mr-1" />

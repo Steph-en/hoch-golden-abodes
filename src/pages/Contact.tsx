@@ -49,9 +49,9 @@ const Contact = () => {
 
   const contactInfo = [
     { icon: MapPin, label: "Visit Us", value: "East Legon, Accra, Ghana" },
-    { icon: Phone, label: "Call Us", value: "+233 123 456 789" },
-    { icon: Mail, label: "Email Us", value: "info@hochonline.com" },
-    { icon: Clock, label: "Hours", value: "Mon - Sat: 8AM - 6PM" }
+    { icon: Phone, label: "Call Us", value: "+233 59 276 3541" },
+    { icon: Mail, label: "Email Us", value: "info@thehochgroup.com" },
+    { icon: Clock, label: "Hours", value: "Mon - Sat: 8AM - 6PM" },
   ];
 
   return (
@@ -150,8 +150,8 @@ const Contact = () => {
 
               {/* Quick Actions */}
               <div className="space-y-4">
-                <a 
-                  href="tel:+233123456789"
+                <a
+                  href="tel:+233592763541"
                   className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors group"
                 >
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -159,13 +159,13 @@ const Contact = () => {
                   </div>
                   <div className="flex-1">
                     <div className="text-sm text-muted-foreground">Prefer to talk?</div>
-                    <div className="font-medium text-foreground">+233 123 456 789</div>
+<div className="font-medium text-foreground">+233 59 276 3541</div>
                   </div>
                   <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </a>
 
-                <a 
-                  href="mailto:info@hochonline.com"
+                <a
+                  href="mailto:info@thehochgroup.com"
                   className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors group"
                 >
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -173,7 +173,7 @@ const Contact = () => {
                   </div>
                   <div className="flex-1">
                     <div className="text-sm text-muted-foreground">Email us directly</div>
-                    <div className="font-medium text-foreground">info@hochonline.com</div>
+<div className="font-medium text-foreground">info@thehochgroup.com</div>
                   </div>
                   <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </a>
@@ -223,7 +223,7 @@ const Contact = () => {
                         type="tel"
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder="+233 123 456 789"
+placeholder="+233 59 276 3541"
                       />
                     </div>
                     <div className="space-y-2">
