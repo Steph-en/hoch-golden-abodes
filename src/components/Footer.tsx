@@ -26,6 +26,7 @@ const Footer = () => {
     { name: "Home", path: "/" },
     { name: "About Us", path: "/about" },
     { name: "Properties", path: "/explore" },
+    { name: "Airbnb", href: "/stays" },
     { name: "Services", path: "/services" },
     { name: "Contact", path: "/contact" },
   ];
@@ -50,7 +51,7 @@ const Footer = () => {
   return (
     <footer ref={footerRef} className="relative overflow-hidden">
       {/* Newsletter Section */}
-      <div className="relative py-1 overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(38 45% 58%) 0%, hsl(42 50% 65%) 100%)" }}>
+      <div className="relative py-[1px] overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(38 45% 58%) 0%, hsl(42 50% 65%) 100%)" }}>
       </div>
 
       {/* Main Footer */}

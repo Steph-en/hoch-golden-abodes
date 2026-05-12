@@ -19,7 +19,7 @@ const Header = () => {
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
     { name: "Properties", href: "/explore" },
-    { name: "Stays", href: "/stays" },
+    { name: "Airbnb", href: "/stays" },
     { name: "Services", href: "/services" },
     { name: "Contact", href: "/contact" },
     ...(isAdmin ? [{ name: "Admin", href: "/admin" }] : []),

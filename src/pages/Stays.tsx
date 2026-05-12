@@ -8,9 +8,9 @@ import { useStays } from "@/hooks/useRentals";
 import SEO, { breadcrumbLd } from "@/components/SEO";
 
 const KIND_TABS = [
-  { value: "all", label: "All Stays", icon: Hotel },
-  { value: "hotel", label: "Hotels & Short Stay", icon: Hotel },
-  { value: "rental_property", label: "Apartments for Rent", icon: Building2 },
+  { value: "all", label: "All Listings", icon: Hotel },
+  { value: "hotel", label: "Hotels", icon: Hotel },
+  { value: "rental_property", label: "Apartments", icon: Building2 },
   { value: "commercial_rental", label: "Commercial Rentals", icon: Briefcase },
 ] as const;
 
