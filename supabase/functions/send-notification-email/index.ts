@@ -6,16 +6,31 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 type NotificationType =
   | "agreement_created"
   | "agreement_approved"
-  | "payment_confirmed";
+  | "payment_confirmed"
+  | "booking_created"
+  | "booking_confirmed"
+  | "booking_cancelled"
+  | "booking_updated"
+  | "booking_payment_status";
 
 interface RequestBody {
   type: NotificationType;
-  to?: string;          // optional - if not provided, lookup by userId
-  userId?: string;      // when provided, email is fetched from auth.users
+  to?: string;
+  userId?: string;
   recipientName?: string;
   propertyTitle?: string;
   amount?: number;
   fromAddress?: string;
+  // booking fields
+  roomName?: string;
+  checkIn?: string;
+  checkOut?: string;
+  nights?: number;
+  guests?: number;
+  total?: number;
+  currency?: string;
+  status?: string;
+  paymentStatus?: string;
 }
 
 const buildEmail = (b: RequestBody) => {
@@ -49,9 +64,46 @@ const buildEmail = (b: RequestBody) => {
           <h2 style="color:#c8a15f;margin:0 0 12px">Payment confirmed</h2>
           <p>Hi ${name},</p>
           <p>We've confirmed your payment${b.amount ? ` of <strong>$${b.amount.toLocaleString()}</strong>` : ""} for <strong>${property}</strong>. Your invoice balance has been updated.</p>
-          <p style="margin-top:24px;color:#888;font-size:13px">— Tropical Estates</p>
+          <p style="margin-top:24px;color:#888;font-size:13px">— Hoch</p>
         </div>`,
       };
+    case "booking_created":
+    case "booking_confirmed":
+    case "booking_cancelled":
+    case "booking_updated":
+    case "booking_payment_status": {
+      const room = b.roomName || "your room";
+      const dates = b.checkIn && b.checkOut ? `${b.checkIn} → ${b.checkOut}` : "";
+      const totals = b.total ? `<p><strong>Total:</strong> ${b.currency || "USD"} ${Number(b.total).toLocaleString()}</p>` : "";
+      const headlineMap: Record<string, string> = {
+        booking_created: "We've received your booking",
+        booking_confirmed: "Your booking is confirmed",
+        booking_cancelled: "Your booking has been cancelled",
+        booking_updated: "Your booking has been updated",
+        booking_payment_status: "Payment status updated",
+      };
+      const subjMap: Record<string, string> = {
+        booking_created: `Booking received — ${property}`,
+        booking_confirmed: `Booking confirmed — ${property}`,
+        booking_cancelled: `Booking cancelled — ${property}`,
+        booking_updated: `Booking updated — ${property}`,
+        booking_payment_status: `Payment ${b.paymentStatus || "updated"} — ${property}`,
+      };
+      return {
+        subject: subjMap[b.type],
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#222">
+          <h2 style="color:#c8a15f;margin:0 0 12px">${headlineMap[b.type]}</h2>
+          <p>Hi ${name},</p>
+          <p><strong>${property}</strong>${room ? ` — ${room}` : ""}</p>
+          ${dates ? `<p><strong>Stay:</strong> ${dates}${b.nights ? ` · ${b.nights} night(s)` : ""}${b.guests ? ` · ${b.guests} guest(s)` : ""}</p>` : ""}
+          ${totals}
+          ${b.status ? `<p><strong>Status:</strong> ${b.status}</p>` : ""}
+          ${b.paymentStatus ? `<p><strong>Payment:</strong> ${b.paymentStatus}</p>` : ""}
+          <p style="margin-top:20px">You can view this booking anytime in your dashboard.</p>
+          <p style="margin-top:24px;color:#888;font-size:13px">— Hoch</p>
+        </div>`,
+      };
+    }
   }
 };
 
