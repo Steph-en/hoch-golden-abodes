@@ -56,11 +56,11 @@ const StayDetail = () => {
           alt={stay.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient from-background via-background/30 to-transparent" />
         <div className="absolute bottom-8 left-0 right-0 px-4">
           <div className="max-w-6xl mx-auto">
-            <h1 className="font-serif text-3xl md:text-5xl font-bold text-foreground drop-shadow">{stay.title}</h1>
-            <div className="flex items-center text-muted-foreground mt-2">
+            <h1 className="font-serif text-3xl md:text-5xl font-bold text-white/80 drop-shadow">{stay.title}</h1>
+            <div className="flex items-center text-white/80 mt-2">
               <MapPin className="w-4 h-4 mr-1.5" /> <span>{stay.location}</span>
             </div>
           </div>

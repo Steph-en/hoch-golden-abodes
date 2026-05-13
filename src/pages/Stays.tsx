@@ -42,10 +42,10 @@ const Stays = () => {
         <div className="max-w-6xl mx-auto text-center">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
             className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Stays & Short-Term Rentals
+            Hotels & Appartments
           </motion.h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Hotels, serviced apartments and apartment complexes — book by the night.
+            Hotels, Serviced Apartments and Apartment Complexes — Book by the night.
           </p>
         </div>
       </section>

@@ -125,8 +125,8 @@ const Explore = () => {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm">
               <span className="px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium">For Sale</span>
-              <Link to="/stays?kind=hotel" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Hotels & Short Stay</Link>
-              <Link to="/stays?kind=rental_property" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Apartments for Rent</Link>
+              <Link to="/stays?kind=hotel" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Hotels</Link>
+              <Link to="/stays?kind=rental_property" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Apartments</Link>
               <Link to="/stays?kind=commercial_rental" className="px-4 py-2 rounded-full bg-muted text-foreground hover:bg-primary/10 hover:text-primary transition-colors">Commercial Rentals</Link>
             </div>
           </motion.div>
