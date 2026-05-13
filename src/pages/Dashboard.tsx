@@ -702,8 +702,6 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-import { PaymentBadge as _PaymentBadgeShared } from "@/components/PaymentBadge";
-const PaymentBadge = _PaymentBadgeShared;
 
 const EmptyState = ({ icon: Icon, title, description, actionLabel, actionTo }: { icon: any; title: string; description: string; actionLabel?: string; actionTo?: string }) => (
   <div className="text-center py-20">
