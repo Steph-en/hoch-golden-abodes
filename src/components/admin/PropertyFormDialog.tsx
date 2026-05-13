@@ -9,8 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 
-const TYPES = ["Villa", "Apartment", "Townhouse", "Penthouse", "Commercial"];
-const STATUSES = ["Available", "Reserved", "Sold"];
+const TYPES = ["Villa", "Apartment", "Townhouse", "Penthouse", "House", "Hotel", "Office", "Land", "Commercial"];
+const STATUSES = ["Available", "Reserved", "Sold", "Rented", "Upcoming"];
+const CURRENCIES = ["USD", "GHS", "EUR", "GBP"];
 
 interface Props {
   open: boolean;
@@ -26,10 +27,12 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
   const [uploading, setUploading] = useState(false);
 
   const [form, setForm] = useState({
-    title: "", location: "", area: "", price: "", price_value: 0,
+    title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
     beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
     description: "", amenitiesText: "", year_built: "", parking: 0,
     image_url: "", images: [] as string[], featured: false,
+    country: "Ghana", city: "", region: "", gps_lat: "", gps_lng: "",
+    owner_name: "", owner_email: "", owner_phone: "", video_url: "",
   });
 
   useEffect(() => {
@@ -40,6 +43,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
         area: property.area || "",
         price: property.price || "",
         price_value: Number(property.price_value) || 0,
+        currency: property.currency || "USD",
         beds: Number(property.beds) || 0,
         baths: Number(property.baths) || 0,
         sqft: property.sqft || "",
@@ -52,13 +56,24 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
         image_url: property.image_url || "",
         images: property.images || [],
         featured: !!property.featured,
+        country: property.country || "Ghana",
+        city: property.city || "",
+        region: property.region || "",
+        gps_lat: property.gps_lat != null ? String(property.gps_lat) : "",
+        gps_lng: property.gps_lng != null ? String(property.gps_lng) : "",
+        owner_name: property.owner_name || "",
+        owner_email: property.owner_email || "",
+        owner_phone: property.owner_phone || "",
+        video_url: property.video_url || "",
       });
     } else {
       setForm({
-        title: "", location: "", area: "", price: "", price_value: 0,
+        title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
         beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
         description: "", amenitiesText: "", year_built: "", parking: 0,
         image_url: "", images: [], featured: false,
+        country: "Ghana", city: "", region: "", gps_lat: "", gps_lng: "",
+        owner_name: "", owner_email: "", owner_phone: "", video_url: "",
       });
     }
   }, [property, open]);
@@ -117,6 +132,16 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
       image_url: form.image_url || null,
       images: form.images,
       featured: form.featured,
+      currency: form.currency || "USD",
+      country: form.country || null,
+      city: form.city || null,
+      region: form.region || null,
+      gps_lat: form.gps_lat ? Number(form.gps_lat) : null,
+      gps_lng: form.gps_lng ? Number(form.gps_lng) : null,
+      owner_name: form.owner_name || null,
+      owner_email: form.owner_email || null,
+      owner_phone: form.owner_phone || null,
+      video_url: form.video_url || null,
       updated_at: new Date().toISOString(),
     };
     const res = isEdit
@@ -152,6 +177,12 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
             </div>
             <div><Label>Price (display) *</Label><Input value={form.price} onChange={e => setForm(f => ({...f, price: e.target.value}))} placeholder="$850,000" /></div>
             <div><Label>Price value (number) *</Label><Input type="number" value={form.price_value} onChange={e => setForm(f => ({...f, price_value: Number(e.target.value)}))} /></div>
+            <div><Label>Currency</Label>
+              <Select value={form.currency} onValueChange={(v) => setForm(f => ({...f, currency: v}))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div><Label>Beds</Label><Input type="number" value={form.beds} onChange={e => setForm(f => ({...f, beds: Number(e.target.value)}))} /></div>
             <div><Label>Baths</Label><Input type="number" value={form.baths} onChange={e => setForm(f => ({...f, baths: Number(e.target.value)}))} /></div>
             <div><Label>Sqft</Label><Input value={form.sqft} onChange={e => setForm(f => ({...f, sqft: e.target.value}))} placeholder="5200" /></div>
@@ -163,6 +194,15 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
                 <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <div><Label>Country</Label><Input value={form.country} onChange={e => setForm(f => ({...f, country: e.target.value}))} /></div>
+            <div><Label>City</Label><Input value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))} placeholder="Accra" /></div>
+            <div><Label>Region</Label><Input value={form.region} onChange={e => setForm(f => ({...f, region: e.target.value}))} placeholder="Greater Accra" /></div>
+            <div><Label>GPS latitude</Label><Input value={form.gps_lat} onChange={e => setForm(f => ({...f, gps_lat: e.target.value}))} placeholder="5.6037" /></div>
+            <div><Label>GPS longitude</Label><Input value={form.gps_lng} onChange={e => setForm(f => ({...f, gps_lng: e.target.value}))} placeholder="-0.1870" /></div>
+            <div><Label>Owner name</Label><Input value={form.owner_name} onChange={e => setForm(f => ({...f, owner_name: e.target.value}))} /></div>
+            <div><Label>Owner email</Label><Input type="email" value={form.owner_email} onChange={e => setForm(f => ({...f, owner_email: e.target.value}))} /></div>
+            <div><Label>Owner phone</Label><Input value={form.owner_phone} onChange={e => setForm(f => ({...f, owner_phone: e.target.value}))} /></div>
+            <div className="md:col-span-2"><Label>Video tour URL</Label><Input value={form.video_url} onChange={e => setForm(f => ({...f, video_url: e.target.value}))} placeholder="https://youtube.com/..." /></div>
           </div>
 
           <div><Label>Description</Label><Textarea rows={3} value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} /></div>
