@@ -27,10 +27,12 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
   const [uploading, setUploading] = useState(false);
 
   const [form, setForm] = useState({
-    title: "", location: "", area: "", price: "", price_value: 0,
+    title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
     beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
     description: "", amenitiesText: "", year_built: "", parking: 0,
     image_url: "", images: [] as string[], featured: false,
+    country: "Ghana", city: "", region: "", gps_lat: "", gps_lng: "",
+    owner_name: "", owner_email: "", owner_phone: "", video_url: "",
   });
 
   useEffect(() => {
