@@ -16,8 +16,15 @@ const NotificationBell = ({ variant = "dark" }: Props) => {
   const { notifications, unreadCount, markRead, markAllRead, remove } = useNotifications(user?.id);
   if (!user) return null;
 
+  const handleOpenChange = (open: boolean) => {
+    if (open && unreadCount > 0) {
+      // Mark all as read shortly after opening so the count clears in real time
+      setTimeout(() => { markAllRead(); }, 600);
+    }
+  };
+
   return (
-    <Popover>
+    <Popover onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ""}`}
