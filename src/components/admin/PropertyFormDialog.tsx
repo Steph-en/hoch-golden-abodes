@@ -132,6 +132,16 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
       image_url: form.image_url || null,
       images: form.images,
       featured: form.featured,
+      currency: form.currency || "USD",
+      country: form.country || null,
+      city: form.city || null,
+      region: form.region || null,
+      gps_lat: form.gps_lat ? Number(form.gps_lat) : null,
+      gps_lng: form.gps_lng ? Number(form.gps_lng) : null,
+      owner_name: form.owner_name || null,
+      owner_email: form.owner_email || null,
+      owner_phone: form.owner_phone || null,
+      video_url: form.video_url || null,
       updated_at: new Date().toISOString(),
     };
     const res = isEdit
