@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Building2, BedDouble, CalendarRange, Plus, Pencil, Trash2, Loader2, ArrowLeft, Search, X } from "lucide-react";
+import { Building2, BedDouble, CalendarRange, Plus, Pencil, Trash2, Loader2, ArrowLeft, Search, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PaymentBadge } from "@/components/PaymentBadge";
 import SEO from "@/components/SEO";
 
 const RENTAL_KINDS = ["rental_property", "hotel", "commercial_rental"];
