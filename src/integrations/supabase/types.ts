@@ -452,22 +452,34 @@ export type Database = {
           area: string | null
           baths: number
           beds: number
+          city: string | null
+          country: string | null
           created_at: string
+          currency: string | null
+          deleted_at: string | null
           description: string | null
           featured: boolean
+          gps_lat: number | null
+          gps_lng: number | null
           id: number
           image_url: string | null
           images: string[] | null
           listing_kind: Database["public"]["Enums"]["listing_kind"]
           location: string
+          owner_email: string | null
+          owner_name: string | null
+          owner_phone: string | null
           parking: number | null
           price: string
           price_value: number
+          region: string | null
+          slug: string | null
           sqft: string | null
           status: string
           title: string
           type: string
           updated_at: string
+          video_url: string | null
           year_built: number | null
         }
         Insert: {
@@ -475,22 +487,34 @@ export type Database = {
           area?: string | null
           baths?: number
           beds?: number
+          city?: string | null
+          country?: string | null
           created_at?: string
+          currency?: string | null
+          deleted_at?: string | null
           description?: string | null
           featured?: boolean
+          gps_lat?: number | null
+          gps_lng?: number | null
           id?: number
           image_url?: string | null
           images?: string[] | null
           listing_kind?: Database["public"]["Enums"]["listing_kind"]
           location: string
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
           parking?: number | null
           price: string
           price_value?: number
+          region?: string | null
+          slug?: string | null
           sqft?: string | null
           status?: string
           title: string
           type?: string
           updated_at?: string
+          video_url?: string | null
           year_built?: number | null
         }
         Update: {
@@ -498,23 +522,65 @@ export type Database = {
           area?: string | null
           baths?: number
           beds?: number
+          city?: string | null
+          country?: string | null
           created_at?: string
+          currency?: string | null
+          deleted_at?: string | null
           description?: string | null
           featured?: boolean
+          gps_lat?: number | null
+          gps_lng?: number | null
           id?: number
           image_url?: string | null
           images?: string[] | null
           listing_kind?: Database["public"]["Enums"]["listing_kind"]
           location?: string
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
           parking?: number | null
           price?: string
           price_value?: number
+          region?: string | null
+          slug?: string | null
           sqft?: string | null
           status?: string
           title?: string
           type?: string
           updated_at?: string
+          video_url?: string | null
           year_built?: number | null
+        }
+        Relationships: []
+      }
+      property_audit_log: {
+        Row: {
+          action: string
+          changes: Json | null
+          created_at: string
+          id: string
+          performed_by: string | null
+          performed_by_email: string | null
+          property_id: number | null
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          performed_by?: string | null
+          performed_by_email?: string | null
+          property_id?: number | null
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          created_at?: string
+          id?: string
+          performed_by?: string | null
+          performed_by_email?: string | null
+          property_id?: number | null
         }
         Relationships: []
       }
@@ -830,9 +896,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      slugify: { Args: { _input: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "super_admin"
       listing_kind: "sale" | "rental_property" | "hotel" | "commercial_rental"
     }
     CompositeTypes: {
@@ -961,7 +1028,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "super_admin"],
       listing_kind: ["sale", "rental_property", "hotel", "commercial_rental"],
     },
   },
