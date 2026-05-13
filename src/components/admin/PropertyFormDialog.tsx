@@ -9,8 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 
-const TYPES = ["Villa", "Apartment", "Townhouse", "Penthouse", "Commercial"];
-const STATUSES = ["Available", "Reserved", "Sold"];
+const TYPES = ["Villa", "Apartment", "Townhouse", "Penthouse", "House", "Hotel", "Office", "Land", "Commercial"];
+const STATUSES = ["Available", "Reserved", "Sold", "Rented", "Upcoming"];
+const CURRENCIES = ["USD", "GHS", "EUR", "GBP"];
 
 interface Props {
   open: boolean;
