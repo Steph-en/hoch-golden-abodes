@@ -177,6 +177,12 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
             </div>
             <div><Label>Price (display) *</Label><Input value={form.price} onChange={e => setForm(f => ({...f, price: e.target.value}))} placeholder="$850,000" /></div>
             <div><Label>Price value (number) *</Label><Input type="number" value={form.price_value} onChange={e => setForm(f => ({...f, price_value: Number(e.target.value)}))} /></div>
+            <div><Label>Currency</Label>
+              <Select value={form.currency} onValueChange={(v) => setForm(f => ({...f, currency: v}))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div><Label>Beds</Label><Input type="number" value={form.beds} onChange={e => setForm(f => ({...f, beds: Number(e.target.value)}))} /></div>
             <div><Label>Baths</Label><Input type="number" value={form.baths} onChange={e => setForm(f => ({...f, baths: Number(e.target.value)}))} /></div>
             <div><Label>Sqft</Label><Input value={form.sqft} onChange={e => setForm(f => ({...f, sqft: e.target.value}))} placeholder="5200" /></div>
@@ -188,6 +194,15 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
                 <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <div><Label>Country</Label><Input value={form.country} onChange={e => setForm(f => ({...f, country: e.target.value}))} /></div>
+            <div><Label>City</Label><Input value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))} placeholder="Accra" /></div>
+            <div><Label>Region</Label><Input value={form.region} onChange={e => setForm(f => ({...f, region: e.target.value}))} placeholder="Greater Accra" /></div>
+            <div><Label>GPS latitude</Label><Input value={form.gps_lat} onChange={e => setForm(f => ({...f, gps_lat: e.target.value}))} placeholder="5.6037" /></div>
+            <div><Label>GPS longitude</Label><Input value={form.gps_lng} onChange={e => setForm(f => ({...f, gps_lng: e.target.value}))} placeholder="-0.1870" /></div>
+            <div><Label>Owner name</Label><Input value={form.owner_name} onChange={e => setForm(f => ({...f, owner_name: e.target.value}))} /></div>
+            <div><Label>Owner email</Label><Input type="email" value={form.owner_email} onChange={e => setForm(f => ({...f, owner_email: e.target.value}))} /></div>
+            <div><Label>Owner phone</Label><Input value={form.owner_phone} onChange={e => setForm(f => ({...f, owner_phone: e.target.value}))} /></div>
+            <div className="md:col-span-2"><Label>Video tour URL</Label><Input value={form.video_url} onChange={e => setForm(f => ({...f, video_url: e.target.value}))} placeholder="https://youtube.com/..." /></div>
           </div>
 
           <div><Label>Description</Label><Textarea rows={3} value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} /></div>
