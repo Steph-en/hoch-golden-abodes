@@ -61,6 +61,7 @@ const AdminStays = () => {
 
   const [bookingSearch, setBookingSearch] = useState("");
   const [bookingFilterProperty, setBookingFilterProperty] = useState("all");
+  const [bookingFilterRoomType, setBookingFilterRoomType] = useState("all");
   const [bookingFilterStatus, setBookingFilterStatus] = useState("all");
   const [bookingFilterPayment, setBookingFilterPayment] = useState("all");
   const [bookingFrom, setBookingFrom] = useState("");
