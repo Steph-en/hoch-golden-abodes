@@ -21,6 +21,7 @@ import EnquiryDetailModal from "@/components/EnquiryDetailModal";
 import SignaturePad from "@/components/SignaturePad";
 import SEO from "@/components/SEO";
 import { useMyBookings } from "@/hooks/useRentals";
+import { PaymentBadge } from "@/components/PaymentBadge";
 
 const Dashboard = () => {
   const { user, profile, loading, updateProfile } = useAuth();
