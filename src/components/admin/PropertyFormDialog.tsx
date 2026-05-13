@@ -43,6 +43,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
         area: property.area || "",
         price: property.price || "",
         price_value: Number(property.price_value) || 0,
+        currency: property.currency || "USD",
         beds: Number(property.beds) || 0,
         baths: Number(property.baths) || 0,
         sqft: property.sqft || "",
@@ -55,13 +56,24 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
         image_url: property.image_url || "",
         images: property.images || [],
         featured: !!property.featured,
+        country: property.country || "Ghana",
+        city: property.city || "",
+        region: property.region || "",
+        gps_lat: property.gps_lat != null ? String(property.gps_lat) : "",
+        gps_lng: property.gps_lng != null ? String(property.gps_lng) : "",
+        owner_name: property.owner_name || "",
+        owner_email: property.owner_email || "",
+        owner_phone: property.owner_phone || "",
+        video_url: property.video_url || "",
       });
     } else {
       setForm({
-        title: "", location: "", area: "", price: "", price_value: 0,
+        title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
         beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
         description: "", amenitiesText: "", year_built: "", parking: 0,
         image_url: "", images: [], featured: false,
+        country: "Ghana", city: "", region: "", gps_lat: "", gps_lng: "",
+        owner_name: "", owner_email: "", owner_phone: "", video_url: "",
       });
     }
   }, [property, open]);
