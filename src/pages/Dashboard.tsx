@@ -701,21 +701,8 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const PaymentBadge = ({ status }: { status?: string }) => {
-  const s = (status || "unpaid").toLowerCase();
-  const styles: Record<string, string> = {
-    unpaid: "bg-muted text-muted-foreground",
-    pending: "bg-amber-500/10 text-amber-600",
-    paid: "bg-emerald-500/10 text-emerald-600",
-    refunded: "bg-blue-500/10 text-blue-600",
-    failed: "bg-red-500/10 text-red-600",
-  };
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${styles[s] || styles.unpaid}`}>
-      {s}
-    </span>
-  );
-};
+import { PaymentBadge as _PaymentBadgeShared } from "@/components/PaymentBadge";
+const PaymentBadge = _PaymentBadgeShared;
 
 const EmptyState = ({ icon: Icon, title, description, actionLabel, actionTo }: { icon: any; title: string; description: string; actionLabel?: string; actionTo?: string }) => (
   <div className="text-center py-20">
