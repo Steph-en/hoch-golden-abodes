@@ -55,7 +55,7 @@ const Footer = () => {
       </div>
 
       {/* Main Footer */}
-      <div className="bg-foreground py-10">
+      <div className="bg-foreground/95 py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-12">
             {/* Brand Column */}

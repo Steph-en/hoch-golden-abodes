@@ -31,7 +31,9 @@ const RoomDetail = () => {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
-  const [availability, setAvailability] = useState<"unknown" | "checking" | "available" | "unavailable">("unknown");
+  const [availability, setAvailability] = useState<
+    "unknown" | "checking" | "available" | "unavailable"
+  >("unknown");
 
   useEffect(() => {
     if (user) {
@@ -45,7 +47,10 @@ const RoomDetail = () => {
     return Math.max(0, differenceInCalendarDays(range.to, range.from));
   }, [range]);
 
-  const total = useMemo(() => nights * Number(room?.nightly_price || 0), [nights, room]);
+  const total = useMemo(
+    () => nights * Number(room?.nightly_price || 0),
+    [nights, room]
+  );
 
   const fmt = (d?: Date) => (d ? format(d, "yyyy-MM-dd") : "");
 
@@ -57,13 +62,44 @@ const RoomDetail = () => {
     let cancelled = false;
     setAvailability("checking");
     checkAvailability(room.id, fmt(range.from), fmt(range.to))
-      .then((ok) => { if (!cancelled) setAvailability(ok ? "available" : "unavailable"); })
-      .catch(() => { if (!cancelled) setAvailability("unknown"); });
+      .then((ok) => {
+        if (!cancelled) setAvailability(ok ? "available" : "unavailable");
+      })
+      .catch(() => {
+        if (!cancelled) setAvailability("unknown");
+      });
     return () => { cancelled = true; };
   }, [room, range, nights]);
 
+  const sendConfirmationEmail = async (bid: string) => {
+    if (!room || !property || !range?.from || !range?.to) return;
+    try {
+      await supabase.functions.invoke("send-booking-email", {
+        body: {
+          type: "booking_created",
+          guestEmail: email.trim(),
+          guestName: name.trim(),
+          propertyTitle: property.title,
+          roomName: room.name,
+          checkIn: fmt(range.from),
+          checkOut: fmt(range.to),
+          nights,
+          total,
+          currency: room.currency,
+          bookingRef: bid.slice(0, 8).toUpperCase(),
+        },
+      });
+    } catch {
+      // Non-fatal — booking succeeded regardless
+    }
+  };
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
   if (!room) return <Navigate to="/stays" replace />;
 
@@ -93,23 +129,8 @@ const RoomDetail = () => {
         notes: notes.trim() || undefined,
       });
       setBookingId(id);
-      // Fire-and-forget confirmation email (won't block UX on failure)
-      supabase.functions.invoke("send-notification-email", {
-        body: {
-          type: "booking_created",
-          to: email.trim(),
-          recipientName: name.trim(),
-          propertyTitle: property?.title,
-          roomName: room.name,
-          checkIn: fmt(range.from),
-          checkOut: fmt(range.to),
-          nights,
-          guests,
-          total,
-          currency: room.currency,
-        },
-      }).catch(() => {});
       toast.success("Reservation created!");
+      await sendConfirmationEmail(id);
     } catch (err: any) {
       toast.error(err?.message || "Could not create booking");
     } finally {
@@ -117,40 +138,90 @@ const RoomDetail = () => {
     }
   };
 
-  const images = room.images && room.images.length > 0 ? room.images : (property?.images?.length ? property.images : [property?.image_url || "/placeholder.svg"]);
+  const images =
+    room.images && room.images.length > 0
+      ? room.images
+      : property?.images?.length
+        ? property.images
+        : [property?.image_url || "/placeholder.svg"];
 
+  // ── Confirmation screen ──────────────────────────────────
   if (bookingId) {
     return (
       <div className="min-h-screen bg-background py-20 px-4">
         <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-card p-8 text-center">
-          <CheckCircle2 className="w-16 h-16 mx-auto text-primary mb-4" />
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8 text-primary" />
+          </div>
           <h1 className="font-serif text-3xl font-bold mb-2">Booking confirmed</h1>
           <p className="text-muted-foreground mb-6">
-            Reservation reference <span className="font-mono text-foreground">{bookingId.slice(0, 8).toUpperCase()}</span>.
-            We've recorded your stay at <strong>{property?.title}</strong> from{" "}
-            <strong>{format(range!.from!, "PP")}</strong> to <strong>{format(range!.to!, "PP")}</strong>.
+            Reservation reference{" "}
+            <span className="font-mono font-semibold text-foreground">
+              {bookingId.slice(0, 8).toUpperCase()}
+            </span>
+            . A confirmation has been sent to{" "}
+            <strong>{email}</strong>.
           </p>
-          <div className="rounded-lg bg-muted p-4 text-left text-sm space-y-1 mb-6">
-            <p><span className="text-muted-foreground">Room:</span> {room.name}</p>
-            <p><span className="text-muted-foreground">Guests:</span> {guests}</p>
-            <p><span className="text-muted-foreground">Nights:</span> {nights}</p>
-            <p><span className="text-muted-foreground">Total:</span> ${total.toLocaleString()} {room.currency}</p>
-            <p><span className="text-muted-foreground">Payment:</span> Pay on arrival — secure online payment coming soon.</p>
+          <div className="rounded-xl bg-muted p-5 text-left text-sm space-y-2 mb-6">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Property</span>
+              <span className="font-medium">{property?.title}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Room</span>
+              <span className="font-medium">{room.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Check-in</span>
+              <span className="font-medium">{format(range!.from!, "d MMM yyyy")}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Check-out</span>
+              <span className="font-medium">{format(range!.to!, "d MMM yyyy")}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Nights</span>
+              <span className="font-medium">{nights}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Guests</span>
+              <span className="font-medium">{guests}</span>
+            </div>
+            <div className="flex justify-between border-t border-border pt-2 mt-1">
+              <span className="text-muted-foreground font-medium">Total</span>
+              <span className="font-semibold text-foreground">
+                ${total.toLocaleString()} {room.currency}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Payment</span>
+              <span className="text-amber-600 font-medium">Pay on arrival — online payments coming soon</span>
+            </div>
           </div>
           <div className="flex gap-3 justify-center">
-            <Link to="/stays"><Button variant="outline">Browse more stays</Button></Link>
-            {user && <Link to="/dashboard"><Button>View my bookings</Button></Link>}
+            <Link to="/stays">
+              <Button variant="outline">Browse more stays</Button>
+            </Link>
+            {user && (
+              <Link to="/dashboard">
+                <Button>View my bookings</Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
+  // ── Room detail + booking widget ─────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <SEO
         title={`${room.name} — ${property?.title || "Book a room"}`}
-        description={(room.description || `Book ${room.name} at ${property?.title}. From $${room.nightly_price}/night.`).slice(0, 160)}
+        description={(
+          room.description ||
+          `Book ${room.name} at ${property?.title}. From $${room.nightly_price}/night.`
+        ).slice(0, 160)}
         path={`/stays/${propertyId}/rooms/${room.id}`}
         image={images[0]}
         jsonLd={[
@@ -177,19 +248,29 @@ const RoomDetail = () => {
       />
 
       <div className="max-w-6xl mx-auto px-4 pt-6">
-        <Link to={`/stays/${propertyId}`} className="inline-flex items-center text-sm text-muted-foreground hover:text-primary">
-          <ChevronLeft className="w-4 h-4" /> Back to {property?.title || "stay"}
+        <Link
+          to={`/stays/${propertyId}`}
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to {property?.title || "stay"}
         </Link>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8 grid lg:grid-cols-3 gap-8">
+        {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
           <Carousel className="rounded-2xl overflow-hidden">
             <CarouselContent>
               {images.map((img, i) => (
                 <CarouselItem key={i}>
                   <div className="aspect-[16/10] bg-muted">
-                    <img src={img} alt={`${room.name} ${i + 1}`} className="w-full h-full object-cover" loading={i === 0 ? "eager" : "lazy"} />
+                    <img
+                      src={img}
+                      alt={`${room.name} ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
+                    />
                   </div>
                 </CarouselItem>
               ))}
@@ -204,10 +285,18 @@ const RoomDetail = () => {
 
           <div>
             <h1 className="font-serif text-3xl md:text-4xl font-bold">{room.name}</h1>
-            {room.room_type && <p className="text-muted-foreground mt-1">{room.room_type}</p>}
+            {room.room_type && (
+              <p className="text-muted-foreground mt-1">{room.room_type}</p>
+            )}
             <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
-              <span className="flex items-center gap-1"><Users className="w-4 h-4" /> Sleeps {room.capacity}</span>
-              {room.bed_config && <span className="flex items-center gap-1"><Bed className="w-4 h-4" /> {room.bed_config}</span>}
+              <span className="flex items-center gap-1">
+                <Users className="w-4 h-4" /> Sleeps {room.capacity}
+              </span>
+              {room.bed_config && (
+                <span className="flex items-center gap-1">
+                  <Bed className="w-4 h-4" /> {room.bed_config}
+                </span>
+              )}
             </div>
           </div>
 
@@ -220,10 +309,12 @@ const RoomDetail = () => {
 
           {room.amenities && room.amenities.length > 0 && (
             <div>
-              <h2 className="font-semibold text-lg mb-2">Amenities</h2>
+              <h2 className="font-semibold text-lg mb-3">Amenities</h2>
               <div className="flex flex-wrap gap-2">
                 {room.amenities.map((a) => (
-                  <span key={a} className="px-3 py-1 rounded-full bg-muted text-sm">{a}</span>
+                  <span key={a} className="px-3 py-1.5 rounded-full bg-muted text-sm">
+                    {a}
+                  </span>
                 ))}
               </div>
             </div>
@@ -234,13 +325,16 @@ const RoomDetail = () => {
               <h2 className="font-semibold text-lg mb-2">Booking rules</h2>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {Object.entries(room.booking_rules).map(([k, v]) => (
-                  <li key={k}><span className="capitalize">{k.replace(/_/g, " ")}:</span> {String(v)}</li>
+                  <li key={k}>
+                    <span className="capitalize">{k.replace(/_/g, " ")}:</span> {String(v)}
+                  </li>
                 ))}
               </ul>
             </div>
           )}
         </div>
 
+        {/* Booking widget */}
         <aside className="lg:sticky lg:top-24 h-fit rounded-2xl border border-border bg-card p-6 space-y-4">
           <div>
             <p className="font-serif text-3xl font-bold">
@@ -249,13 +343,24 @@ const RoomDetail = () => {
             </p>
           </div>
 
-          <div className="space-y-2">
+          {/* Date picker */}
+          <div className="space-y-1">
             <Label>Check-in / Check-out</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !range && "text-muted-foreground")}>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !range && "text-muted-foreground"
+                  )}
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {range?.from ? (range.to ? <>{format(range.from, "LLL d")} → {format(range.to, "LLL d, yyyy")}</> : format(range.from, "PPP")) : "Select dates"}
+                  {range?.from
+                    ? range.to
+                      ? `${format(range.from, "LLL d")} → ${format(range.to, "LLL d, yyyy")}`
+                      : format(range.from, "PPP")
+                    : "Select dates"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -272,45 +377,89 @@ const RoomDetail = () => {
             </Popover>
           </div>
 
-          <div className="space-y-2">
+          {/* Guests */}
+          <div className="space-y-1">
             <Label htmlFor="guests">Guests (max {room.capacity})</Label>
-            <Input id="guests" type="number" min={1} max={room.capacity} value={guests} onChange={(e) => setGuests(Math.max(1, Math.min(room.capacity, Number(e.target.value) || 1)))} />
+            <Input
+              id="guests"
+              type="number"
+              min={1}
+              max={room.capacity}
+              value={guests}
+              onChange={(e) =>
+                setGuests(Math.max(1, Math.min(room.capacity, Number(e.target.value) || 1)))
+              }
+            />
           </div>
 
+          {/* Guest details (pre-filled if logged in) */}
           {!user && (
             <>
-              <div className="space-y-2"><Label htmlFor="name">Full name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} /></div>
-              <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+              <div className="space-y-1">
+                <Label htmlFor="name">Full name *</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="email">Email *</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
             </>
           )}
-          <div className="space-y-2"><Label htmlFor="phone">Phone (optional)</Label><Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-          <div className="space-y-2"><Label htmlFor="notes">Notes (optional)</Label><Textarea id="notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+          <div className="space-y-1">
+            <Label htmlFor="phone">Phone (optional)</Label>
+            <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="notes">Notes (optional)</Label>
+            <Textarea id="notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
 
+          {/* Price summary */}
           {nights > 0 && (
-            <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
-              <div className="flex justify-between"><span>${Number(room.nightly_price).toLocaleString()} × {nights} night{nights === 1 ? "" : "s"}</span><span>${total.toLocaleString()}</span></div>
-              <div className="flex justify-between font-semibold border-t border-border pt-2"><span>Total</span><span>${total.toLocaleString()} {room.currency}</span></div>
+            <div className="rounded-xl bg-muted p-3 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>${Number(room.nightly_price).toLocaleString()} × {nights} night{nights !== 1 ? "s" : ""}</span>
+                <span>${total.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between font-semibold border-t border-border pt-2">
+                <span>Total</span>
+                <span>${total.toLocaleString()} {room.currency}</span>
+              </div>
             </div>
           )}
 
+          {/* Availability indicator */}
           {availability === "unavailable" && (
-            <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+            <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-xl">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>These dates are unavailable. Please pick different dates.</span>
+              <span>These dates are unavailable. Please try different dates.</span>
             </div>
           )}
           {availability === "available" && (
-            <div className="flex items-start gap-2 text-sm text-primary bg-primary/10 p-3 rounded-lg">
+            <div className="flex items-start gap-2 text-sm text-primary bg-primary/10 p-3 rounded-xl">
               <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>Dates are available!</span>
             </div>
           )}
 
-          <Button className="w-full" size="lg" onClick={handleBook} disabled={submitting || availability === "unavailable" || availability === "checking" || nights < 1}>
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={handleBook}
+            disabled={
+              submitting ||
+              availability === "unavailable" ||
+              availability === "checking" ||
+              nights < 1
+            }
+          >
+            {submitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             Reserve
           </Button>
-          <p className="text-xs text-muted-foreground text-center">No charge today — pay on arrival. Online payments coming soon.</p>
+
+          <p className="text-xs text-muted-foreground text-center">
+            No charge today — pay on arrival. Online payments coming soon.
+          </p>
         </aside>
       </div>
     </div>

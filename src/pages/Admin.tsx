@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Users, MessageSquare, Activity, Shield, Search, Eye, Clock, CheckCircle2, TrendingUp,
-  UserPlus, BarChart3, FileSignature, CreditCard, XCircle, Upload, Building2, Plus, Pencil, Trash2, BedDouble
+  Users, MessageSquare, Activity, Shield, Search, Eye, CheckCircle2, TrendingUp,
+  BarChart3, FileSignature, CreditCard, XCircle, Upload, Building2, Plus, Pencil, Trash2,
+  BedDouble, CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +19,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { properties as staticProperties } from "@/data/properties";
 import EnquiryDetailModal from "@/components/EnquiryDetailModal";
 import PropertyFormDialog from "@/components/admin/PropertyFormDialog";
+import AdminRoomsTab from "@/components/admin/AdminRoomsTab";
+import AdminStaysBookingsTab from "@/components/admin/AdminStaysBookingsTab";
 import { useToast } from "@/hooks/use-toast";
 
 const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
+const RENTAL_KINDS = ["rental_property", "hotel", "commercial_rental"];
 
 const sendNotification = async (payload: any) => {
   try {
@@ -30,13 +34,18 @@ const sendNotification = async (payload: any) => {
   }
 };
 
+type TabId =
+  | "overview" | "users" | "enquiries" | "properties"
+  | "agreements" | "payments" | "activity"
+  | "rooms" | "stays_bookings";
+
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "enquiries" | "properties" | "agreements" | "payments" | "activity">("overview");
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [allProfiles, setAllProfiles] = useState<any[]>([]);
   const [allInquiries, setAllInquiries] = useState<any[]>([]);
   const [allAgreements, setAllAgreements] = useState<any[]>([]);
@@ -85,14 +94,15 @@ const Admin = () => {
   }, [isAdmin]);
 
   const fetchData = async () => {
-    const [profilesRes, inquiriesRes, agreementsRes, paymentsRes, activityRes, propsRes] = await Promise.all([
-      (supabase as any).from("profiles").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("inquiries").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("agreements").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("payments").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("activity_logs").select("*").order("created_at", { ascending: false }).limit(100),
-      (supabase as any).from("properties").select("*").order("id"),
-    ]);
+    const [profilesRes, inquiriesRes, agreementsRes, paymentsRes, activityRes, propsRes] =
+      await Promise.all([
+        (supabase as any).from("profiles").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("inquiries").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("agreements").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("payments").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("activity_logs").select("*").order("created_at", { ascending: false }).limit(100),
+        (supabase as any).from("properties").select("*").order("id"),
+      ]);
     setAllProfiles(profilesRes.data || []);
     setAllInquiries(inquiriesRes.data || []);
     setAllAgreements(agreementsRes.data || []);
@@ -125,6 +135,9 @@ const Admin = () => {
   const pendingAgreements = allAgreements.filter((a) => a.approval_status === "Pending" && a.signature_url).length;
   const pendingPayments = allPayments.filter((p) => p.status === "Pending").length;
 
+  // Rental properties for Rooms / Stays Bookings tabs
+  const rentalProperties = dbProperties.filter((p: any) => RENTAL_KINDS.includes(p.listing_kind));
+
   const filteredUsers = allProfiles.filter((p) =>
     !userSearch || (p.display_name || "").toLowerCase().includes(userSearch.toLowerCase()) || p.id.includes(userSearch)
   );
@@ -143,21 +156,33 @@ const Admin = () => {
   allInquiries.forEach((i) => { if (i.user_id) userInquiryCounts[i.user_id] = (userInquiryCounts[i.user_id] || 0) + 1; });
 
   const topProperties = Object.entries(
-    allInquiries.reduce((acc: Record<number, number>, i) => { if (i.property_id) acc[i.property_id] = (acc[i.property_id] || 0) + 1; return acc; }, {})
-  ).sort(([, a], [, b]) => (b as number) - (a as number)).slice(0, 5).map(([id, count]) => {
-    const prop = dbProperties.find((p: any) => p.id === Number(id)) || staticProperties.find((p) => p.id === Number(id));
-    return { property: prop, count };
-  });
+    allInquiries.reduce((acc: Record<number, number>, i) => {
+      if (i.property_id) acc[i.property_id] = (acc[i.property_id] || 0) + 1;
+      return acc;
+    }, {})
+  )
+    .sort(([, a], [, b]) => (b as number) - (a as number))
+    .slice(0, 5)
+    .map(([id, count]) => {
+      const prop = dbProperties.find((p: any) => p.id === Number(id)) || staticProperties.find((p) => p.id === Number(id));
+      return { property: prop, count };
+    });
 
-  const getProfile = (userId: string) => allProfiles.find(p => p.id === userId);
+  const getProfile = (userId: string) => allProfiles.find((p) => p.id === userId);
   const getPropDisplay = (propId: number) => {
     const dbProp = dbProperties.find((p: any) => p.id === propId);
-    const staticProp = staticProperties.find(p => p.id === propId);
-    return { title: dbProp?.title || staticProp?.title || `Property #${propId}`, image: staticProp?.image || dbProp?.image_url || "/placeholder.svg" };
+    const staticProp = staticProperties.find((p) => p.id === propId);
+    return {
+      title: dbProp?.title || staticProp?.title || `Property #${propId}`,
+      image: staticProp?.image || dbProp?.image_url || "/placeholder.svg",
+    };
   };
 
   const handleChangePropertyStatus = async (propertyId: number, newStatus: string) => {
-    const { error } = await (supabase as any).from("properties").update({ status: newStatus, updated_at: new Date().toISOString() }).eq("id", propertyId);
+    const { error } = await (supabase as any)
+      .from("properties")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", propertyId);
     if (error) {
       toast({ title: "Failed to update status", variant: "destructive" });
     } else {
@@ -233,13 +258,15 @@ const Admin = () => {
   };
 
   const tabs = [
-    { id: "overview" as const, label: "Overview", icon: BarChart3 },
-    { id: "users" as const, label: "Users", icon: Users },
-    { id: "enquiries" as const, label: "Enquiries", icon: MessageSquare },
-    { id: "properties" as const, label: "Properties", icon: Building2 },
-    { id: "agreements" as const, label: "Agreements", icon: FileSignature, badge: pendingAgreements },
-    { id: "payments" as const, label: "Payments", icon: CreditCard, badge: pendingPayments },
-    { id: "activity" as const, label: "Activity", icon: Activity },
+    { id: "overview" as TabId, label: "Overview", icon: BarChart3 },
+    { id: "users" as TabId, label: "Users", icon: Users },
+    { id: "enquiries" as TabId, label: "Enquiries", icon: MessageSquare },
+    { id: "properties" as TabId, label: "Properties", icon: Building2 },
+    { id: "rooms" as TabId, label: "Rooms", icon: BedDouble },
+    { id: "stays_bookings" as TabId, label: "Stays Bookings", icon: CalendarCheck },
+    { id: "agreements" as TabId, label: "Agreements", icon: FileSignature, badge: pendingAgreements },
+    { id: "payments" as TabId, label: "Payments", icon: CreditCard, badge: pendingPayments },
+    { id: "activity" as TabId, label: "Activity", icon: Activity },
   ];
 
   const statusColors: Record<string, string> = {
@@ -251,39 +278,49 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 flex items-start justify-between gap-4 flex-wrap">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center"><Shield className="w-6 h-6 text-primary" /></div>
+            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+              <Shield className="w-6 h-6 text-primary" />
+            </div>
             <div>
               <h1 className="font-display text-3xl md:text-4xl font-semibold text-foreground">Admin Panel</h1>
-              <p className="text-muted-foreground">Manage users, properties, agreements, payments, and platform activity</p>
+              <p className="text-muted-foreground">Manage users, properties, rooms, bookings, agreements, and payments</p>
             </div>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button asChild variant="outline" size="sm"><a href="/admin/stays"><BedDouble className="w-4 h-4 mr-2" />Manage Stays</a></Button>
-            <Button asChild variant="outline" size="sm"><a href="/admin/roles"><Shield className="w-4 h-4 mr-2" />Roles</a></Button>
           </div>
         </motion.div>
 
-        <div className="flex gap-2 mb-10 border-b border-border pb-0 overflow-x-auto">
+        {/* Tabs */}
+        <div className="flex gap-1 mb-10 border-b border-border pb-0 overflow-x-auto">
           {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${
+                activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
               <tab.icon className="w-4 h-4" />
               {tab.label}
-              {(tab as any).badge > 0 && <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-red-500/10 text-red-500">{(tab as any).badge}</span>}
+              {(tab as any).badge > 0 && (
+                <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-red-500/10 text-red-500">
+                  {(tab as any).badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
         <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          {/* Overview */}
+
+          {/* ── Overview ── */}
           {activeTab === "overview" && (
             <div className="space-y-8">
               <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 {[
                   { label: "Total Users", value: totalUsers, icon: Users },
                   { label: "Total Enquiries", value: totalInquiries, icon: MessageSquare },
-                  { label: "Properties", value: dbProperties.length, icon: Building2 },
+                  { label: "Properties", value: dbProperties.filter((p: any) => !RENTAL_KINDS.includes(p.listing_kind)).length, icon: Building2 },
                   { label: "Pending Agreements", value: pendingAgreements, icon: FileSignature },
                   { label: "Pending Payments", value: pendingPayments, icon: CreditCard },
                 ].map((stat, i) => (
@@ -300,25 +337,47 @@ const Admin = () => {
                   </Card>
                 ))}
               </div>
-              {/* Property Status Summary */}
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> Property Status Summary</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
-                    {PROPERTY_STATUSES.map(status => {
-                      const count = dbProperties.filter((p: any) => p.status === status).length;
-                      return (
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" />Property Status</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4">
+                      {PROPERTY_STATUSES.map((status) => (
                         <div key={status} className="p-4 rounded-xl bg-muted/50 text-center">
                           <p className="text-sm text-muted-foreground">{status}</p>
-                          <p className="text-2xl font-display font-semibold text-foreground">{count}</p>
+                          <p className="text-2xl font-display font-semibold text-foreground">
+                            {dbProperties.filter((p: any) => p.status === status && !RENTAL_KINDS.includes(p.listing_kind)).length}
+                          </p>
                         </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader><CardTitle className="flex items-center gap-2"><BedDouble className="w-5 h-5 text-primary" />Rental Inventory</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4">
+                      {[
+                        { label: "Hotels", kind: "hotel" },
+                        { label: "Apartments", kind: "rental_property" },
+                        { label: "Commercial", kind: "commercial_rental" },
+                      ].map((k) => (
+                        <div key={k.kind} className="p-4 rounded-xl bg-muted/50 text-center">
+                          <p className="text-sm text-muted-foreground">{k.label}</p>
+                          <p className="text-2xl font-display font-semibold text-foreground">
+                            {dbProperties.filter((p: any) => p.listing_kind === k.kind).length}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" /> Most Enquired Properties</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Most Enquired Properties</CardTitle></CardHeader>
                 <CardContent>
                   {topProperties.length === 0 ? <p className="text-sm text-muted-foreground">No enquiries yet</p> : (
                     <div className="space-y-3">
@@ -339,13 +398,13 @@ const Admin = () => {
             </div>
           )}
 
-          {/* Users */}
+          {/* ── Users ── */}
           {activeTab === "users" && (
             <div className="space-y-6">
               <div className="flex gap-3">
                 <div className="relative flex-1 max-w-md">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input placeholder="Search users..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-10" />
+                  <Input placeholder="Search users…" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pl-10" />
                 </div>
               </div>
               <Card>
@@ -357,7 +416,7 @@ const Admin = () => {
                     <TableBody>
                       {filteredUsers.map((profile) => (
                         <TableRow key={profile.id} className={profile.suspended ? "opacity-60" : ""}>
-                          <TableCell><div><p className="font-medium text-foreground">{profile.display_name || "—"}</p><p className="text-xs text-muted-foreground">{profile.id.slice(0, 8)}...</p></div></TableCell>
+                          <TableCell><div><p className="font-medium text-foreground">{profile.display_name || "—"}</p><p className="text-xs text-muted-foreground">{profile.id.slice(0, 8)}…</p></div></TableCell>
                           <TableCell className="text-muted-foreground">{profile.phone || "—"}</TableCell>
                           <TableCell className="text-muted-foreground">{new Date(profile.created_at).toLocaleDateString()}</TableCell>
                           <TableCell><span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">{userInquiryCounts[profile.id] || 0}</span></TableCell>
@@ -381,7 +440,7 @@ const Admin = () => {
                                   <AlertDialogDescription>
                                     {profile.suspended
                                       ? `${profile.display_name || "This user"} will regain access to their account.`
-                                      : `${profile.display_name || "This user"} will be signed out on their next request and prevented from accessing their dashboard.`}
+                                      : `${profile.display_name || "This user"} will be signed out and prevented from accessing their dashboard.`}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -403,7 +462,7 @@ const Admin = () => {
             </div>
           )}
 
-          {/* Enquiries */}
+          {/* ── Enquiries ── */}
           {activeTab === "enquiries" && (
             <div className="space-y-6">
               <div className="flex flex-wrap gap-3">
@@ -420,7 +479,9 @@ const Admin = () => {
                   <SelectTrigger className="w-52"><SelectValue placeholder="Property" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Properties</SelectItem>
-                    {(dbProperties.length > 0 ? dbProperties : staticProperties).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
+                    {(dbProperties.length > 0 ? dbProperties : staticProperties).map((p: any) => (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -452,7 +513,7 @@ const Admin = () => {
             </div>
           )}
 
-          {/* Properties Management */}
+          {/* ── Properties (Sales) ── */}
           {activeTab === "properties" && (
             <div className="space-y-6">
               <div className="flex flex-wrap gap-3 items-center">
@@ -460,7 +521,7 @@ const Admin = () => {
                   <SelectTrigger className="w-44"><SelectValue placeholder="Filter by status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    {PROPERTY_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    {PROPERTY_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground ml-auto">{filteredProperties.length} properties</p>
@@ -470,10 +531,10 @@ const Admin = () => {
               </div>
               <div className="grid gap-4">
                 {filteredProperties.map((prop: any) => {
-                  const staticProp = staticProperties.find(p => p.id === prop.id);
+                  const staticProp = staticProperties.find((p) => p.id === prop.id);
                   const image = prop.image_url || staticProp?.image || "/placeholder.svg";
-                  const enquiryCount = allInquiries.filter(i => i.property_id === prop.id).length;
-                  const agreementCount = allAgreements.filter(a => a.property_id === prop.id).length;
+                  const enquiryCount = allInquiries.filter((i) => i.property_id === prop.id).length;
+                  const agreementCount = allAgreements.filter((a) => a.property_id === prop.id).length;
                   return (
                     <Card key={prop.id}>
                       <CardContent className="p-4">
@@ -484,7 +545,7 @@ const Admin = () => {
                               <h4 className="font-semibold text-foreground truncate">{prop.title}</h4>
                               <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[prop.status] || "bg-muted text-muted-foreground"}`}>{prop.status}</span>
                             </div>
-                            <p className="text-sm text-muted-foreground">{prop.location} • {prop.price}</p>
+                            <p className="text-sm text-muted-foreground">{prop.location} · {prop.price}</p>
                             <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
                               <span>{enquiryCount} enquiries</span>
                               <span>{agreementCount} agreements</span>
@@ -492,13 +553,9 @@ const Admin = () => {
                           </div>
                           <div className="flex flex-wrap gap-2 flex-shrink-0">
                             <Select value={prop.status} onValueChange={(val) => handleChangePropertyStatus(prop.id, val)}>
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
+                              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                {PROPERTY_STATUSES.map(s => (
-                                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                                ))}
+                                {PROPERTY_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                               </SelectContent>
                             </Select>
                             <Button variant="outline" size="icon" onClick={() => { setEditingProperty(prop); setPropertyDialogOpen(true); }}>
@@ -511,9 +568,7 @@ const Admin = () => {
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Delete property?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    "{prop.title}" will be permanently removed. Existing agreements, payments, and invoices for this property may break.
-                                  </AlertDialogDescription>
+                                  <AlertDialogDescription>"{prop.title}" will be permanently removed.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -531,14 +586,23 @@ const Admin = () => {
                   <div className="text-center py-20">
                     <Building2 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-foreground mb-2">No properties found</h3>
-                    <p className="text-muted-foreground">No properties match the selected filter</p>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* Agreements */}
+          {/* ── Rooms ── */}
+          {activeTab === "rooms" && (
+            <AdminRoomsTab rentalProperties={rentalProperties} />
+          )}
+
+          {/* ── Stays Bookings ── */}
+          {activeTab === "stays_bookings" && (
+            <AdminStaysBookingsTab rentalProperties={rentalProperties} />
+          )}
+
+          {/* ── Agreements ── */}
           {activeTab === "agreements" && (
             <div className="space-y-8">
               <Card>
@@ -548,7 +612,7 @@ const Admin = () => {
                     <Select value={newAgrUserId} onValueChange={setNewAgrUserId}>
                       <SelectTrigger><SelectValue placeholder="Select user" /></SelectTrigger>
                       <SelectContent>
-                        {allProfiles.map(p => <SelectItem key={p.id} value={p.id}>{p.display_name || p.id.slice(0, 8)}</SelectItem>)}
+                        {allProfiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.display_name || p.id.slice(0, 8)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <Select value={newAgrPropertyId} onValueChange={setNewAgrPropertyId}>
@@ -560,7 +624,7 @@ const Admin = () => {
                     <Input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setNewAgrDoc(e.target.files?.[0] || null)} />
                   </div>
                   <Button onClick={handleCreateAgreement} disabled={creatingAgr || !newAgrUserId || !newAgrPropertyId} className="mt-4">
-                    {creatingAgr ? "Creating..." : "Create Agreement"}
+                    {creatingAgr ? "Creating…" : "Create Agreement"}
                   </Button>
                 </CardContent>
               </Card>
@@ -568,11 +632,11 @@ const Admin = () => {
               <Card>
                 <CardHeader><CardTitle>Pending Approvals ({pendingAgreements})</CardTitle></CardHeader>
                 <CardContent>
-                  {allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).length === 0 ? (
+                  {allAgreements.filter((a) => a.approval_status === "Pending" && a.signature_url).length === 0 ? (
                     <p className="text-muted-foreground text-center py-6">No pending approvals</p>
                   ) : (
                     <div className="space-y-4">
-                      {allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).map(agr => {
+                      {allAgreements.filter((a) => a.approval_status === "Pending" && a.signature_url).map((agr) => {
                         const { title } = getPropDisplay(agr.property_id);
                         const profile = getProfile(agr.user_id);
                         return (
@@ -598,11 +662,9 @@ const Admin = () => {
                 <CardHeader><CardTitle>All Agreements</CardTitle></CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader>
-                      <TableRow><TableHead>Property</TableHead><TableHead>User</TableHead><TableHead>Status</TableHead><TableHead>Signed</TableHead><TableHead>Date</TableHead></TableRow>
-                    </TableHeader>
+                    <TableHeader><TableRow><TableHead>Property</TableHead><TableHead>User</TableHead><TableHead>Status</TableHead><TableHead>Signed</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {allAgreements.map(agr => {
+                      {allAgreements.map((agr) => {
                         const { title } = getPropDisplay(agr.property_id);
                         const profile = getProfile(agr.user_id);
                         return (
@@ -622,24 +684,24 @@ const Admin = () => {
             </div>
           )}
 
-          {/* Payments */}
+          {/* ── Payments ── */}
           {activeTab === "payments" && (
             <div className="space-y-8">
               <Card>
                 <CardHeader><CardTitle>Pending Confirmations ({pendingPayments})</CardTitle></CardHeader>
                 <CardContent>
-                  {allPayments.filter(p => p.status === "Pending").length === 0 ? (
+                  {allPayments.filter((p) => p.status === "Pending").length === 0 ? (
                     <p className="text-muted-foreground text-center py-6">No pending payments</p>
                   ) : (
                     <div className="space-y-4">
-                      {allPayments.filter(p => p.status === "Pending").map(pay => {
+                      {allPayments.filter((p) => p.status === "Pending").map((pay) => {
                         const { title } = getPropDisplay(pay.property_id);
                         const profile = getProfile(pay.user_id);
                         return (
                           <div key={pay.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl">
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-foreground">{title} — ${pay.amount?.toLocaleString()}</p>
-                              <p className="text-sm text-muted-foreground">By: {profile?.display_name || pay.user_id.slice(0, 8)} • {new Date(pay.payment_date).toLocaleDateString()}</p>
+                              <p className="text-sm text-muted-foreground">By: {profile?.display_name || pay.user_id.slice(0, 8)} · {new Date(pay.payment_date).toLocaleDateString()}</p>
                               {pay.receipt_url && <a href={pay.receipt_url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">View Receipt</a>}
                             </div>
                             <div className="flex gap-2">
@@ -653,16 +715,13 @@ const Admin = () => {
                   )}
                 </CardContent>
               </Card>
-
               <Card>
                 <CardHeader><CardTitle>All Payments</CardTitle></CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader>
-                      <TableRow><TableHead>Property</TableHead><TableHead>User</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow>
-                    </TableHeader>
+                    <TableHeader><TableRow><TableHead>Property</TableHead><TableHead>User</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {allPayments.map(pay => {
+                      {allPayments.map((pay) => {
                         const { title } = getPropDisplay(pay.property_id);
                         const profile = getProfile(pay.user_id);
                         return (
@@ -682,14 +741,13 @@ const Admin = () => {
             </div>
           )}
 
-          {/* Activity */}
+          {/* ── Activity ── */}
           {activeTab === "activity" && (
             <div className="space-y-4">
               {activityLogs.length === 0 ? (
                 <div className="text-center py-20">
                   <Activity className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-foreground mb-2">No activity yet</h3>
-                  <p className="text-muted-foreground">Platform activity will appear here</p>
                 </div>
               ) : (
                 <Card>
