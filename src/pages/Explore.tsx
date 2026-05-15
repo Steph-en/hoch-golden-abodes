@@ -72,9 +72,6 @@ const RentalCard = ({ stay }: { stay: RentalProperty }) => (
         <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
         <span className="line-clamp-1">{stay.location}</span>
       </div>
-      {stay.nightly_price > 0 && (
-        <p className="text-sm font-semibold text-primary mb-4">${stay.nightly_price}/night</p>
-      )}
       <Link to={`/stays/${stay.id}`}>
         <Button className="w-full" variant="outline">
           View Rooms
