@@ -391,7 +391,7 @@ const Admin = () => {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-8 border-b border-border pb-0 overflow-x-auto">
+        <div className="flex gap-1 mb-8 border-b border-border pb-1 overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
