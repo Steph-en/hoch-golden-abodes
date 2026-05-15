@@ -242,14 +242,14 @@ const AdminStays = () => {
                   <Input value={roomSearch} onChange={e => setRoomSearch(e.target.value)} placeholder="Search rooms..." className="pl-9" />
                 </div>
                 <Select value={roomFilterProperty} onValueChange={setRoomFilterProperty}>
-                  <SelectTrigger className="w-[180px]"><SelectValue placeholder="Property" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Property" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All properties</SelectItem>
                     {stayProps.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Select value={roomFilterType} onValueChange={setRoomFilterType}>
-                  <SelectTrigger className="w-[150px]"><SelectValue placeholder="Type" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All types</SelectItem>
                     {Array.from(new Set(rooms.map(r => r.room_type).filter(Boolean))).map(t => (
@@ -258,7 +258,7 @@ const AdminStays = () => {
                   </SelectContent>
                 </Select>
                 <Select value={roomFilterStatus} onValueChange={setRoomFilterStatus}>
-                  <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All status</SelectItem>
                     {["active","inactive","maintenance"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -363,14 +363,14 @@ const AdminStays = () => {
                         <Input value={bookingSearch} onChange={e => setBookingSearch(e.target.value)} placeholder="Search guest, email..." className="pl-9" />
                       </div>
                       <Select value={bookingFilterProperty} onValueChange={setBookingFilterProperty}>
-                        <SelectTrigger className="w-[180px]"><SelectValue placeholder="Property" /></SelectTrigger>
+                        <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Property" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All properties</SelectItem>
                           {stayProps.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Select value={bookingFilterRoomType} onValueChange={setBookingFilterRoomType}>
-                        <SelectTrigger className="w-[150px]"><SelectValue placeholder="Room type" /></SelectTrigger>
+                        <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Room type" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All room types</SelectItem>
                           {Array.from(new Set(rooms.map(r => r.room_type).filter(Boolean))).map(t => (
@@ -379,14 +379,14 @@ const AdminStays = () => {
                         </SelectContent>
                       </Select>
                       <Select value={bookingFilterStatus} onValueChange={setBookingFilterStatus}>
-                        <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                        <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All status</SelectItem>
                           {BOOKING_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Select value={bookingFilterPayment} onValueChange={setBookingFilterPayment}>
-                        <SelectTrigger className="w-[140px]"><SelectValue placeholder="Payment" /></SelectTrigger>
+                        <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder="Payment" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All payments</SelectItem>
                           {PAYMENT_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -394,11 +394,11 @@ const AdminStays = () => {
                       </Select>
                       <div className="space-y-1">
                         <Label className="text-xs">From</Label>
-                        <Input type="date" value={bookingFrom} onChange={e => setBookingFrom(e.target.value)} className="w-[150px]" />
+                        <Input type="date" value={bookingFrom} onChange={e => setBookingFrom(e.target.value)} className="w-full sm:w-[150px]" />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">To</Label>
-                        <Input type="date" value={bookingTo} onChange={e => setBookingTo(e.target.value)} className="w-[150px]" />
+                        <Input type="date" value={bookingTo} onChange={e => setBookingTo(e.target.value)} className="w-full sm:w-[150px]" />
                       </div>
                       {(bookingSearch || bookingFilterProperty !== "all" || bookingFilterRoomType !== "all" || bookingFilterStatus !== "all" || bookingFilterPayment !== "all" || bookingFrom || bookingTo) && (
                         <Button variant="ghost" size="sm" onClick={() => { setBookingSearch(""); setBookingFilterProperty("all"); setBookingFilterRoomType("all"); setBookingFilterStatus("all"); setBookingFilterPayment("all"); setBookingFrom(""); setBookingTo(""); }}>
