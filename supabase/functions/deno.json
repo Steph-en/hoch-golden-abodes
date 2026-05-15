@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "lib": ["deno.window"],
+        "strict": true
+    },
+    "imports": {
+        "https://esm.sh/@supabase/supabase-js@2.95.0/cors": "https://esm.sh/@supabase/supabase-js@2.95.0/cors"
+    }
+}

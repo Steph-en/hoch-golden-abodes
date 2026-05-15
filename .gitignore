@@ -50,6 +50,9 @@ coverage/
 !.vscode/extensions.json
 .idea/
 .DS_Store
+Thumbs.db
+.eslintcache
+.turbo/
 *.suo
 *.ntvs*
 *.njsproj
@@ -67,6 +70,13 @@ coverage/
 supabase/config.toml
 supabase/.env
 supabase/.temp
+supabase/.metabase
+
+# Supabase local function build artifacts (Deno-based)
+# (migrations are source-of-truth and intentionally NOT ignored)
+supabase/functions/**/.deno/
+supabase/functions/**/dist/
+supabase/functions/**/target/
 
 # ============================
 # Lockfiles (optional)
@@ -75,6 +85,8 @@ supabase/.temp
 bun.lockb
 bun.lock
 package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # ============================
 # Lovable (if generated)
@@ -85,4 +97,3 @@ package-lock.json
 # Misc
 # ============================
 .git/
-

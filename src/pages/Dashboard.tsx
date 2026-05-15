@@ -535,7 +535,7 @@ const Dashboard = () => {
         path="/dashboard"
         noIndex
       />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex items-center gap-4 mb-2">
             <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
@@ -551,7 +551,7 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-10 border-b border-border pb-0 overflow-x-auto">
+        <div className="flex gap-1 mb-10 border-b border-border pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
