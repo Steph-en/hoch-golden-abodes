@@ -462,7 +462,7 @@ const Admin = () => {
                     onChange={e => setUserSearch(e.target.value)} className="pl-9" />
                 </div>
                 <Select value={userRoleFilter} onValueChange={setUserRoleFilter}>
-                  <SelectTrigger className="w-44"><SelectValue placeholder="All roles" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All roles" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Roles</SelectItem>
                     {["super_admin","admin","moderator","user"].map(r => (
@@ -471,7 +471,7 @@ const Admin = () => {
                   </SelectContent>
                 </Select>
                 <Select value={userStatusFilter} onValueChange={setUserStatusFilter}>
-                  <SelectTrigger className="w-40"><SelectValue placeholder="All status" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
@@ -641,7 +641,7 @@ const Admin = () => {
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 <Select value={inquiryStatusFilter} onValueChange={setInquiryStatusFilter}>
-                  <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
@@ -696,7 +696,7 @@ const Admin = () => {
                 </div>
                 {propertyTab === "active" && (
                   <Select value={propertyStatusFilter} onValueChange={setPropertyStatusFilter}>
-                    <SelectTrigger className="w-44"><SelectValue placeholder="All statuses" /></SelectTrigger>
+                    <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All statuses" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Statuses</SelectItem>
                       {PROPERTY_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
