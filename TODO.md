@@ -1,27 +1,56 @@
-# TODO — Two-way HOCH enquiry chat
+# TODO - HOCH Agreements History Management
 
-## Phase 1: Schema + realtime
-- [x] Create migration: `public.enquiry_messages` (full chat thread)
-- [x] Create migration: `public.enquiry_message_receipts` (per-recipient read receipts)
-- [x] Add RLS policies for select/insert/update on both tables
-- [x] Enable Supabase realtime publication for `enquiry_messages`
+## 1) Gather & confirm current agreement schema
+- [x] Scan repo for agreements/signatures usage
+- [x] Inspect existing agreement UI in `src/pages/Dashboard.tsx`
+- [x] Inspect existing Supabase migration creating `public.agreements` and storage buckets/policies
 
-## Phase 2: Data migration/backfill
-- [ ] Backfill: convert existing `inquiries` + `enquiry_responses` into `enquiry_messages`
-- [ ] Backfill: populate receipts for initial messages (mark sender as read)
+## 2) Database enhancements (Supabase)
+- [ ] Add/extend `public.agreements` fields for status lifecycle, timestamps, archival
+- [x] Create `agreement_versions`, `agreement_signatures`, `agreement_audit_logs` tables + basic RLS
+- [x] Add agreement versioning + status sync triggers
+- [x] Add delete protection trigger
 
-## Phase 3: Frontend chat UI
-- [ ] Rewrite `src/components/EnquiryDetailModal.tsx` to use `enquiry_messages`
-- [ ] Add Supabase realtime subscription (filter by selected `enquiry_id`)
-- [ ] Implement composer for both user + admin
-- [ ] Auto-scroll + empty/loading states
+- [ ] Create `public.agreement_versions`
+- [ ] Create `public.agreement_signatures`
+- [ ] Create `public.agreement_audit_logs`
+- [ ] Add triggers/functions for versioning after signed edit
+- [ ] Add constraints to prevent deleting signed artifacts (soft-delete / RLS restrictions)
 
-## Phase 4: Notifications
-- [ ] Add DB trigger/function to create `notifications` on new chat messages
-- [ ] Ensure notifications realtime updates work for badges/unread counts
 
-## Phase 5: Admin list UX (incremental)
-- [ ] Add admin filters: unread/active/resolved based on messages + receipts
-- [ ] Add search by user name/email/property
-- [ ] Resolve/close conversation updates
+## 3) Signed document storage (Supabase Storage)
+- [ ] Ensure signed PDFs stored in a private bucket
+- [ ] Add storage object RLS policies (user own access; admin all)
+- [ ] Implement consistent storage path scheme including agreement/version identifiers
+
+## 4) RLS policies
+- [ ] Add RLS policies for selecting/insert/update/delete on new tables
+- [ ] Ensure users can only access their agreements + signed docs + history
+- [ ] Ensure admins can access all
+
+## 5) Backend support helpers (optional)
+- [ ] Add helper function/edge function to generate signed URLs for PDFs (if needed)
+
+## 6) Frontend: User dashboard agreements page
+- [ ] Replace agreements card list with searchable/filterable list
+- [ ] Implement status badges + full timestamp display
+- [ ] Add PDF preview/download modal using secure signed URLs
+- [ ] Add agreement history timeline/version viewer
+- [ ] Add filters: signed / pending / expired / archived
+
+## 7) Frontend: Admin dashboard agreements
+- [ ] Enhance agreements section in `src/pages/Admin.tsx`
+- [ ] Add search: user name/email/property/agreement id
+- [ ] Add filters: status + date range + property + user
+- [ ] Add actions: view signed, view history, archive, restore
+- [ ] Ensure secure access to PDFs
+
+## 8) Types + UI components
+- [ ] Update `src/integrations/supabase/types.ts`
+- [ ] Add reusable UI components (status badge, pdf modal, timeline, empty/loading states)
+
+## 9) Testing/verification
+- [ ] Run migrations
+- [ ] Smoke-test user vs admin access control
+- [ ] Validate signed agreement persistence and historical records after edits
 

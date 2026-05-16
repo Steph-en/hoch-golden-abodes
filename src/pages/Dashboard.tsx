@@ -463,10 +463,44 @@ const Dashboard = () => {
     let receiptUrl = null;
     if (receiptFile) {
       const path = `${user.id}/${Date.now()}_${receiptFile.name}`;
-      const { data: uploadData } = await supabase.storage.from("receipts").upload(path, receiptFile);
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from("receipts")
+        .upload(path, receiptFile, { upsert: true });
+
+      if (uploadErr) {
+        toast({ title: "Receipt upload failed", description: uploadErr.message, variant: "destructive" });
+        return;
+      }
+
       if (uploadData) {
-        const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(path);
-        receiptUrl = urlData.publicUrl;
+        // receipts bucket is private (public = false), so public URL 404s.
+        const { data: signed, error: signedErr } = await supabase.storage
+          .from("receipts")
+          .createSignedUrl(path, 60 * 60);
+
+        if (signedErr) {
+          toast({ title: "Could not open receipt", description: signedErr.message, variant: "destructive" });
+          return;
+        }
+
+        // Store signed URL.
+        // The signed URL must include the correct auth query params.
+        // Also handle response-shape differences.
+        receiptUrl =
+          (signed as any)?.signedUrl ||
+          (signed as any)?.url ||
+          (signed as any)?.data?.signedUrl ||
+          signed.signedUrl;
+
+        // If we somehow ended up with a public-object URL, ignore it.
+        if (typeof receiptUrl === "string" && receiptUrl.includes("/object/public/receipts/")) {
+          toast({
+            title: "Receipt link error",
+            description: "Generated URL points to a public endpoint, but receipts bucket is private.",
+            variant: "destructive",
+          });
+          receiptUrl = null;
+        }
       }
     }
     const { error } = await (supabase as any).from("payments").insert({

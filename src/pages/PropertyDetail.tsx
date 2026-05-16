@@ -463,7 +463,7 @@ const PropertyDetail = () => {
                   <Phone className="w-5 h-5 text-primary" />
                   <div>
                     <p className="text-sm text-muted-foreground">Call Us</p>
-                    <p className="font-semibold text-foreground">+233 20 123 4567</p>
+                    <p className="font-semibold text-foreground">+233 59 276 3541</p>
                   </div>
                 </a>
                 <a
