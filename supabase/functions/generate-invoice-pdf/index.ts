@@ -3,7 +3,7 @@ import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
@@ -82,8 +82,8 @@ Deno.serve(async (req) => {
         <p style="color:#64748b;margin:4px 0;">Date: ${invoiceDate}</p>
       </div>
       <div style="text-align:right;">
-        <h2 style="margin:0;font-size:18px;color:#0f172a;">LuxeRealty</h2>
-        <p style="color:#64748b;margin:4px 0;font-size:13px;">Premium Real Estate</p>
+        <h2 style="margin:0;font-size:18px;color:#0f172a;">The Hoch Group</h2>
+        <p style="color:#64748b;margin:4px 0;font-size:13px;">Where Luxury Meets Home</p>
       </div>
     </div>
 

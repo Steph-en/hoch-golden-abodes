@@ -97,3 +97,5 @@ pnpm-lock.yaml
 # Misc
 # ============================
 .git/
+.vercel
+.env*.local

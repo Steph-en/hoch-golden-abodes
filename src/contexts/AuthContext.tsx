@@ -34,7 +34,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from("profiles")
       .select("*")
       .eq("id", userId)
-      .single();
+      .single()
+      .throwOnError();
+
     if (data?.suspended) {
       await supabase.auth.signOut();
       setUser(null);
