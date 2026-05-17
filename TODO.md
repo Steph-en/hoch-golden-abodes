@@ -5,3 +5,4 @@
 - [ ] Search for other occurrences of “LuxeRealty” in invoice-related code and replace them.
 - [ ] Run TypeScript/linters and (if available) a local invoice generation sanity check.
 
+

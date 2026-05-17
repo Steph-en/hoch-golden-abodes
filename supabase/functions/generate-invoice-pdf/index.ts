@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       </div>
       <div style="text-align:right;">
         <h2 style="margin:0;font-size:18px;color:#0f172a;">The Hoch Group</h2>
-        <p style="color:#64748b;margin:4px 0;font-size:13px;">Luxury Meets Home</p>
+        <p style="color:#64748b;margin:4px 0;font-size:13px;">Where Luxury Meets Home</p>
       </div>
     </div>
 
