@@ -231,7 +231,7 @@ const About = () => {
       </section>
 
       {/* Team Section */}
-      <section ref={teamRef} className="py-24 px-4">
+      {/* <section ref={teamRef} className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -287,7 +287,7 @@ const About = () => {
             </Link>
           </motion.div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };

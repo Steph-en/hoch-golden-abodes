@@ -5,17 +5,17 @@ import {
   CheckCircle2, TrendingUp, BarChart3, FileSignature, CreditCard, XCircle,
   Building2, Plus, Pencil, Trash2, BedDouble, CalendarCheck, Archive,
   RotateCcw, FileText, Ban, UserCheck, UserX, Crown, ChevronDown,
-  Loader2, AlertTriangle,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -35,7 +35,6 @@ import PropertyFormDialog from "@/components/admin/PropertyFormDialog";
 import AdminRoomsTab from "@/components/admin/AdminRoomsTab";
 import AdminStaysBookingsTab from "@/components/admin/AdminStaysBookingsTab";
 import { useToast } from "@/hooks/use-toast";
-import { toast as sonnerToast } from "sonner";
 
 const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
 const RENTAL_KINDS = ["rental_property", "hotel", "commercial_rental"];
@@ -45,16 +44,17 @@ const sendNotification = async (payload: any) => {
   catch (e) { console.error("notification email failed", e); }
 };
 
-type TabId = "overview" | "users" | "enquiries" | "properties" | "agreements"
-  | "payments" | "activity" | "rooms" | "stays_bookings";
+type TabId =
+  | "overview" | "users" | "enquiries" | "properties"
+  | "agreements" | "payments" | "activity" | "rooms" | "stays_bookings";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Small helpers ─────────────────────────────────────────────────────────────
 
 const roleColor: Record<string, string> = {
   super_admin: "bg-purple-500/10 text-purple-600",
-  admin: "bg-primary/10 text-primary",
-  moderator: "bg-blue-500/10 text-blue-600",
-  user: "bg-muted text-muted-foreground",
+  admin:       "bg-primary/10 text-primary",
+  moderator:   "bg-blue-500/10 text-blue-600",
+  user:        "bg-muted text-muted-foreground",
 };
 
 const RoleBadge = ({ role }: { role: string }) => (
@@ -64,126 +64,117 @@ const RoleBadge = ({ role }: { role: string }) => (
   </span>
 );
 
-const statusBadge = (status: string) => {
-  const map: Record<string, string> = {
-    Available: "bg-emerald-500/10 text-emerald-600",
-    Reserved: "bg-amber-500/10 text-amber-600",
-    Sold: "bg-red-500/10 text-red-600",
-    Rented: "bg-blue-500/10 text-blue-600",
-  };
-  return map[status] || "bg-muted text-muted-foreground";
+const propStatusColor: Record<string, string> = {
+  Available: "bg-emerald-500/10 text-emerald-600",
+  Reserved:  "bg-amber-500/10 text-amber-600",
+  Sold:      "bg-red-500/10 text-red-600",
+  Rented:    "bg-blue-500/10 text-blue-600",
 };
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, loading: adminLoading } = useAdmin();
+  // isSuperAdmin now comes directly from the updated useAdmin hook
+  const { isAdmin, isSuperAdmin, loading: adminLoading } = useAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("overview");
 
-  // Data
-  const [allUsers, setAllUsers] = useState<any[]>([]);
-  const [allInquiries, setAllInquiries] = useState<any[]>([]);
-  const [allAgreements, setAllAgreements] = useState<any[]>([]);
-  const [allPayments, setAllPayments] = useState<any[]>([]);
-  const [activityLogs, setActivityLogs] = useState<any[]>([]);
-  const [dbProperties, setDbProperties] = useState<any[]>([]);
+  // ── Data ──────────────────────────────────────────────────────────────────────
+  const [allUsers,       setAllUsers]       = useState<any[]>([]);
+  const [allInquiries,   setAllInquiries]   = useState<any[]>([]);
+  const [allAgreements,  setAllAgreements]  = useState<any[]>([]);
+  const [allPayments,    setAllPayments]    = useState<any[]>([]);
+  const [activityLogs,   setActivityLogs]   = useState<any[]>([]);
+  const [dbProperties,   setDbProperties]   = useState<any[]>([]);
 
-  // UI state
-  const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+  // ── UI state ──────────────────────────────────────────────────────────────────
+  const [selectedInquiry,    setSelectedInquiry]    = useState<any>(null);
   const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
-  const [editingProperty, setEditingProperty] = useState<any | null>(null);
-  const [selectedPropertyIds, setSelectedPropertyIds] = useState<Set<number>>(new Set());
-  const [bulkLoading, setBulkLoading] = useState(false);
+  const [editingProperty,    setEditingProperty]    = useState<any | null>(null);
+  const [selectedPropIds,    setSelectedPropIds]    = useState<Set<number>>(new Set());
+  const [bulkLoading,        setBulkLoading]        = useState(false);
 
   // User management
-  const [userSearch, setUserSearch] = useState("");
-  const [userRoleFilter, setUserRoleFilter] = useState("all");
-  const [userStatusFilter, setUserStatusFilter] = useState("all");
-  const [suspendReason, setSuspendReason] = useState("");
-  const [suspendTarget, setSuspendTarget] = useState<any | null>(null);
+  const [userSearch,      setUserSearch]      = useState("");
+  const [userRoleFilter,  setUserRoleFilter]  = useState("all");
+  const [userStatusFilter,setUserStatusFilter]= useState("all");
+  const [suspendReason,   setSuspendReason]   = useState("");
+  const [suspendTarget,   setSuspendTarget]   = useState<any | null>(null);
 
   // Property filters
-  const [propertyTab, setPropertyTab] = useState<"active" | "archived" | "draft">("active");
+  const [propertyTab,          setPropertyTab]          = useState<"active"|"archived">("active");
   const [propertyStatusFilter, setPropertyStatusFilter] = useState("all");
-  const [propertySearch, setPropertySearch] = useState("");
+  const [propertySearch,       setPropertySearch]       = useState("");
 
   // Enquiry filters
-  const [inquiryStatusFilter, setInquiryStatusFilter] = useState("all");
+  const [inquiryStatusFilter,   setInquiryStatusFilter]   = useState("all");
   const [inquiryPropertyFilter, setInquiryPropertyFilter] = useState("all");
 
-  // Agreement form
-  const [newAgrUserId, setNewAgrUserId] = useState("");
-  const [newAgrPropertyId, setNewAgrPropertyId] = useState("");
-  const [newAgrDoc, setNewAgrDoc] = useState<File | null>(null);
-  const [creatingAgr, setCreatingAgr] = useState(false);
+  // Agreement creation
+  const [newAgrUserId,    setNewAgrUserId]    = useState("");
+  const [newAgrPropertyId,setNewAgrPropertyId]= useState("");
+  const [newAgrDoc,       setNewAgrDoc]       = useState<File | null>(null);
+  const [creatingAgr,     setCreatingAgr]     = useState(false);
 
+  // ── Guards ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!authLoading && !adminLoading) {
-      if (!user) { navigate("/auth"); return; }
+      if (!user)    { navigate("/auth");      return; }
       if (!isAdmin) { navigate("/dashboard"); return; }
     }
   }, [user, isAdmin, authLoading, adminLoading, navigate]);
 
-  useEffect(() => {
-    if (!isAdmin || !user) return;
-    // Check super_admin
-    (supabase as any).from("user_roles").select("role")
-      .eq("user_id", user.id).eq("role", "super_admin")
-      .then(({ data }: any) => setIsSuperAdmin(data && data.length > 0));
-    fetchData();
-  }, [isAdmin, user]);
+  useEffect(() => { if (isAdmin) fetchData(); }, [isAdmin]);
 
   useEffect(() => {
     if (!isAdmin) return;
-    const ch = supabase.channel("admin-realtime")
+    const ch = supabase.channel("admin-rt")
       .on("postgres_changes", { event: "*", schema: "public", table: "agreements" }, fetchData)
-      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, fetchData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments"   }, fetchData)
       .on("postgres_changes", { event: "*", schema: "public", table: "properties" }, fetchData)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [isAdmin]);
 
+  // ── Data fetch ────────────────────────────────────────────────────────────────
   const fetchData = async () => {
-    const [usersRes, inqRes, agrRes, payRes, actRes, propsRes] = await Promise.all([
+    const [uRes, iRes, aRes, pRes, actRes, propRes] = await Promise.all([
       (supabase as any).rpc("list_users_with_roles"),
       (supabase as any).from("inquiries").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("agreements").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("payments").select("*").order("created_at", { ascending: false }),
+      (supabase as any).from("payments").select("*").order("created_at",  { ascending: false }),
       (supabase as any).from("activity_logs").select("*").order("created_at", { ascending: false }).limit(100),
       (supabase as any).from("properties").select("*").order("id"),
     ]);
-    setAllUsers(usersRes.data || []);
-    setAllInquiries(inqRes.data || []);
-    setAllAgreements(agrRes.data || []);
-    setAllPayments(payRes.data || []);
+    setAllUsers(uRes.data || []);
+    setAllInquiries(iRes.data || []);
+    setAllAgreements(aRes.data || []);
+    setAllPayments(pRes.data || []);
     setActivityLogs(actRes.data || []);
-    setDbProperties(propsRes.data || []);
+    setDbProperties(propRes.data || []);
   };
 
-  const isReady = !authLoading && !adminLoading && isAdmin;
+  // ── Derived data ──
+  const isReadyToRender = !authLoading && !adminLoading && isAdmin;
 
-  // Hook rules: never return before calling hooks.
-
-  // ── Computed values ─────────────────────────────────────────────────────────
-
-  const rentalProperties = dbProperties.filter((p: any) => RENTAL_KINDS.includes(p.listing_kind));
-  const salesProperties = dbProperties.filter((p: any) => !RENTAL_KINDS.includes(p.listing_kind));
-  const activeProps = salesProperties.filter((p: any) => !p.is_archived && !p.deleted_at);
-  const archivedProps = salesProperties.filter((p: any) => p.is_archived || p.deleted_at);
+  const rentalProperties  = dbProperties.filter((p: any) => RENTAL_KINDS.includes(p.listing_kind));
+  const salesProperties   = dbProperties.filter((p: any) => !RENTAL_KINDS.includes(p.listing_kind));
+  const activeProps       = salesProperties.filter((p: any) => !p.is_archived && !p.deleted_at);
+  const archivedProps     = salesProperties.filter((p: any) =>  p.is_archived ||  p.deleted_at);
   const pendingAgreements = allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).length;
-  const pendingPayments = allPayments.filter(p => p.status === "Pending").length;
+  const pendingPayments   = allPayments.filter(p => p.status === "Pending").length;
 
   const displayedProperties = useMemo(() => {
-    let list = propertyTab === "active" ? activeProps : propertyTab === "archived" ? archivedProps : salesProperties;
-    if (propertyStatusFilter !== "all") list = list.filter((p: any) => p.status === propertyStatusFilter);
+    let list = propertyTab === "active" ? activeProps : archivedProps;
+    if (propertyStatusFilter !== "all")
+      list = list.filter((p: any) => p.status === propertyStatusFilter);
     if (propertySearch.trim()) {
       const s = propertySearch.toLowerCase();
-      list = list.filter((p: any) => p.title.toLowerCase().includes(s) || p.location.toLowerCase().includes(s));
+      list = list.filter((p: any) =>
+        p.title.toLowerCase().includes(s) || p.location.toLowerCase().includes(s));
     }
     return list;
   }, [dbProperties, propertyTab, propertyStatusFilter, propertySearch]);
@@ -192,130 +183,100 @@ const Admin = () => {
     let list = allUsers;
     if (userSearch.trim()) {
       const s = userSearch.toLowerCase();
-      list = list.filter((u: any) => (u.email || "").toLowerCase().includes(s) || (u.display_name || "").toLowerCase().includes(s));
+      list = list.filter((u: any) =>
+        (u.email || "").toLowerCase().includes(s) ||
+        (u.display_name || "").toLowerCase().includes(s));
     }
-    if (userRoleFilter !== "all") {
+    if (userRoleFilter !== "all")
       list = list.filter((u: any) => (u.roles || []).includes(userRoleFilter));
-    }
-    if (userStatusFilter === "active") list = list.filter((u: any) => !u.suspended);
-    if (userStatusFilter === "suspended") list = list.filter((u: any) => u.suspended);
+    if (userStatusFilter === "active")    list = list.filter((u: any) => !u.suspended);
+    if (userStatusFilter === "suspended") list = list.filter((u: any) =>  u.suspended);
     return list;
   }, [allUsers, userSearch, userRoleFilter, userStatusFilter]);
 
   const filteredInquiries = allInquiries.filter(i => {
-    if (inquiryStatusFilter !== "all" && i.status !== inquiryStatusFilter) return false;
+    if (inquiryStatusFilter   !== "all" && i.status      !== inquiryStatusFilter)   return false;
     if (inquiryPropertyFilter !== "all" && String(i.property_id) !== inquiryPropertyFilter) return false;
     return true;
   });
 
-  // ── Actions ─────────────────────────────────────────────────────────────────
-
+  // ── Helpers ───────────────────────────────────────────────────────────────────
   const getPropDisplay = (propId: number) => {
-    const dbProp = dbProperties.find((p: any) => p.id === propId);
-    const staticProp = staticProperties.find(p => p.id === propId);
+    const db  = dbProperties.find((p: any) => p.id === propId);
+    const sta = staticProperties.find(p => p.id === propId);
     return {
-      title: dbProp?.title || staticProp?.title || `Property #${propId}`,
-      image: staticProp?.image || dbProp?.image_url || "/placeholder.svg",
+      title: db?.title || sta?.title || `Property #${propId}`,
+      image: sta?.image || db?.image_url || "/placeholder.svg",
     };
   };
+  const getUser = (uid: string) => allUsers.find((u: any) => u.user_id === uid);
 
-  const getUser = (userId: string) => allUsers.find((u: any) => u.user_id === userId);
-
-  // Property actions
-  const handleArchiveProperty = async (id: number) => {
-    const { error } = await (supabase as any).rpc("archive_property", { _property_id: id });
-    if (error) toast({ title: "Failed to archive", description: error.message, variant: "destructive" });
-    else { toast({ title: "Property archived" }); fetchData(); }
+  // ── Property actions ──────────────────────────────────────────────────────────
+  const rpc = async (fn: string, args: any, successMsg: string) => {
+    const { error } = await (supabase as any).rpc(fn, args);
+    if (error) toast({ title: "Action failed", description: error.message, variant: "destructive" });
+    else { toast({ title: successMsg }); fetchData(); }
   };
 
-  const handleRestoreProperty = async (id: number) => {
-    const { error } = await (supabase as any).rpc("restore_property", { _property_id: id });
-    if (error) toast({ title: "Failed to restore", description: error.message, variant: "destructive" });
-    else { toast({ title: "Property restored" }); fetchData(); }
-  };
+  const handleArchive        = (id: number) => rpc("archive_property",          { _property_id: id }, "Property archived");
+  const handleRestore        = (id: number) => rpc("restore_property",          { _property_id: id }, "Property restored");
+  const handlePermDelete     = (id: number) => rpc("permanent_delete_property", { _property_id: id }, "Property permanently deleted");
+  const handleReactivateUser = (uid: string) => rpc("reactivate_user",          { _target_user_id: uid }, "User reactivated");
+  const handleAssignRole  = (uid: string, role: string) => rpc("assign_role", { _target_user_id: uid, _role: role }, `Role "${role}" granted`);
+  const handleRevokeRole  = (uid: string, role: string) => rpc("revoke_role", { _target_user_id: uid, _role: role }, `Role "${role}" revoked`);
 
-  const handlePermanentDelete = async (id: number) => {
-    if (!isSuperAdmin) { toast({ title: "Super Admin required", variant: "destructive" }); return; }
-    const { error } = await (supabase as any).rpc("permanent_delete_property", { _property_id: id });
-    if (error) toast({ title: "Delete failed", description: error.message, variant: "destructive" });
-    else { toast({ title: "Property permanently deleted" }); fetchData(); }
-  };
-
-  const handleChangePropertyStatus = async (propertyId: number, newStatus: string) => {
+  const handleChangeStatus = async (id: number, status: string) => {
     const { error } = await (supabase as any).from("properties")
-      .update({ status: newStatus, updated_at: new Date().toISOString() }).eq("id", propertyId);
-    if (error) toast({ title: "Failed to update status", variant: "destructive" });
-    else { toast({ title: `Status → ${newStatus}` }); fetchData(); }
+      .update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) toast({ title: "Failed", variant: "destructive" });
+    else { toast({ title: `Status → ${status}` }); fetchData(); }
   };
 
-  // Bulk actions
-  const handleBulkAction = async (action: "archive" | "restore" | "delete") => {
-    if (selectedPropertyIds.size === 0) return;
-    if (action === "delete" && !isSuperAdmin) { toast({ title: "Super Admin required", variant: "destructive" }); return; }
+  const handleBulkAction = async (action: "archive"|"restore"|"delete") => {
+    if (selectedPropIds.size === 0) return;
     setBulkLoading(true);
-    const ids = Array.from(selectedPropertyIds);
-    const fn = action === "archive" ? "archive_property" : action === "restore" ? "restore_property" : "permanent_delete_property";
-    await Promise.all(ids.map(id => (supabase as any).rpc(fn, { _property_id: id })));
-    setSelectedPropertyIds(new Set());
+    const fn = action === "archive" ? "archive_property"
+             : action === "restore" ? "restore_property"
+             : "permanent_delete_property";
+    await Promise.all(Array.from(selectedPropIds).map(id =>
+      (supabase as any).rpc(fn, { _property_id: id })));
+    setSelectedPropIds(new Set());
     fetchData(); setBulkLoading(false);
-    toast({ title: `${ids.length} propert${ids.length !== 1 ? "ies" : "y"} ${action === "archive" ? "archived" : action === "restore" ? "restored" : "deleted"}` });
+    toast({ title: `${selectedPropIds.size} ${action}d` });
   };
 
-  const toggleSelectAll = (list: any[]) => {
-    if (selectedPropertyIds.size === list.length) setSelectedPropertyIds(new Set());
-    else setSelectedPropertyIds(new Set(list.map((p: any) => p.id)));
-  };
+  const toggleSelectAll = (list: any[]) =>
+    setSelectedPropIds(selectedPropIds.size === list.length ? new Set() : new Set(list.map((p: any) => p.id)));
 
-  // User actions
+  // ── User actions ──────────────────────────────────────────────────────────────
   const handleSuspendUser = async (u: any) => {
     const { error } = await (supabase as any).rpc("suspend_user", {
       _target_user_id: u.user_id, _reason: suspendReason || null,
     });
-    if (error) toast({ title: "Failed to suspend", description: error.message, variant: "destructive" });
+    if (error) toast({ title: "Failed", description: error.message, variant: "destructive" });
     else { toast({ title: "User suspended" }); setSuspendTarget(null); setSuspendReason(""); fetchData(); }
   };
 
-  const handleReactivateUser = async (userId: string) => {
-    const { error } = await (supabase as any).rpc("reactivate_user", { _target_user_id: userId });
-    if (error) toast({ title: "Failed to reactivate", description: error.message, variant: "destructive" });
-    else { toast({ title: "User reactivated" }); fetchData(); }
-  };
-
-  const handleAssignRole = async (userId: string, role: string) => {
-    if (!isSuperAdmin && role === "super_admin") { toast({ title: "Only Super Admins can grant this role", variant: "destructive" }); return; }
-    const { error } = await (supabase as any).rpc("assign_role", { _target_user_id: userId, _role: role });
-    if (error) toast({ title: "Failed to assign role", description: error.message, variant: "destructive" });
-    else { toast({ title: `Role ${role} granted` }); fetchData(); }
-  };
-
-  const handleRevokeRole = async (userId: string, role: string) => {
-    const { error } = await (supabase as any).rpc("revoke_role", { _target_user_id: userId, _role: role });
-    if (error) toast({ title: "Failed to revoke role", description: error.message, variant: "destructive" });
-    else { toast({ title: `Role ${role} revoked` }); fetchData(); }
-  };
-
-  const handlePermanentDeleteUser = async (userId: string) => {
-    if (!isSuperAdmin) { toast({ title: "Super Admin required", variant: "destructive" }); return; }
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+  const handlePermDeleteUser = async (uid: string, email: string) => {
+    const { error } = await supabase.auth.admin.deleteUser(uid);
     if (error) toast({ title: "Failed to delete user", description: error.message, variant: "destructive" });
-    else { toast({ title: "User permanently deleted" }); fetchData(); }
+    else { toast({ title: `${email} deleted` }); fetchData(); }
   };
 
-  // Agreements
+  // ── Agreement / payment actions ───────────────────────────────────────────────
   const handleApproveAgreement = async (agr: any) => {
-    await (supabase as any).from("agreements").update({ approval_status: "Approved", updated_at: new Date().toISOString() }).eq("id", agr.id);
+    await (supabase as any).from("agreements")
+      .update({ approval_status: "Approved", updated_at: new Date().toISOString() }).eq("id", agr.id);
     toast({ title: "Agreement approved!" });
-    const u = getUser(agr.user_id);
-    const { title } = getPropDisplay(agr.property_id);
+    const u = getUser(agr.user_id); const { title } = getPropDisplay(agr.property_id);
     sendNotification({ type: "agreement_approved", userId: agr.user_id, recipientName: u?.display_name, propertyTitle: title });
     fetchData();
   };
-
   const handleRejectAgreement = async (id: string) => {
-    await (supabase as any).from("agreements").update({ approval_status: "Rejected", updated_at: new Date().toISOString() }).eq("id", id);
-    toast({ title: "Agreement rejected" }); fetchData();
+    await (supabase as any).from("agreements")
+      .update({ approval_status: "Rejected", updated_at: new Date().toISOString() }).eq("id", id);
+    toast({ title: "Rejected" }); fetchData();
   };
-
   const handleConfirmPayment = async (pay: any) => {
     await (supabase as any).from("payments").update({ status: "Confirmed" }).eq("id", pay.id);
     toast({ title: "Payment confirmed!" });
@@ -323,12 +284,10 @@ const Admin = () => {
     sendNotification({ type: "payment_confirmed", userId: pay.user_id, recipientName: u?.display_name, propertyTitle: title, amount: pay.amount });
     fetchData();
   };
-
   const handleRejectPayment = async (id: string) => {
     await (supabase as any).from("payments").update({ status: "Rejected" }).eq("id", id);
-    toast({ title: "Payment rejected" }); fetchData();
+    toast({ title: "Rejected" }); fetchData();
   };
-
   const handleCreateAgreement = async () => {
     if (!newAgrUserId || !newAgrPropertyId) return;
     setCreatingAgr(true);
@@ -347,54 +306,56 @@ const Admin = () => {
     fetchData(); setCreatingAgr(false);
   };
 
-  // ── Tabs config ──────────────────────────────────────────────────────────────
-
+  // ── Tab definitions ───────────────────────────────────────────────────────────
   const tabs = [
-    { id: "overview" as TabId, label: "Overview", icon: BarChart3 },
-    { id: "users" as TabId, label: "Users", icon: Users, badge: allUsers.filter((u: any) => u.suspended).length },
-    { id: "enquiries" as TabId, label: "Enquiries", icon: MessageSquare },
-    { id: "properties" as TabId, label: "Properties", icon: Building2 },
-    { id: "rooms" as TabId, label: "Rooms", icon: BedDouble },
+    { id: "overview"       as TabId, label: "Overview",       icon: BarChart3 },
+    { id: "users"          as TabId, label: "Users",          icon: Users,         badge: allUsers.filter((u: any) => u.suspended).length },
+    { id: "enquiries"      as TabId, label: "Enquiries",      icon: MessageSquare },
+    { id: "properties"     as TabId, label: "Properties",     icon: Building2 },
+    { id: "rooms"          as TabId, label: "Rooms",          icon: BedDouble },
     { id: "stays_bookings" as TabId, label: "Stays Bookings", icon: CalendarCheck },
-    { id: "agreements" as TabId, label: "Agreements", icon: FileSignature, badge: pendingAgreements },
-    { id: "payments" as TabId, label: "Payments", icon: CreditCard, badge: pendingPayments },
-    { id: "activity" as TabId, label: "Activity", icon: Activity },
+    { id: "agreements"     as TabId, label: "Agreements",     icon: FileSignature, badge: pendingAgreements },
+    { id: "payments"       as TabId, label: "Payments",       icon: CreditCard,    badge: pendingPayments },
+    { id: "activity"       as TabId, label: "Activity",       icon: Activity },
   ];
 
-  // ── Render ───────────────────────────────────────────────────────────────────
-
-  if (!isReady) return null;
-
+  // ── Render ────────────────────────────────────────────────────────────────────
   return (
-
     <div className="min-h-screen bg-background pt-28 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex flex-wrap items-center gap-3 mb-2">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
               <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="font-display text-3xl md:text-4xl font-semibold text-foreground flex items-center gap-2">
                 Admin Panel
-                {isSuperAdmin && <span className="text-sm px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 font-medium flex items-center gap-1"><Crown className="w-3.5 h-3.5" />Super Admin</span>}
+                {isSuperAdmin && (
+                  <span className="text-sm px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 font-medium flex items-center gap-1">
+                    <Crown className="w-3.5 h-3.5" />Super Admin
+                  </span>
+                )}
               </h1>
               <p className="text-muted-foreground text-sm">Manage users, properties, rooms, bookings, agreements and payments</p>
             </div>
           </div>
-          <div className="flex gap-2 mt-3 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" size="sm" asChild><Link to="/admin/roles"><ShieldCheck className="w-4 h-4 mr-1" />Roles</Link></Button>
             <Button variant="outline" size="sm" asChild><Link to="/admin/audit"><FileText className="w-4 h-4 mr-1" />Audit Log</Link></Button>
             <Button variant="outline" size="sm" asChild><Link to="/admin/diagnostics">Diagnostics</Link></Button>
           </div>
         </motion.div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-8 border-b border-border pb-1 overflow-x-auto">
+        {/* Tab bar */}
+        <div className="flex gap-1 mb-8 border-b border-border pb-0 overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${
+                activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}>
               <tab.icon className="w-4 h-4" />
               {tab.label}
               {(tab as any).badge > 0 && (
@@ -406,37 +367,34 @@ const Admin = () => {
 
         <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
 
-          {/* ── Overview ── */}
+          {/* ── Overview ─────────────────────────────────────────────────────── */}
           {activeTab === "overview" && (
             <div className="space-y-6">
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Total Users", value: allUsers.length, icon: Users, sub: `${allUsers.filter((u: any) => u.suspended).length} suspended` },
-                  { label: "Total Enquiries", value: allInquiries.length, icon: MessageSquare, sub: `${allInquiries.filter(i => i.status === "pending").length} pending` },
-                  { label: "Active Properties", value: activeProps.length, icon: Building2, sub: `${archivedProps.length} archived` },
-                  { label: "Pending Actions", value: pendingAgreements + pendingPayments, icon: AlertTriangle, sub: `${pendingAgreements} agr · ${pendingPayments} pay` },
+                  { label: "Total Users",       value: allUsers.length,                       icon: Users,         sub: `${allUsers.filter((u: any) => u.suspended).length} suspended` },
+                  { label: "Total Enquiries",   value: allInquiries.length,                   icon: MessageSquare, sub: `${allInquiries.filter(i => i.status === "pending").length} pending` },
+                  { label: "Active Properties", value: activeProps.length,                    icon: Building2,     sub: `${archivedProps.length} archived` },
+                  { label: "Pending Actions",   value: pendingAgreements + pendingPayments,   icon: AlertTriangle, sub: `${pendingAgreements} agr · ${pendingPayments} pay` },
                 ].map((s, i) => (
-                  <Card key={i}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-xl bg-primary/10"><s.icon className="w-5 h-5 text-primary" /></div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">{s.label}</p>
-                          <p className="text-2xl font-display font-semibold">{s.value}</p>
-                          <p className="text-xs text-muted-foreground">{s.sub}</p>
-                        </div>
+                  <Card key={i}><CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-xl bg-primary/10"><s.icon className="w-5 h-5 text-primary" /></div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">{s.label}</p>
+                        <p className="text-2xl font-display font-semibold">{s.value}</p>
+                        <p className="text-xs text-muted-foreground">{s.sub}</p>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </CardContent></Card>
                 ))}
               </div>
-              {/* Top enquired */}
               <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Most Enquired</CardTitle></CardHeader>
                 <CardContent>
-                  {Object.entries(allInquiries.reduce((acc: Record<number, number>, i) => {
+                  {Object.entries(allInquiries.reduce((acc: Record<number,number>, i) => {
                     if (i.property_id) acc[i.property_id] = (acc[i.property_id] || 0) + 1; return acc;
-                  }, {})).sort(([, a], [, b]) => (b as number) - (a as number)).slice(0, 5).map(([id, count]) => {
+                  }, {})).sort(([,a],[,b]) => (b as number)-(a as number)).slice(0,5).map(([id, count]) => {
                     const { title, image } = getPropDisplay(Number(id));
                     return (
                       <div key={id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 mb-2">
@@ -451,27 +409,25 @@ const Admin = () => {
             </div>
           )}
 
-          {/* ── Users ── */}
+          {/* ── Users ─────────────────────────────────────────────────────────── */}
           {activeTab === "users" && (
-            <div className="space-y-6">
-              {/* Filters */}
+            <div className="space-y-5">
               <div className="flex flex-wrap gap-3">
                 <div className="relative flex-1 min-w-[220px] max-w-sm">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input placeholder="Search by name or email…" value={userSearch}
-                    onChange={e => setUserSearch(e.target.value)} className="pl-9" />
+                  <Input placeholder="Search by name or email…" value={userSearch} onChange={e => setUserSearch(e.target.value)} className="pl-9" />
                 </div>
                 <Select value={userRoleFilter} onValueChange={setUserRoleFilter}>
-                  <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All roles" /></SelectTrigger>
+                  <SelectTrigger className="w-44"><SelectValue placeholder="All roles" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Roles</SelectItem>
                     {["super_admin","admin","moderator","user"].map(r => (
-                      <SelectItem key={r} value={r} className="capitalize">{r.replace(/_/g,' ')}</SelectItem>
+                      <SelectItem key={r} value={r} className="capitalize">{r.replace(/_/g," ")}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <Select value={userStatusFilter} onValueChange={setUserStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All status" /></SelectTrigger>
+                  <SelectTrigger className="w-40"><SelectValue placeholder="All status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
@@ -488,10 +444,9 @@ const Admin = () => {
                     <AlertDialogTitle>Suspend {suspendTarget?.display_name || suspendTarget?.email}?</AlertDialogTitle>
                     <AlertDialogDescription>This user will be blocked from logging in. You can reactivate them at any time.</AlertDialogDescription>
                   </AlertDialogHeader>
-                  <div className="space-y-2">
-                    <Label className="text-sm">Reason (optional)</Label>
-                    <Textarea value={suspendReason} onChange={e => setSuspendReason(e.target.value)}
-                      placeholder="Explain reason for suspension…" rows={2} />
+                  <div className="space-y-2 py-2">
+                    <Label>Reason (optional)</Label>
+                    <Textarea value={suspendReason} onChange={e => setSuspendReason(e.target.value)} placeholder="Explain reason…" rows={2} />
                   </div>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -500,148 +455,136 @@ const Admin = () => {
                 </AlertDialogContent>
               </AlertDialog>
 
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Roles</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Registered</TableHead>
-                        <TableHead>Last Login</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.map((u: any) => {
-                        const isSelf = u.user_id === user?.id;
-                        const roles: string[] = u.roles || [];
-                        const isUserSuperAdmin = roles.includes("super_admin");
-                        const isUserAdmin = roles.includes("admin");
-                        return (
-                          <TableRow key={u.user_id} className={u.suspended ? "opacity-60" : ""}>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
-                                  {(u.display_name || u.email || "?")[0].toUpperCase()}
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-foreground">{u.display_name || "—"}</p>
-                                  {isSelf && <span className="text-xs text-muted-foreground">(you)</span>}
-                                </div>
+              <Card><CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead><TableHead>Email</TableHead><TableHead>Roles</TableHead>
+                      <TableHead>Status</TableHead><TableHead>Registered</TableHead>
+                      <TableHead>Last Login</TableHead><TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((u: any) => {
+                      const isSelf = u.user_id === user?.id;
+                      const roles: string[] = u.roles || [];
+                      const isUserSuperAdmin = roles.includes("super_admin");
+                      const isUserAdmin      = roles.includes("admin");
+                      return (
+                        <TableRow key={u.user_id} className={u.suspended ? "opacity-60" : ""}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-semibold text-primary">
+                                {(u.display_name || u.email || "?")[0].toUpperCase()}
                               </div>
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {roles.length === 0 && <span className="text-xs text-muted-foreground">user</span>}
-                                {roles.map((r: string) => <RoleBadge key={r} role={r} />)}
+                              <div>
+                                <p className="text-sm font-medium">{u.display_name || "—"}</p>
+                                {isSelf && <span className="text-xs text-muted-foreground">(you)</span>}
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              {u.suspended ? (
-                                <div>
-                                  <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 text-xs font-medium">Suspended</span>
-                                  {u.suspension_reason && <p className="text-xs text-muted-foreground mt-0.5 max-w-[120px] truncate">{u.suspension_reason}</p>}
-                                </div>
-                              ) : (
-                                <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-medium">Active</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : "Never"}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="outline" size="sm" disabled={isSelf && !isSuperAdmin}>
-                                    Actions <ChevronDown className="w-3 h-3 ml-1" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-52">
-                                  {/* Role management — only super_admin or admin */}
-                                  {(isSuperAdmin || isAdmin) && !isUserAdmin && !isUserSuperAdmin && (
-                                    <DropdownMenuItem onClick={() => handleAssignRole(u.user_id, "admin")}>
-                                      <ShieldCheck className="w-4 h-4 mr-2" />Promote to Admin
-                                    </DropdownMenuItem>
-                                  )}
-                                  {(isSuperAdmin || isAdmin) && isUserAdmin && !isUserSuperAdmin && (
-                                    <DropdownMenuItem onClick={() => handleRevokeRole(u.user_id, "admin")}>
-                                      <Shield className="w-4 h-4 mr-2" />Revoke Admin
-                                    </DropdownMenuItem>
-                                  )}
-                                  {isSuperAdmin && !isUserSuperAdmin && (
-                                    <DropdownMenuItem onClick={() => handleAssignRole(u.user_id, "super_admin")}>
-                                      <Crown className="w-4 h-4 mr-2" />Grant Super Admin
-                                    </DropdownMenuItem>
-                                  )}
-                                  {isSuperAdmin && isUserSuperAdmin && !isSelf && (
-                                    <DropdownMenuItem onClick={() => handleRevokeRole(u.user_id, "super_admin")}>
-                                      <Crown className="w-4 h-4 mr-2" />Revoke Super Admin
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuSeparator />
-                                  {/* Suspend / reactivate */}
-                                  {!u.suspended && !isSelf && (
-                                    <DropdownMenuItem onClick={() => setSuspendTarget(u)} className="text-amber-600">
-                                      <Ban className="w-4 h-4 mr-2" />Suspend User
-                                    </DropdownMenuItem>
-                                  )}
-                                  {u.suspended && (
-                                    <DropdownMenuItem onClick={() => handleReactivateUser(u.user_id)} className="text-emerald-600">
-                                      <UserCheck className="w-4 h-4 mr-2" />Reactivate User
-                                    </DropdownMenuItem>
-                                  )}
-                                  {/* Permanent delete — super admin only */}
-                                  {isSuperAdmin && !isSelf && (
-                                    <>
-                                      <DropdownMenuSeparator />
-                                      <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                          <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={e => e.preventDefault()}>
-                                            <UserX className="w-4 h-4 mr-2" />Permanently Delete
-                                          </DropdownMenuItem>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                          <AlertDialogHeader>
-                                            <AlertDialogTitle>Permanently delete user?</AlertDialogTitle>
-                                            <AlertDialogDescription>This will remove {u.email} and all their data. This cannot be undone.</AlertDialogDescription>
-                                          </AlertDialogHeader>
-                                          <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction className="bg-destructive" onClick={() => handlePermanentDeleteUser(u.user_id)}>Delete</AlertDialogAction>
-                                          </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                      </AlertDialog>
-                                    </>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      {filteredUsers.length === 0 && (
-                        <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No users found</TableCell></TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {roles.length === 0 && <span className="text-xs text-muted-foreground">user</span>}
+                              {roles.map((r: string) => <RoleBadge key={r} role={r} />)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {u.suspended ? (
+                              <div>
+                                <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 text-xs font-medium">Suspended</span>
+                                {u.suspension_reason && <p className="text-xs text-muted-foreground mt-0.5 max-w-[120px] truncate">{u.suspension_reason}</p>}
+                              </div>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-medium">Active</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : "Never"}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm">Actions <ChevronDown className="w-3 h-3 ml-1" /></Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-52">
+                                {!isUserAdmin && !isUserSuperAdmin && (
+                                  <DropdownMenuItem onClick={() => handleAssignRole(u.user_id, "admin")}>
+                                    <ShieldCheck className="w-4 h-4 mr-2" />Promote to Admin
+                                  </DropdownMenuItem>
+                                )}
+                                {isUserAdmin && !isUserSuperAdmin && (
+                                  <DropdownMenuItem onClick={() => handleRevokeRole(u.user_id, "admin")}>
+                                    <Shield className="w-4 h-4 mr-2" />Revoke Admin
+                                  </DropdownMenuItem>
+                                )}
+                                {isSuperAdmin && !isUserSuperAdmin && (
+                                  <DropdownMenuItem onClick={() => handleAssignRole(u.user_id, "super_admin")}>
+                                    <Crown className="w-4 h-4 mr-2" />Grant Super Admin
+                                  </DropdownMenuItem>
+                                )}
+                                {isSuperAdmin && isUserSuperAdmin && !isSelf && (
+                                  <DropdownMenuItem onClick={() => handleRevokeRole(u.user_id, "super_admin")}>
+                                    <Crown className="w-4 h-4 mr-2" />Revoke Super Admin
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                {!u.suspended && !isSelf && (
+                                  <DropdownMenuItem onClick={() => setSuspendTarget(u)} className="text-amber-600">
+                                    <Ban className="w-4 h-4 mr-2" />Suspend User
+                                  </DropdownMenuItem>
+                                )}
+                                {u.suspended && (
+                                  <DropdownMenuItem onClick={() => handleReactivateUser(u.user_id)} className="text-emerald-600">
+                                    <UserCheck className="w-4 h-4 mr-2" />Reactivate User
+                                  </DropdownMenuItem>
+                                )}
+                                {isSuperAdmin && !isSelf && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={e => e.preventDefault()}>
+                                          <UserX className="w-4 h-4 mr-2" />Permanently Delete
+                                        </DropdownMenuItem>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Permanently delete user?</AlertDialogTitle>
+                                          <AlertDialogDescription>Removes {u.email} and all their data. Cannot be undone.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction className="bg-destructive hover:bg-destructive/90"
+                                            onClick={() => handlePermDeleteUser(u.user_id, u.email)}>
+                                            Delete
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {filteredUsers.length === 0 && (
+                      <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No users found</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent></Card>
             </div>
           )}
 
-          {/* ── Enquiries ── */}
+          {/* ── Enquiries ─────────────────────────────────────────────────────── */}
           {activeTab === "enquiries" && (
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 <Select value={inquiryStatusFilter} onValueChange={setInquiryStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
@@ -657,72 +600,67 @@ const Admin = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Card>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow><TableHead>Property</TableHead><TableHead>From</TableHead><TableHead>Message</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead><TableHead /></TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInquiries.map(inquiry => {
-                        const { title, image } = getPropDisplay(inquiry.property_id);
-                        return (
-                          <TableRow key={inquiry.id}>
-                            <TableCell><div className="flex items-center gap-2"><img src={image} alt="" className="w-10 h-10 rounded-lg object-cover" /><span className="text-sm font-medium truncate max-w-[120px]">{title}</span></div></TableCell>
-                            <TableCell><div><p className="text-sm font-medium">{inquiry.name}</p><p className="text-xs text-muted-foreground">{inquiry.email}</p></div></TableCell>
-                            <TableCell><p className="text-sm text-muted-foreground truncate max-w-[180px]">{inquiry.message}</p></TableCell>
-                            <TableCell><span className={`px-2.5 py-1 rounded-full text-xs font-medium ${inquiry.status === "pending" ? "bg-amber-500/10 text-amber-600" : inquiry.status === "responded" ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"}`}>{inquiry.status}</span></TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{new Date(inquiry.created_at).toLocaleDateString()}</TableCell>
-                            <TableCell><Button variant="ghost" size="sm" onClick={() => setSelectedInquiry(inquiry)}><Eye className="w-4 h-4" /></Button></TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      {filteredInquiries.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No enquiries found</TableCell></TableRow>}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <Card><CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow><TableHead>Property</TableHead><TableHead>From</TableHead><TableHead>Message</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead><TableHead /></TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInquiries.map(inq => {
+                      const { title, image } = getPropDisplay(inq.property_id);
+                      return (
+                        <TableRow key={inq.id}>
+                          <TableCell><div className="flex items-center gap-2"><img src={image} alt="" className="w-10 h-10 rounded-lg object-cover" /><span className="text-sm font-medium truncate max-w-[100px]">{title}</span></div></TableCell>
+                          <TableCell><p className="text-sm font-medium">{inq.name}</p><p className="text-xs text-muted-foreground">{inq.email}</p></TableCell>
+                          <TableCell><p className="text-sm text-muted-foreground truncate max-w-[160px]">{inq.message}</p></TableCell>
+                          <TableCell><span className={`px-2.5 py-1 rounded-full text-xs font-medium ${inq.status==="pending"?"bg-amber-500/10 text-amber-600":inq.status==="responded"?"bg-emerald-500/10 text-emerald-600":"bg-muted text-muted-foreground"}`}>{inq.status}</span></TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{new Date(inq.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell><Button variant="ghost" size="sm" onClick={() => setSelectedInquiry(inq)}><Eye className="w-4 h-4" /></Button></TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {filteredInquiries.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No enquiries found</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </CardContent></Card>
             </div>
           )}
 
-          {/* ── Properties ── */}
+          {/* ── Properties ────────────────────────────────────────────────────── */}
           {activeTab === "properties" && (
             <div className="space-y-4">
-              {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative flex-1 min-w-[200px] max-w-xs">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input placeholder="Search properties…" value={propertySearch} onChange={e => setPropertySearch(e.target.value)} className="pl-9" />
+                  <Input placeholder="Search…" value={propertySearch} onChange={e => setPropertySearch(e.target.value)} className="pl-9" />
                 </div>
                 {propertyTab === "active" && (
                   <Select value={propertyStatusFilter} onValueChange={setPropertyStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All statuses" /></SelectTrigger>
+                    <SelectTrigger className="w-44"><SelectValue placeholder="All statuses" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Statuses</SelectItem>
                       {PROPERTY_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 )}
-                <p className="text-sm text-muted-foreground ml-auto">{displayedProperties.length} properties</p>
+                <p className="text-sm text-muted-foreground ml-auto">{displayedProperties.length} shown</p>
                 <Button onClick={() => { setEditingProperty(null); setPropertyDialogOpen(true); }}>
-                  <Plus className="w-4 h-4 mr-1" />New
+                  <Plus className="w-4 h-4 mr-1" />New Property
                 </Button>
               </div>
 
-              {/* Bulk action bar */}
-              {selectedPropertyIds.size > 0 && (
-                <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/20">
-                  <span className="text-sm font-medium text-primary">{selectedPropertyIds.size} selected</span>
-                  <div className="flex gap-2 ml-auto">
+              {/* Bulk bar */}
+              {selectedPropIds.size > 0 && (
+                <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/20 flex-wrap">
+                  <span className="text-sm font-medium text-primary">{selectedPropIds.size} selected</span>
+                  <div className="flex gap-2 ml-auto flex-wrap">
                     {propertyTab === "active" && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline" disabled={bulkLoading}>
-                            <Archive className="w-4 h-4 mr-1" />Archive All
-                          </Button>
+                          <Button size="sm" variant="outline" disabled={bulkLoading}><Archive className="w-4 h-4 mr-1" />Archive All</Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
-                          <AlertDialogHeader><AlertDialogTitle>Archive {selectedPropertyIds.size} properties?</AlertDialogTitle><AlertDialogDescription>They will be hidden from the public but remain in the admin dashboard.</AlertDialogDescription></AlertDialogHeader>
+                          <AlertDialogHeader><AlertDialogTitle>Archive {selectedPropIds.size} properties?</AlertDialogTitle><AlertDialogDescription>Hidden from public but remain in admin dashboard.</AlertDialogDescription></AlertDialogHeader>
                           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleBulkAction("archive")}>Archive</AlertDialogAction></AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -735,85 +673,76 @@ const Admin = () => {
                     {isSuperAdmin && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="destructive" disabled={bulkLoading}>
-                            <Trash2 className="w-4 h-4 mr-1" />Delete All
-                          </Button>
+                          <Button size="sm" variant="destructive" disabled={bulkLoading}><Trash2 className="w-4 h-4 mr-1" />Delete All</Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
-                          <AlertDialogHeader><AlertDialogTitle>Permanently delete {selectedPropertyIds.size} properties?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+                          <AlertDialogHeader><AlertDialogTitle>Permanently delete {selectedPropIds.size} properties?</AlertDialogTitle><AlertDialogDescription>Cannot be undone.</AlertDialogDescription></AlertDialogHeader>
                           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive" onClick={() => handleBulkAction("delete")}>Delete</AlertDialogAction></AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => setSelectedPropertyIds(new Set())}>Clear</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setSelectedPropIds(new Set())}>Clear</Button>
                   </div>
                 </div>
               )}
 
-              {/* Property tabs */}
-              <Tabs value={propertyTab} onValueChange={(v: any) => { setPropertyTab(v); setSelectedPropertyIds(new Set()); }}>
+              <Tabs value={propertyTab} onValueChange={(v: any) => { setPropertyTab(v); setSelectedPropIds(new Set()); }}>
                 <TabsList>
                   <TabsTrigger value="active">Active ({activeProps.length})</TabsTrigger>
                   <TabsTrigger value="archived">Archived ({archivedProps.length})</TabsTrigger>
                 </TabsList>
 
-                {(["active", "archived"] as const).map(tab => (
+                {(["active","archived"] as const).map(tab => (
                   <TabsContent key={tab} value={tab} className="mt-4">
                     {displayedProperties.length === 0 ? (
-                      <div className="text-center py-16"><Building2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-muted-foreground">No {tab} properties found</p></div>
+                      <div className="text-center py-16"><Building2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-muted-foreground">No {tab} properties</p></div>
                     ) : (
                       <div className="space-y-3">
-                        {/* Select all */}
                         <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer ml-2">
-                          <Checkbox checked={selectedPropertyIds.size === displayedProperties.length && displayedProperties.length > 0}
-                            onCheckedChange={() => toggleSelectAll(displayedProperties)} />
+                          <Checkbox checked={selectedPropIds.size === displayedProperties.length && displayedProperties.length > 0} onCheckedChange={() => toggleSelectAll(displayedProperties)} />
                           Select all
                         </label>
                         {displayedProperties.map((prop: any) => {
-                          const staticProp = staticProperties.find(p => p.id === prop.id);
-                          const image = prop.image_url || staticProp?.image || "/placeholder.svg";
+                          const sta = staticProperties.find(p => p.id === prop.id);
+                          const image = prop.image_url || sta?.image || "/placeholder.svg";
                           const enquiryCount = allInquiries.filter(i => i.property_id === prop.id).length;
-                          const isSelected = selectedPropertyIds.has(prop.id);
+                          const isSelected = selectedPropIds.has(prop.id);
                           return (
                             <Card key={prop.id} className={isSelected ? "border-primary/50 bg-primary/5" : ""}>
                               <CardContent className="p-4">
                                 <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                  <Checkbox checked={isSelected}
-                                    onCheckedChange={checked => {
-                                      const next = new Set(selectedPropertyIds);
-                                      checked ? next.add(prop.id) : next.delete(prop.id);
-                                      setSelectedPropertyIds(next);
-                                    }} />
+                                  <Checkbox checked={isSelected} onCheckedChange={checked => {
+                                    const n = new Set(selectedPropIds);
+                                    checked ? n.add(prop.id) : n.delete(prop.id);
+                                    setSelectedPropIds(n);
+                                  }} />
                                   <img src={image} alt={prop.title} className="w-20 h-16 rounded-xl object-cover flex-shrink-0" />
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                      <h4 className="font-semibold text-foreground truncate">{prop.title}</h4>
-                                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge(prop.status)}`}>{prop.status}</span>
+                                      <h4 className="font-semibold truncate">{prop.title}</h4>
+                                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${propStatusColor[prop.status] || "bg-muted text-muted-foreground"}`}>{prop.status}</span>
                                       {prop.is_archived && <span className="px-2.5 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-600">Archived</span>}
-                                      {prop.featured && <span className="px-2.5 py-0.5 rounded-full text-xs bg-primary/10 text-primary">Featured</span>}
+                                      {prop.featured   && <span className="px-2.5 py-0.5 rounded-full text-xs bg-primary/10 text-primary">Featured</span>}
                                     </div>
                                     <p className="text-sm text-muted-foreground">{prop.location} · {prop.price}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5">{enquiryCount} enquiries</p>
                                   </div>
                                   <div className="flex flex-wrap gap-2 flex-shrink-0">
                                     {!prop.is_archived && !prop.deleted_at && (
-                                      <Select value={prop.status} onValueChange={v => handleChangePropertyStatus(prop.id, v)}>
+                                      <Select value={prop.status} onValueChange={v => handleChangeStatus(prop.id, v)}>
                                         <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
                                         <SelectContent>{PROPERTY_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                                       </Select>
                                     )}
-                                    <Button variant="outline" size="icon" className="h-8 w-8"
-                                      onClick={() => { setEditingProperty(prop); setPropertyDialogOpen(true); }}>
+                                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { setEditingProperty(prop); setPropertyDialogOpen(true); }}>
                                       <Pencil className="w-3.5 h-3.5" />
                                     </Button>
                                     {!prop.is_archived ? (
-                                      <Button variant="outline" size="sm" className="h-8 text-xs"
-                                        onClick={() => handleArchiveProperty(prop.id)}>
+                                      <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleArchive(prop.id)}>
                                         <Archive className="w-3.5 h-3.5 mr-1" />Archive
                                       </Button>
                                     ) : (
-                                      <Button variant="outline" size="sm" className="h-8 text-xs"
-                                        onClick={() => handleRestoreProperty(prop.id)}>
+                                      <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleRestore(prop.id)}>
                                         <RotateCcw className="w-3.5 h-3.5 mr-1" />Restore
                                       </Button>
                                     )}
@@ -823,8 +752,11 @@ const Admin = () => {
                                           <Button variant="destructive" size="icon" className="h-8 w-8"><Trash2 className="w-3.5 h-3.5" /></Button>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
-                                          <AlertDialogHeader><AlertDialogTitle>Permanently delete?</AlertDialogTitle><AlertDialogDescription>"{prop.title}" will be removed forever.</AlertDialogDescription></AlertDialogHeader>
-                                          <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive" onClick={() => handlePermanentDelete(prop.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                                          <AlertDialogHeader><AlertDialogTitle>Permanently delete?</AlertDialogTitle><AlertDialogDescription>"{prop.title}" cannot be recovered.</AlertDialogDescription></AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction className="bg-destructive" onClick={() => handlePermDelete(prop.id)}>Delete</AlertDialogAction>
+                                          </AlertDialogFooter>
                                         </AlertDialogContent>
                                       </AlertDialog>
                                     )}
@@ -842,15 +774,13 @@ const Admin = () => {
             </div>
           )}
 
-          {/* ── Rooms ── */}
-          {activeTab === "rooms" && <AdminRoomsTab rentalProperties={rentalProperties} />}
-
-          {/* ── Stays Bookings ── */}
+          {/* ── Rooms ─────────────────────────────────────────────────────────── */}
+          {activeTab === "rooms"          && <AdminRoomsTab rentalProperties={rentalProperties} />}
           {activeTab === "stays_bookings" && <AdminStaysBookingsTab rentalProperties={rentalProperties} />}
 
-          {/* ── Agreements ── */}
+          {/* ── Agreements ────────────────────────────────────────────────────── */}
           {activeTab === "agreements" && (
-            <div className="space-y-8">
+            <div className="space-y-6">
               <Card>
                 <CardHeader><CardTitle>Create Agreement</CardTitle></CardHeader>
                 <CardContent>
@@ -870,112 +800,93 @@ const Admin = () => {
                   </Button>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader><CardTitle>Pending Approvals ({pendingAgreements})</CardTitle></CardHeader>
-                <CardContent>
-                  {allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).length === 0 ? (
-                    <p className="text-muted-foreground text-center py-6">No pending approvals</p>
-                  ) : allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).map(agr => {
-                    const { title } = getPropDisplay(agr.property_id);
-                    const u = getUser(agr.user_id);
-                    return (
-                      <div key={agr.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl mb-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground">{title}</p>
-                          <p className="text-sm text-muted-foreground">{u?.display_name || u?.email}</p>
-                          {agr.signature_url && <img src={agr.signature_url} alt="Signature" className="h-10 mt-2 border border-border rounded" />}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleApproveAgreement(agr)}><CheckCircle2 className="w-4 h-4 mr-1" />Approve</Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleRejectAgreement(agr.id)}><XCircle className="w-4 h-4 mr-1" />Reject</Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
+              {allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).map(agr => {
+                const { title } = getPropDisplay(agr.property_id);
+                const u = getUser(agr.user_id);
+                return (
+                  <div key={agr.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium">{title}</p>
+                      <p className="text-sm text-muted-foreground">{u?.display_name || u?.email}</p>
+                      {agr.signature_url && <img src={agr.signature_url} alt="Sig" className="h-10 mt-2 border border-border rounded" />}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleApproveAgreement(agr)}><CheckCircle2 className="w-4 h-4 mr-1" />Approve</Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleRejectAgreement(agr.id)}><XCircle className="w-4 h-4 mr-1" />Reject</Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {/* ── Payments ── */}
+          {/* ── Payments ──────────────────────────────────────────────────────── */}
           {activeTab === "payments" && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader><CardTitle>Pending Confirmations ({pendingPayments})</CardTitle></CardHeader>
-                <CardContent>
-                  {allPayments.filter(p => p.status === "Pending").length === 0 ? (
-                    <p className="text-muted-foreground text-center py-6">No pending payments</p>
-                  ) : allPayments.filter(p => p.status === "Pending").map(pay => {
-                    const { title } = getPropDisplay(pay.property_id);
-                    const u = getUser(pay.user_id);
-                    return (
-                      <div key={pay.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl mb-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium">{title} — ${pay.amount?.toLocaleString()}</p>
-                          <p className="text-sm text-muted-foreground">{u?.display_name || u?.email} · {new Date(pay.payment_date).toLocaleDateString()}</p>
-                          {pay.receipt_url && <a href={pay.receipt_url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">View Receipt</a>}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleConfirmPayment(pay)}><CheckCircle2 className="w-4 h-4 mr-1" />Confirm</Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleRejectPayment(pay.id)}><XCircle className="w-4 h-4 mr-1" />Reject</Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle>All Payments</CardTitle></CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Property</TableHead><TableHead>User</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {allPayments.map(pay => {
-                        const { title } = getPropDisplay(pay.property_id);
-                        const u = getUser(pay.user_id);
-                        return (
-                          <TableRow key={pay.id}>
-                            <TableCell className="font-medium">{title}</TableCell>
-                            <TableCell className="text-muted-foreground">{u?.display_name || u?.email}</TableCell>
-                            <TableCell className="font-semibold">${pay.amount?.toLocaleString()}</TableCell>
-                            <TableCell><span className={`px-2.5 py-1 rounded-full text-xs font-medium ${pay.status === "Confirmed" ? "bg-emerald-500/10 text-emerald-600" : pay.status === "Rejected" ? "bg-red-500/10 text-red-600" : "bg-amber-500/10 text-amber-600"}`}>{pay.status}</span></TableCell>
-                            <TableCell className="text-muted-foreground text-sm">{new Date(pay.payment_date).toLocaleDateString()}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+            <div className="space-y-4">
+              {allPayments.filter(p => p.status === "Pending").map(pay => {
+                const { title } = getPropDisplay(pay.property_id);
+                const u = getUser(pay.user_id);
+                return (
+                  <div key={pay.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium">{title} — ${pay.amount?.toLocaleString()}</p>
+                      <p className="text-sm text-muted-foreground">{u?.display_name || u?.email} · {new Date(pay.payment_date).toLocaleDateString()}</p>
+                      {pay.receipt_url && <a href={pay.receipt_url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">View Receipt</a>}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleConfirmPayment(pay)}><CheckCircle2 className="w-4 h-4 mr-1" />Confirm</Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleRejectPayment(pay.id)}><XCircle className="w-4 h-4 mr-1" />Reject</Button>
+                    </div>
+                  </div>
+                );
+              })}
+              <Card><CardContent className="p-0">
+                <Table>
+                  <TableHeader><TableRow><TableHead>Property</TableHead><TableHead>User</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {allPayments.map(pay => {
+                      const { title } = getPropDisplay(pay.property_id);
+                      const u = getUser(pay.user_id);
+                      return (
+                        <TableRow key={pay.id}>
+                          <TableCell className="font-medium">{title}</TableCell>
+                          <TableCell className="text-muted-foreground">{u?.display_name || u?.email}</TableCell>
+                          <TableCell className="font-semibold">${pay.amount?.toLocaleString()}</TableCell>
+                          <TableCell><span className={`px-2.5 py-1 rounded-full text-xs font-medium ${pay.status==="Confirmed"?"bg-emerald-500/10 text-emerald-600":pay.status==="Rejected"?"bg-red-500/10 text-red-600":"bg-amber-500/10 text-amber-600"}`}>{pay.status}</span></TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{new Date(pay.payment_date).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent></Card>
             </div>
           )}
 
-          {/* ── Activity ── */}
+          {/* ── Activity ──────────────────────────────────────────────────────── */}
           {activeTab === "activity" && (
-            <Card>
-              <CardContent className="p-0">
-                {activityLogs.length === 0 ? (
-                  <div className="text-center py-16"><Activity className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-muted-foreground">No activity yet</p></div>
-                ) : (
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Action</TableHead><TableHead>User</TableHead><TableHead>Details</TableHead><TableHead>Time</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {activityLogs.map(log => {
-                        const u = allUsers.find((u: any) => u.user_id === log.user_id);
-                        return (
-                          <TableRow key={log.id}>
-                            <TableCell><span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">{log.action}</span></TableCell>
-                            <TableCell className="text-sm">{u?.display_name || u?.email || "—"}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{log.metadata ? JSON.stringify(log.metadata).slice(0, 80) : "—"}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{new Date(log.created_at).toLocaleString()}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            <Card><CardContent className="p-0">
+              {activityLogs.length === 0 ? (
+                <div className="text-center py-16"><Activity className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-muted-foreground">No activity yet</p></div>
+              ) : (
+                <Table>
+                  <TableHeader><TableRow><TableHead>Action</TableHead><TableHead>User</TableHead><TableHead>Details</TableHead><TableHead>Time</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {activityLogs.map(log => {
+                      const u = allUsers.find((u: any) => u.user_id === log.user_id);
+                      return (
+                        <TableRow key={log.id}>
+                          <TableCell><span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">{log.action}</span></TableCell>
+                          <TableCell className="text-sm">{u?.display_name || u?.email || "—"}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{log.metadata ? JSON.stringify(log.metadata).slice(0,80) : "—"}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{new Date(log.created_at).toLocaleString()}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent></Card>
           )}
 
         </motion.div>
@@ -986,10 +897,5 @@ const Admin = () => {
     </div>
   );
 };
-
-// Missing import fix
-const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <label className={`text-sm font-medium leading-none ${className}`}>{children}</label>
-);
 
 export default Admin;
