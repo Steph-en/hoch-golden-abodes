@@ -5,7 +5,7 @@ import {
   CheckCircle2, TrendingUp, BarChart3, FileSignature, CreditCard, XCircle,
   Building2, Plus, Pencil, Trash2, BedDouble, CalendarCheck, Archive,
   RotateCcw, FileText, Ban, UserCheck, UserX, Crown, ChevronDown,
-  AlertTriangle,
+  AlertTriangle, Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { properties as staticProperties } from "@/data/properties";
@@ -34,7 +35,9 @@ import EnquiryDetailModal from "@/components/EnquiryDetailModal";
 import PropertyFormDialog from "@/components/admin/PropertyFormDialog";
 import AdminRoomsTab from "@/components/admin/AdminRoomsTab";
 import AdminStaysBookingsTab from "@/components/admin/AdminStaysBookingsTab";
+import AccessDenied from "@/components/admin/AccessDenied";
 import { useToast } from "@/hooks/use-toast";
+import type { AdminTabId } from "@/hooks/usePermissions";
 
 const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
 const RENTAL_KINDS = ["rental_property", "hotel", "commercial_rental"];
@@ -43,10 +46,6 @@ const sendNotification = async (payload: any) => {
   try { await supabase.functions.invoke("send-notification-email", { body: payload }); }
   catch (e) { console.error("notification email failed", e); }
 };
-
-type TabId =
-  | "overview" | "users" | "enquiries" | "properties"
-  | "agreements" | "payments" | "activity" | "rooms" | "stays_bookings";
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
 
@@ -71,16 +70,44 @@ const propStatusColor: Record<string, string> = {
   Rented:    "bg-blue-500/10 text-blue-600",
 };
 
+// ── Restricted Tab Placeholder ────────────────────────────────────────────────
+
+const RestrictedTabContent = () => (
+  <div className="flex flex-col items-center justify-center py-20">
+    <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+      <Lock className="w-8 h-8 text-destructive" />
+    </div>
+    <h3 className="text-lg font-semibold text-foreground mb-2">Super Admin Only</h3>
+    <p className="text-muted-foreground text-sm text-center max-w-sm">
+      This section is restricted to Super Admin users only. Contact your system administrator for elevated access.
+    </p>
+  </div>
+);
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
-  // isSuperAdmin now comes directly from the updated useAdmin hook
   const { isAdmin, isSuperAdmin, loading: adminLoading } = useAdmin();
+  const { canAccess, allowedTabs } = usePermissions();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  // Default to first allowed tab
+  const defaultTab = useMemo<AdminTabId>(() => {
+    if (isSuperAdmin) return "overview";
+    if (isAdmin) return "properties";
+    return "properties";
+  }, [isSuperAdmin, isAdmin]);
+
+  const [activeTab, setActiveTab] = useState<AdminTabId>(defaultTab);
+
+  // Reset to valid tab when permissions load
+  useEffect(() => {
+    if (!adminLoading && !allowedTabs.includes(activeTab)) {
+      setActiveTab(defaultTab);
+    }
+  }, [adminLoading, allowedTabs, activeTab, defaultTab]);
 
   // ── Data ──────────────────────────────────────────────────────────────────────
   const [allUsers,       setAllUsers]       = useState<any[]>([]);
@@ -141,31 +168,40 @@ const Admin = () => {
 
   // ── Data fetch ────────────────────────────────────────────────────────────────
   const fetchData = async () => {
-    const [uRes, iRes, aRes, pRes, actRes, propRes] = await Promise.all([
-      (supabase as any).rpc("list_users_with_roles"),
-      (supabase as any).from("inquiries").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("agreements").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("payments").select("*").order("created_at",  { ascending: false }),
-      (supabase as any).from("activity_logs").select("*").order("created_at", { ascending: false }).limit(100),
+    // Only fetch sensitive data if super_admin
+    const promises: Promise<any>[] = [
       (supabase as any).from("properties").select("*").order("id"),
-    ]);
-    setAllUsers(uRes.data || []);
-    setAllInquiries(iRes.data || []);
-    setAllAgreements(aRes.data || []);
-    setAllPayments(pRes.data || []);
-    setActivityLogs(actRes.data || []);
-    setDbProperties(propRes.data || []);
+    ];
+
+    if (isSuperAdmin) {
+      promises.push(
+        (supabase as any).rpc("list_users_with_roles"),
+        (supabase as any).from("inquiries").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("agreements").select("*").order("created_at", { ascending: false }),
+        (supabase as any).from("payments").select("*").order("created_at",  { ascending: false }),
+        (supabase as any).from("activity_logs").select("*").order("created_at", { ascending: false }).limit(100),
+      );
+    }
+
+    const results = await Promise.all(promises);
+    setDbProperties(results[0].data || []);
+
+    if (isSuperAdmin && results.length > 1) {
+      setAllUsers(results[1].data || []);
+      setAllInquiries(results[2].data || []);
+      setAllAgreements(results[3].data || []);
+      setAllPayments(results[4].data || []);
+      setActivityLogs(results[5].data || []);
+    }
   };
 
   // ── Derived data ──
-  const isReadyToRender = !authLoading && !adminLoading && isAdmin;
-
   const rentalProperties  = dbProperties.filter((p: any) => RENTAL_KINDS.includes(p.listing_kind));
   const salesProperties   = dbProperties.filter((p: any) => !RENTAL_KINDS.includes(p.listing_kind));
   const activeProps       = salesProperties.filter((p: any) => !p.is_archived && !p.deleted_at);
   const archivedProps     = salesProperties.filter((p: any) =>  p.is_archived ||  p.deleted_at);
-  const pendingAgreements = allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).length;
-  const pendingPayments   = allPayments.filter(p => p.status === "Pending").length;
+  const pendingAgreements = isSuperAdmin ? allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).length : 0;
+  const pendingPayments   = isSuperAdmin ? allPayments.filter(p => p.status === "Pending").length : 0;
 
   const displayedProperties = useMemo(() => {
     let list = propertyTab === "active" ? activeProps : archivedProps;
@@ -180,6 +216,7 @@ const Admin = () => {
   }, [dbProperties, propertyTab, propertyStatusFilter, propertySearch]);
 
   const filteredUsers = useMemo(() => {
+    if (!isSuperAdmin) return [];
     let list = allUsers;
     if (userSearch.trim()) {
       const s = userSearch.toLowerCase();
@@ -192,13 +229,13 @@ const Admin = () => {
     if (userStatusFilter === "active")    list = list.filter((u: any) => !u.suspended);
     if (userStatusFilter === "suspended") list = list.filter((u: any) =>  u.suspended);
     return list;
-  }, [allUsers, userSearch, userRoleFilter, userStatusFilter]);
+  }, [allUsers, userSearch, userRoleFilter, userStatusFilter, isSuperAdmin]);
 
-  const filteredInquiries = allInquiries.filter(i => {
+  const filteredInquiries = isSuperAdmin ? allInquiries.filter(i => {
     if (inquiryStatusFilter   !== "all" && i.status      !== inquiryStatusFilter)   return false;
     if (inquiryPropertyFilter !== "all" && String(i.property_id) !== inquiryPropertyFilter) return false;
     return true;
-  });
+  }) : [];
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
   const getPropDisplay = (propId: number) => {
@@ -221,9 +258,20 @@ const Admin = () => {
   const handleArchive        = (id: number) => rpc("archive_property",          { _property_id: id }, "Property archived");
   const handleRestore        = (id: number) => rpc("restore_property",          { _property_id: id }, "Property restored");
   const handlePermDelete     = (id: number) => rpc("permanent_delete_property", { _property_id: id }, "Property permanently deleted");
-  const handleReactivateUser = (uid: string) => rpc("reactivate_user",          { _target_user_id: uid }, "User reactivated");
-  const handleAssignRole  = (uid: string, role: string) => rpc("assign_role", { _target_user_id: uid, _role: role }, `Role "${role}" granted`);
-  const handleRevokeRole  = (uid: string, role: string) => rpc("revoke_role", { _target_user_id: uid, _role: role }, `Role "${role}" revoked`);
+
+  // Super admin only actions
+  const handleReactivateUser = (uid: string) => {
+    if (!isSuperAdmin) return;
+    rpc("reactivate_user", { _target_user_id: uid }, "User reactivated");
+  };
+  const handleAssignRole  = (uid: string, role: string) => {
+    if (!isSuperAdmin) return;
+    rpc("assign_role", { _target_user_id: uid, _role: role }, `Role "${role}" granted`);
+  };
+  const handleRevokeRole  = (uid: string, role: string) => {
+    if (!isSuperAdmin) return;
+    rpc("revoke_role", { _target_user_id: uid, _role: role }, `Role "${role}" revoked`);
+  };
 
   const handleChangeStatus = async (id: number, status: string) => {
     const { error } = await (supabase as any).from("properties")
@@ -248,8 +296,9 @@ const Admin = () => {
   const toggleSelectAll = (list: any[]) =>
     setSelectedPropIds(selectedPropIds.size === list.length ? new Set() : new Set(list.map((p: any) => p.id)));
 
-  // ── User actions ──────────────────────────────────────────────────────────────
+  // ── User actions (super admin only) ──────────────────────────────────────────
   const handleSuspendUser = async (u: any) => {
+    if (!isSuperAdmin) return;
     const { error } = await (supabase as any).rpc("suspend_user", {
       _target_user_id: u.user_id, _reason: suspendReason || null,
     });
@@ -258,13 +307,15 @@ const Admin = () => {
   };
 
   const handlePermDeleteUser = async (uid: string, email: string) => {
+    if (!isSuperAdmin) return;
     const { error } = await supabase.auth.admin.deleteUser(uid);
     if (error) toast({ title: "Failed to delete user", description: error.message, variant: "destructive" });
     else { toast({ title: `${email} deleted` }); fetchData(); }
   };
 
-  // ── Agreement / payment actions ───────────────────────────────────────────────
+  // ── Agreement / payment actions (super admin only) ───────────────────────────
   const handleApproveAgreement = async (agr: any) => {
+    if (!isSuperAdmin) return;
     await (supabase as any).from("agreements")
       .update({ approval_status: "Approved", updated_at: new Date().toISOString() }).eq("id", agr.id);
     toast({ title: "Agreement approved!" });
@@ -273,11 +324,13 @@ const Admin = () => {
     fetchData();
   };
   const handleRejectAgreement = async (id: string) => {
+    if (!isSuperAdmin) return;
     await (supabase as any).from("agreements")
       .update({ approval_status: "Rejected", updated_at: new Date().toISOString() }).eq("id", id);
     toast({ title: "Rejected" }); fetchData();
   };
   const handleConfirmPayment = async (pay: any) => {
+    if (!isSuperAdmin) return;
     await (supabase as any).from("payments").update({ status: "Confirmed" }).eq("id", pay.id);
     toast({ title: "Payment confirmed!" });
     const u = getUser(pay.user_id); const { title } = getPropDisplay(pay.property_id);
@@ -285,11 +338,12 @@ const Admin = () => {
     fetchData();
   };
   const handleRejectPayment = async (id: string) => {
+    if (!isSuperAdmin) return;
     await (supabase as any).from("payments").update({ status: "Rejected" }).eq("id", id);
     toast({ title: "Rejected" }); fetchData();
   };
   const handleCreateAgreement = async () => {
-    if (!newAgrUserId || !newAgrPropertyId) return;
+    if (!isSuperAdmin || !newAgrUserId || !newAgrPropertyId) return;
     setCreatingAgr(true);
     let docUrl = null;
     if (newAgrDoc) {
@@ -307,17 +361,21 @@ const Admin = () => {
   };
 
   // ── Tab definitions ───────────────────────────────────────────────────────────
-  const tabs = [
-    { id: "overview"       as TabId, label: "Overview",       icon: BarChart3 },
-    { id: "users"          as TabId, label: "Users",          icon: Users,         badge: allUsers.filter((u: any) => u.suspended).length },
-    { id: "enquiries"      as TabId, label: "Enquiries",      icon: MessageSquare },
-    { id: "properties"     as TabId, label: "Properties",     icon: Building2 },
-    { id: "rooms"          as TabId, label: "Rooms",          icon: BedDouble },
-    { id: "stays_bookings" as TabId, label: "Stays Bookings", icon: CalendarCheck },
-    { id: "agreements"     as TabId, label: "Agreements",     icon: FileSignature, badge: pendingAgreements },
-    { id: "payments"       as TabId, label: "Payments",       icon: CreditCard,    badge: pendingPayments },
-    { id: "activity"       as TabId, label: "Activity",       icon: Activity },
+  // All tabs — visibility is controlled by RBAC
+  const allTabs = [
+    { id: "overview"       as AdminTabId, label: "Overview",       icon: BarChart3,    superOnly: true },
+    { id: "users"          as AdminTabId, label: "Users",          icon: Users,        superOnly: true, badge: isSuperAdmin ? allUsers.filter((u: any) => u.suspended).length : 0 },
+    { id: "enquiries"      as AdminTabId, label: "Enquiries",      icon: MessageSquare,superOnly: true },
+    { id: "properties"     as AdminTabId, label: "Properties",     icon: Building2,    superOnly: false },
+    { id: "rooms"          as AdminTabId, label: "Rooms",          icon: BedDouble,    superOnly: false },
+    { id: "stays_bookings" as AdminTabId, label: "Stays Bookings", icon: CalendarCheck,superOnly: false },
+    { id: "agreements"     as AdminTabId, label: "Agreements",     icon: FileSignature, superOnly: true, badge: pendingAgreements },
+    { id: "payments"       as AdminTabId, label: "Payments",       icon: CreditCard,   superOnly: true, badge: pendingPayments },
+    { id: "activity"       as AdminTabId, label: "Activity",       icon: Activity,     superOnly: true },
   ];
+
+  // Only show tabs the user can access
+  const visibleTabs = allTabs.filter(tab => canAccess(tab.id));
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -338,20 +396,41 @@ const Admin = () => {
                     <Crown className="w-3.5 h-3.5" />Super Admin
                   </span>
                 )}
+                {isAdmin && !isSuperAdmin && (
+                  <span className="text-sm px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium flex items-center gap-1">
+                    <Shield className="w-3.5 h-3.5" />Admin
+                  </span>
+                )}
               </h1>
-              <p className="text-muted-foreground text-sm">Manage users, properties, rooms, bookings, agreements and payments</p>
+              <p className="text-muted-foreground text-sm">
+                {isSuperAdmin
+                  ? "Full system access — manage users, properties, rooms, bookings, agreements and payments"
+                  : "Property management — manage properties, rooms and bookings"}
+              </p>
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" size="sm" asChild><Link to="/admin/roles"><ShieldCheck className="w-4 h-4 mr-1" />Roles</Link></Button>
-            <Button variant="outline" size="sm" asChild><Link to="/admin/audit"><FileText className="w-4 h-4 mr-1" />Audit Log</Link></Button>
-            <Button variant="outline" size="sm" asChild><Link to="/admin/diagnostics">Diagnostics</Link></Button>
-          </div>
+
+          {/* Super admin only nav links */}
+          {isSuperAdmin && (
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" asChild><Link to="/admin/roles"><ShieldCheck className="w-4 h-4 mr-1" />Roles</Link></Button>
+              <Button variant="outline" size="sm" asChild><Link to="/admin/audit"><FileText className="w-4 h-4 mr-1" />Audit Log</Link></Button>
+              <Button variant="outline" size="sm" asChild><Link to="/admin/diagnostics">Diagnostics</Link></Button>
+            </div>
+          )}
+
+          {/* Admin-only notice */}
+          {isAdmin && !isSuperAdmin && (
+            <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-amber-500/10 text-amber-700 rounded-lg text-sm max-w-max">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>You have limited admin access. Contact a Super Admin for elevated permissions.</span>
+            </div>
+          )}
         </motion.div>
 
-        {/* Tab bar */}
+        {/* Tab bar — only show allowed tabs */}
         <div className="flex gap-1 mb-8 border-b border-border pb-0 overflow-x-auto">
-          {tabs.map(tab => (
+          {visibleTabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${
                 activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
@@ -367,8 +446,14 @@ const Admin = () => {
 
         <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
 
-          {/* ── Overview ─────────────────────────────────────────────────────── */}
-          {activeTab === "overview" && (
+          {/* Guard: show restricted if user tries to access a tab they can't */}
+          {!canAccess(activeTab) ? (
+            <AccessDenied />
+          ) : (
+
+          <>
+          {/* ── Overview (super admin only) ───────────────────────────────── */}
+          {activeTab === "overview" && isSuperAdmin && (
             <div className="space-y-6">
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
@@ -409,8 +494,8 @@ const Admin = () => {
             </div>
           )}
 
-          {/* ── Users ─────────────────────────────────────────────────────────── */}
-          {activeTab === "users" && (
+          {/* ── Users (super admin only) ───────────────────────────────────── */}
+          {activeTab === "users" && isSuperAdmin && (
             <div className="space-y-5">
               <div className="flex flex-wrap gap-3">
                 <div className="relative flex-1 min-w-[220px] max-w-sm">
@@ -437,12 +522,11 @@ const Admin = () => {
                 <p className="text-sm text-muted-foreground self-center ml-auto">{filteredUsers.length} users</p>
               </div>
 
-              {/* Suspend dialog */}
               <AlertDialog open={!!suspendTarget} onOpenChange={o => { if (!o) { setSuspendTarget(null); setSuspendReason(""); } }}>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Suspend {suspendTarget?.display_name || suspendTarget?.email}?</AlertDialogTitle>
-                    <AlertDialogDescription>This user will be blocked from logging in. You can reactivate them at any time.</AlertDialogDescription>
+                    <AlertDialogDescription>This user will be blocked from logging in.</AlertDialogDescription>
                   </AlertDialogHeader>
                   <div className="space-y-2 py-2">
                     <Label>Reason (optional)</Label>
@@ -492,10 +576,7 @@ const Admin = () => {
                           </TableCell>
                           <TableCell>
                             {u.suspended ? (
-                              <div>
-                                <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 text-xs font-medium">Suspended</span>
-                                {u.suspension_reason && <p className="text-xs text-muted-foreground mt-0.5 max-w-[120px] truncate">{u.suspension_reason}</p>}
-                              </div>
+                              <span className="px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 text-xs font-medium">Suspended</span>
                             ) : (
                               <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-medium">Active</span>
                             )}
@@ -518,12 +599,12 @@ const Admin = () => {
                                     <Shield className="w-4 h-4 mr-2" />Revoke Admin
                                   </DropdownMenuItem>
                                 )}
-                                {isSuperAdmin && !isUserSuperAdmin && (
+                                {!isUserSuperAdmin && (
                                   <DropdownMenuItem onClick={() => handleAssignRole(u.user_id, "super_admin")}>
                                     <Crown className="w-4 h-4 mr-2" />Grant Super Admin
                                   </DropdownMenuItem>
                                 )}
-                                {isSuperAdmin && isUserSuperAdmin && !isSelf && (
+                                {isUserSuperAdmin && !isSelf && (
                                   <DropdownMenuItem onClick={() => handleRevokeRole(u.user_id, "super_admin")}>
                                     <Crown className="w-4 h-4 mr-2" />Revoke Super Admin
                                   </DropdownMenuItem>
@@ -539,7 +620,7 @@ const Admin = () => {
                                     <UserCheck className="w-4 h-4 mr-2" />Reactivate User
                                   </DropdownMenuItem>
                                 )}
-                                {isSuperAdmin && !isSelf && (
+                                {!isSelf && (
                                   <>
                                     <DropdownMenuSeparator />
                                     <AlertDialog>
@@ -579,8 +660,8 @@ const Admin = () => {
             </div>
           )}
 
-          {/* ── Enquiries ─────────────────────────────────────────────────────── */}
-          {activeTab === "enquiries" && (
+          {/* ── Enquiries (super admin only) ───────────────────────────────── */}
+          {activeTab === "enquiries" && isSuperAdmin && (
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
                 <Select value={inquiryStatusFilter} onValueChange={setInquiryStatusFilter}>
@@ -626,7 +707,7 @@ const Admin = () => {
             </div>
           )}
 
-          {/* ── Properties ────────────────────────────────────────────────────── */}
+          {/* ── Properties (admin + super admin) ──────────────────────────── */}
           {activeTab === "properties" && (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
@@ -649,7 +730,6 @@ const Admin = () => {
                 </Button>
               </div>
 
-              {/* Bulk bar */}
               {selectedPropIds.size > 0 && (
                 <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/20 flex-wrap">
                   <span className="text-sm font-medium text-primary">{selectedPropIds.size} selected</span>
@@ -660,7 +740,7 @@ const Admin = () => {
                           <Button size="sm" variant="outline" disabled={bulkLoading}><Archive className="w-4 h-4 mr-1" />Archive All</Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
-                          <AlertDialogHeader><AlertDialogTitle>Archive {selectedPropIds.size} properties?</AlertDialogTitle><AlertDialogDescription>Hidden from public but remain in admin dashboard.</AlertDialogDescription></AlertDialogHeader>
+                          <AlertDialogHeader><AlertDialogTitle>Archive {selectedPropIds.size} properties?</AlertDialogTitle></AlertDialogHeader>
                           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleBulkAction("archive")}>Archive</AlertDialogAction></AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -676,7 +756,7 @@ const Admin = () => {
                           <Button size="sm" variant="destructive" disabled={bulkLoading}><Trash2 className="w-4 h-4 mr-1" />Delete All</Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
-                          <AlertDialogHeader><AlertDialogTitle>Permanently delete {selectedPropIds.size} properties?</AlertDialogTitle><AlertDialogDescription>Cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+                          <AlertDialogHeader><AlertDialogTitle>Permanently delete {selectedPropIds.size} properties?</AlertDialogTitle></AlertDialogHeader>
                           <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive" onClick={() => handleBulkAction("delete")}>Delete</AlertDialogAction></AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -705,7 +785,7 @@ const Admin = () => {
                         {displayedProperties.map((prop: any) => {
                           const sta = staticProperties.find(p => p.id === prop.id);
                           const image = prop.image_url || sta?.image || "/placeholder.svg";
-                          const enquiryCount = allInquiries.filter(i => i.property_id === prop.id).length;
+                          const enquiryCount = isSuperAdmin ? allInquiries.filter(i => i.property_id === prop.id).length : 0;
                           const isSelected = selectedPropIds.has(prop.id);
                           return (
                             <Card key={prop.id} className={isSelected ? "border-primary/50 bg-primary/5" : ""}>
@@ -721,11 +801,10 @@ const Admin = () => {
                                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                                       <h4 className="font-semibold truncate">{prop.title}</h4>
                                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${propStatusColor[prop.status] || "bg-muted text-muted-foreground"}`}>{prop.status}</span>
-                                      {prop.is_archived && <span className="px-2.5 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-600">Archived</span>}
-                                      {prop.featured   && <span className="px-2.5 py-0.5 rounded-full text-xs bg-primary/10 text-primary">Featured</span>}
+                                      {prop.featured && <span className="px-2.5 py-0.5 rounded-full text-xs bg-primary/10 text-primary">Featured</span>}
                                     </div>
                                     <p className="text-sm text-muted-foreground">{prop.location} · {prop.price}</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">{enquiryCount} enquiries</p>
+                                    {isSuperAdmin && <p className="text-xs text-muted-foreground mt-0.5">{enquiryCount} enquiries</p>}
                                   </div>
                                   <div className="flex flex-wrap gap-2 flex-shrink-0">
                                     {!prop.is_archived && !prop.deleted_at && (
@@ -774,12 +853,12 @@ const Admin = () => {
             </div>
           )}
 
-          {/* ── Rooms ─────────────────────────────────────────────────────────── */}
+          {/* ── Rooms (admin + super admin) ────────────────────────────────── */}
           {activeTab === "rooms"          && <AdminRoomsTab rentalProperties={rentalProperties} />}
           {activeTab === "stays_bookings" && <AdminStaysBookingsTab rentalProperties={rentalProperties} />}
 
-          {/* ── Agreements ────────────────────────────────────────────────────── */}
-          {activeTab === "agreements" && (
+          {/* ── Agreements (super admin only) ──────────────────────────────── */}
+          {activeTab === "agreements" && isSuperAdmin && (
             <div className="space-y-6">
               <Card>
                 <CardHeader><CardTitle>Create Agreement</CardTitle></CardHeader>
@@ -820,8 +899,8 @@ const Admin = () => {
             </div>
           )}
 
-          {/* ── Payments ──────────────────────────────────────────────────────── */}
-          {activeTab === "payments" && (
+          {/* ── Payments (super admin only) ────────────────────────────────── */}
+          {activeTab === "payments" && isSuperAdmin && (
             <div className="space-y-4">
               {allPayments.filter(p => p.status === "Pending").map(pay => {
                 const { title } = getPropDisplay(pay.property_id);
@@ -830,8 +909,7 @@ const Admin = () => {
                   <div key={pay.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium">{title} — ${pay.amount?.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">{u?.display_name || u?.email} · {new Date(pay.payment_date).toLocaleDateString()}</p>
-                      {pay.receipt_url && <a href={pay.receipt_url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">View Receipt</a>}
+                      <p className="text-sm text-muted-foreground">{u?.display_name || u?.email}</p>
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleConfirmPayment(pay)}><CheckCircle2 className="w-4 h-4 mr-1" />Confirm</Button>
@@ -863,8 +941,8 @@ const Admin = () => {
             </div>
           )}
 
-          {/* ── Activity ──────────────────────────────────────────────────────── */}
-          {activeTab === "activity" && (
+          {/* ── Activity (super admin only) ────────────────────────────────── */}
+          {activeTab === "activity" && isSuperAdmin && (
             <Card><CardContent className="p-0">
               {activityLogs.length === 0 ? (
                 <div className="text-center py-16"><Activity className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-muted-foreground">No activity yet</p></div>
@@ -887,6 +965,8 @@ const Admin = () => {
                 </Table>
               )}
             </CardContent></Card>
+          )}
+          </>
           )}
 
         </motion.div>

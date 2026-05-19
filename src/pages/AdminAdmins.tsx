@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import SuperAdminRoute from "../components/admin/SuperAdminRoute";
 
 interface AdminUser {
   user_id: string;
@@ -31,7 +32,7 @@ const relativeTime = (d: string | null) => {
   return `${Math.floor(days / 365)}y ago`;
 };
 
-const AdminAdmins = () => {
+const AdminAdminsContent = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const navigate = useNavigate();
@@ -116,7 +117,7 @@ const AdminAdmins = () => {
                           <div className="flex items-center gap-2">
                             <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                             <span>{relativeTime(a.last_sign_in_at)}</span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground hidden sm:inline">
                               ({formatDate(a.last_sign_in_at)})
                             </span>
                           </div>
@@ -143,5 +144,12 @@ const AdminAdmins = () => {
     </div>
   );
 };
+
+// Wrapped with SuperAdminRoute guard
+const AdminAdmins = () => (
+  <SuperAdminRoute deniedMessage="The administrators list is restricted to Super Admin users only.">
+    <AdminAdminsContent />
+  </SuperAdminRoute>
+);
 
 export default AdminAdmins;

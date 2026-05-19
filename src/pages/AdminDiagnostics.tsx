@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
+import SuperAdminRoute from "../components/admin/SuperAdminRoute";
 
 type CheckStatus = "pending" | "pass" | "fail" | "warn";
 interface CheckResult {
@@ -21,7 +22,7 @@ const StatusIcon = ({ status }: { status: CheckStatus }) => {
   return <XCircle className="w-5 h-5 text-destructive" />;
 };
 
-const AdminDiagnostics = () => {
+const AdminDiagnosticsContent = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const navigate = useNavigate();
@@ -62,7 +63,6 @@ const AdminDiagnostics = () => {
           : `${fieldIssues} properties missing title or price`
       );
 
-      // 2. Images
       const noImage = data?.filter((p: any) => !p.image_url && (!p.images || p.images.length === 0)).length || 0;
       setCheck(
         "Properties: images",
@@ -70,7 +70,6 @@ const AdminDiagnostics = () => {
         noImage === 0 ? "All properties have at least one image" : `${noImage} properties have no image`
       );
 
-      // 3. Probe one image URL
       const sample = data?.find((p: any) => p.image_url)?.image_url;
       if (sample) {
         try {
@@ -90,7 +89,7 @@ const AdminDiagnostics = () => {
       setCheck("Properties: required fields", "fail", e.message || "Read failed");
     }
 
-    // 4. Storage bucket
+    // 2. Storage bucket
     try {
       const { data, error } = await supabase.storage.from("property-images").list("", { limit: 1 });
       if (error) throw error;
@@ -99,7 +98,7 @@ const AdminDiagnostics = () => {
       setCheck("Storage: property-images bucket", "fail", e.message || "Bucket inaccessible");
     }
 
-    // 5. RLS — anon can read properties (public)
+    // 3. RLS checks
     try {
       const { error } = await (supabase as any).from("properties").select("id").limit(1);
       setCheck("RLS: public read on properties", error ? "fail" : "pass", error?.message || "Anyone can view properties");
@@ -107,7 +106,6 @@ const AdminDiagnostics = () => {
       setCheck("RLS: public read on properties", "fail", e.message);
     }
 
-    // 6. RLS — admin reads on protected tables
     for (const table of ["agreements", "payments", "invoices", "inquiries", "profiles", "user_roles"]) {
       try {
         const { error } = await (supabase as any).from(table).select("*", { count: "exact", head: true });
@@ -117,7 +115,7 @@ const AdminDiagnostics = () => {
       }
     }
 
-    // 7. has_role function
+    // 4. has_role function
     try {
       const { data, error } = await (supabase as any).rpc("has_role", {
         _user_id: user?.id,
@@ -128,26 +126,18 @@ const AdminDiagnostics = () => {
       setCheck("Function: has_role()", "fail", e.message);
     }
 
-    // 8. Edge function: send-notification-email (dry — invalid type to confirm reachable)
+    // 5. Edge function
     try {
       const { data, error } = await supabase.functions.invoke("send-notification-email", {
         body: { type: "agreement_created", to: "diagnostics@example.com", recipientName: "Diagnostics", propertyTitle: "Diagnostic Check" },
       });
       if (error) throw error;
-      setCheck("Edge fn: send-notification-email", data?.success ? "pass" : "warn", data?.success ? "Reachable & accepted (test send)" : JSON.stringify(data));
+      setCheck("Edge fn: send-notification-email", data?.success ? "pass" : "warn", data?.success ? "Reachable & accepted" : JSON.stringify(data));
     } catch (e: any) {
       setCheck("Edge fn: send-notification-email", "fail", e.message || "Invocation failed");
     }
 
-    // 9. Triggers (indirectly via functions)
-    try {
-      const { error } = await (supabase as any).from("invoices").select("id", { head: true, count: "exact" });
-      setCheck("Triggers: invoices table accessible", error ? "fail" : "pass", error?.message || "Trigger target table OK");
-    } catch (e: any) {
-      setCheck("Triggers: invoices table accessible", "fail", e.message);
-    }
-
-    // 10. Server-side RLS probe suite (admin only)
+    // 6. RLS probe suite
     try {
       const { data, error } = await supabase.functions.invoke("rls-check", { body: {} });
       if (error) throw error;
@@ -169,16 +159,7 @@ const AdminDiagnostics = () => {
 
   useEffect(() => {
     if (isAdmin) runDiagnostics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
-
-  if (authLoading || adminLoading || !isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
 
   const passCount = checks.filter((c) => c.status === "pass").length;
   const failCount = checks.filter((c) => c.status === "fail").length;
@@ -226,5 +207,12 @@ const AdminDiagnostics = () => {
     </div>
   );
 };
+
+// Wrapped with SuperAdminRoute guard
+const AdminDiagnostics = () => (
+  <SuperAdminRoute deniedMessage="System diagnostics are restricted to Super Admin users only.">
+    <AdminDiagnosticsContent />
+  </SuperAdminRoute>
+);
 
 export default AdminDiagnostics;

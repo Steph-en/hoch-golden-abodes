@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import SuperAdminRoute from "../components/admin/SuperAdminRoute";
 
 type AppRole = "admin" | "moderator" | "user";
 interface UserRow {
@@ -44,7 +45,7 @@ const ROLES: AppRole[] = ["admin", "moderator", "user"];
 type ActionFilter = "all" | "granted" | "revoked";
 type RoleFilter = "all" | AppRole;
 
-const AdminRoles = () => {
+const AdminRolesContent = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdmin();
   const navigate = useNavigate();
@@ -57,13 +58,11 @@ const AdminRoles = () => {
   const [auditLoading, setAuditLoading] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Audit filters
   const [actionFilter, setActionFilter] = useState<ActionFilter>("all");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
 
-  // Confirmation
   const [pending, setPending] = useState<{
     target: UserRow;
     role: AppRole;
@@ -71,10 +70,8 @@ const AdminRoles = () => {
   } | null>(null);
   const [typedConfirm, setTypedConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
   const [selectedRole, setSelectedRole] = useState<Record<string, AppRole>>({});
 
-  // Last role-change email status (for on-screen indicator + retry)
   type EmailStatus = "idle" | "sending" | "success" | "failed";
   const [lastEmail, setLastEmail] = useState<{
     status: EmailStatus;
@@ -131,13 +128,10 @@ const AdminRoles = () => {
       await Promise.all([fetchUsers(), fetchAudit()]);
       setLoading(false);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
-  // Refetch audit when filters change
   useEffect(() => {
     if (isAdmin && !loading) fetchAudit();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actionFilter, roleFilter, fromDate, toDate]);
 
   const filtered = useMemo(() => {
@@ -154,11 +148,10 @@ const AdminRoles = () => {
   const isLastAdmin = adminCount <= 1;
 
   const openConfirm = (target: UserRow, role: AppRole, action: "grant" | "revoke") => {
-    // Block last-admin revoke client-side with a toast (server also blocks it)
     if (action === "revoke" && role === "admin" && isLastAdmin) {
       toast({
         title: "Action blocked",
-        description: "This is the only admin on the platform. Grant the admin role to another user before revoking this one.",
+        description: "This is the only admin on the platform.",
         variant: "destructive",
       });
       return;
@@ -166,7 +159,7 @@ const AdminRoles = () => {
     if (action === "revoke" && role === "admin" && target.user_id === user?.id) {
       toast({
         title: "Action blocked",
-        description: "You cannot revoke your own admin role. Ask another admin to do this.",
+        description: "You cannot revoke your own admin role.",
         variant: "destructive",
       });
       return;
@@ -187,7 +180,6 @@ const AdminRoles = () => {
         body: { action, role, targetUserId, performedByEmail: user?.email },
       });
       if (error) {
-        console.warn("Notification email failed:", error.message);
         setLastEmail({ status: "failed", targetUserId, targetEmail, role, action, error: error.message });
         return false;
       }
@@ -195,7 +187,6 @@ const AdminRoles = () => {
       return true;
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Unknown error";
-      console.warn("Notification email error:", e);
       setLastEmail({ status: "failed", targetUserId, targetEmail, role, action, error: msg });
       return false;
     }
@@ -208,9 +199,6 @@ const AdminRoles = () => {
     );
     toast({
       title: ok ? "Email sent" : "Email retry failed",
-      description: ok
-        ? `Notification re-sent to ${lastEmail.targetEmail}`
-        : "Check edge function logs for details.",
       variant: ok ? "default" : "destructive",
     });
   };
@@ -235,16 +223,12 @@ const AdminRoles = () => {
 
     const action: "granted" | "revoked" = pending.action === "grant" ? "granted" : "revoked";
     const emailOk = await sendNotificationEmail(
-      pending.target.user_id,
-      pending.target.email,
-      pending.role,
-      action,
+      pending.target.user_id, pending.target.email, pending.role, action,
     );
 
     setSubmitting(false);
     toast({
       title: pending.action === "grant" ? "Role granted" : "Role revoked",
-      description: `${pending.role} ${pending.action === "grant" ? "→" : "✗"} ${pending.target.email}${emailOk ? " (notification email sent)" : " — email failed, see status banner"}`,
       variant: emailOk ? "default" : "destructive",
     });
     setPending(null);
@@ -260,7 +244,7 @@ const AdminRoles = () => {
 
   const exportAuditCsv = () => {
     if (audit.length === 0) {
-      toast({ title: "Nothing to export", description: "No audit entries match these filters." });
+      toast({ title: "Nothing to export" });
       return;
     }
     const escape = (v: unknown) => {
@@ -283,14 +267,6 @@ const AdminRoles = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-
-  if (authLoading || adminLoading || !isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
 
   return (
     <TooltipProvider>
@@ -315,16 +291,13 @@ const AdminRoles = () => {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Only one admin remains</AlertTitle>
               <AlertDescription>
-                There is currently <strong>{adminCount}</strong> admin on the platform. Removing this admin would leave the system with no administrators, so the revoke action is blocked. Grant the admin role to another user before attempting to revoke this one.
+                Revoking this admin's role is blocked until another admin is assigned.
               </AlertDescription>
             </Alert>
           )}
 
           {lastEmail && lastEmail.status !== "idle" && (
-            <Alert
-              variant={lastEmail.status === "failed" ? "destructive" : "default"}
-              className={lastEmail.status === "success" ? "border-primary/30" : undefined}
-            >
+            <Alert variant={lastEmail.status === "failed" ? "destructive" : "default"}>
               {lastEmail.status === "sending" && <Loader2 className="h-4 w-4 animate-spin" />}
               {lastEmail.status === "success" && <MailCheck className="h-4 w-4" />}
               {lastEmail.status === "failed" && <MailX className="h-4 w-4" />}
@@ -341,19 +314,13 @@ const AdminRoles = () => {
                 )}
               </AlertTitle>
               <AlertDescription>
-                Role <strong>{lastEmail.action}</strong> · <strong>{lastEmail.role}</strong> · recipient{" "}
-                <strong>{lastEmail.targetEmail}</strong>
-                {lastEmail.status === "failed" && lastEmail.error && (
-                  <span className="block text-xs mt-1 opacity-80">Error: {lastEmail.error}</span>
-                )}
+                Role <strong>{lastEmail.action}</strong> · <strong>{lastEmail.role}</strong> · {lastEmail.targetEmail}
               </AlertDescription>
             </Alert>
           )}
 
           <Card>
-            <CardHeader>
-              <CardTitle>Users</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Users</CardTitle></CardHeader>
             <CardContent>
               <div className="relative mb-4">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -383,11 +350,10 @@ const AdminRoles = () => {
                       const roleToUse = selectedRole[u.user_id] || "admin";
                       const hasRole = u.roles.includes(roleToUse);
                       const blockSelfAdmin = isSelf && roleToUse === "admin";
-                      const blockLastAdmin =
-                        roleToUse === "admin" && hasRole && isLastAdmin;
+                      const blockLastAdmin = roleToUse === "admin" && hasRole && isLastAdmin;
                       const revokeBlocked = blockSelfAdmin || blockLastAdmin;
                       const blockReason = blockLastAdmin
-                        ? "Cannot revoke the last admin on the platform"
+                        ? "Cannot revoke the last admin"
                         : blockSelfAdmin
                         ? "You cannot revoke your own admin role"
                         : "";
@@ -431,9 +397,7 @@ const AdminRoles = () => {
                                       </Button>
                                     </span>
                                   </TooltipTrigger>
-                                  {blockReason && (
-                                    <TooltipContent>{blockReason}</TooltipContent>
-                                  )}
+                                  {blockReason && <TooltipContent>{blockReason}</TooltipContent>}
                                 </Tooltip>
                               ) : (
                                 <Button size="sm" onClick={() => openConfirm(u, roleToUse, "grant")}>
@@ -544,7 +508,7 @@ const AdminRoles = () => {
               <AlertDialogDescription>
                 You are about to <strong>{pending?.action}</strong> the <strong>{pending?.role}</strong> role
                 {pending?.action === "grant" ? " to " : " from "}
-                <strong>{pending?.target.email}</strong>. The user will receive an email notification.
+                <strong>{pending?.target.email}</strong>.
                 <br /><br />
                 Type the user's email to confirm:
               </AlertDialogDescription>
@@ -568,5 +532,12 @@ const AdminRoles = () => {
     </TooltipProvider>
   );
 };
+
+// Wrap the entire page in SuperAdminRoute
+const AdminRoles = () => (
+  <SuperAdminRoute deniedMessage="Role management is restricted to Super Admin users only.">
+    <AdminRolesContent />
+  </SuperAdminRoute>
+);
 
 export default AdminRoles;
