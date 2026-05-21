@@ -429,7 +429,7 @@ const Admin = () => {
         </motion.div>
 
         {/* Tab bar — only show allowed tabs */}
-        <div className="flex gap-1 mb-8 border-b border-border pb-0 overflow-x-auto">
+        <div className="flex gap-1 mb-8 border-b border-border pb-[1px] overflow-x-auto">
           {visibleTabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${

@@ -585,7 +585,7 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-10 border-b border-border pb-1">
+        <div className="flex gap-1 mb-10 border-b border-border pb-[1px]">
           {tabs.map((tab) => (
             <button
               key={tab.id}
