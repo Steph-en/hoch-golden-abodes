@@ -38,6 +38,7 @@ import AdminStaysBookingsTab from "@/components/admin/AdminStaysBookingsTab";
 import AccessDenied from "@/components/admin/AccessDenied";
 import { useToast } from "@/hooks/use-toast";
 import type { AdminTabId } from "@/hooks/usePermissions";
+import AdminPaymentsTab from "@/components/admin/AdminPaymentsTab";
 
 const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
 const RENTAL_KINDS = ["rental_property", "hotel", "commercial_rental"];
@@ -900,7 +901,7 @@ const Admin = () => {
           )}
 
           {/* ── Payments (super admin only) ────────────────────────────────── */}
-          {activeTab === "payments" && isSuperAdmin && (
+          {/* {activeTab === "payments" && isSuperAdmin && (
             <div className="space-y-4">
               {allPayments.filter(p => p.status === "Pending").map(pay => {
                 const { title } = getPropDisplay(pay.property_id);
@@ -939,6 +940,9 @@ const Admin = () => {
                 </Table>
               </CardContent></Card>
             </div>
+          )} */}
+          {activeTab === "payments" && isSuperAdmin && (
+            <AdminPaymentsTab allUsers={allUsers} dbProperties={dbProperties}/>
           )}
 
           {/* ── Activity (super admin only) ────────────────────────────────── */}

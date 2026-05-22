@@ -456,65 +456,159 @@ const Dashboard = () => {
     }
   };
 
+  // const handleSubmitPayment = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!user || !selectedPropertyId || !paymentAmount) return;
+  //   setSubmittingPayment(true);
+  //   let receiptUrl = null;
+  //   if (receiptFile) {
+  //     const path = `${user.id}/${Date.now()}_${receiptFile.name}`;
+  //     const { data: uploadData, error: uploadErr } = await supabase.storage
+  //       .from("receipts")
+  //       .upload(path, receiptFile, { upsert: true });
+
+  //     if (uploadErr) {
+  //       toast({ title: "Receipt upload failed", description: uploadErr.message, variant: "destructive" });
+  //       return;
+  //     }
+
+  //     if (uploadData) {
+  //       // receipts bucket is private (public = false), so public URL 404s.
+  //       const { data: signed, error: signedErr } = await supabase.storage
+  //         .from("receipts")
+  //         .createSignedUrl(path, 60 * 60);
+
+  //       if (signedErr) {
+  //         toast({ title: "Could not open receipt", description: signedErr.message, variant: "destructive" });
+  //         return;
+  //       }
+
+  //       // Store signed URL.
+  //       // The signed URL must include the correct auth query params.
+  //       // Also handle response-shape differences.
+  //       receiptUrl =
+  //         (signed as any)?.signedUrl ||
+  //         (signed as any)?.url ||
+  //         (signed as any)?.data?.signedUrl ||
+  //         signed.signedUrl;
+
+  //       // If we somehow ended up with a public-object URL, ignore it.
+  //       if (typeof receiptUrl === "string" && receiptUrl.includes("/object/public/receipts/")) {
+  //         toast({
+  //           title: "Receipt link error",
+  //           description: "Generated URL points to a public endpoint, but receipts bucket is private.",
+  //           variant: "destructive",
+  //         });
+  //         receiptUrl = null;
+  //       }
+  //     }
+  //   }
+  //   const { error } = await (supabase as any).from("payments").insert({
+  //     user_id: user.id, property_id: parseInt(selectedPropertyId),
+  //     amount: parseFloat(paymentAmount), receipt_url: receiptUrl, status: "Pending",
+  //   });
+  //   if (error) {
+  //     toast({ title: "Failed to submit payment", variant: "destructive" });
+  //   } else {
+  //     toast({ title: "Payment submitted!", description: "Awaiting admin confirmation." });
+  //     setPaymentAmount("");
+  //     setReceiptFile(null);
+  //     fetchAll();
+  //   }
+  //   setSubmittingPayment(false);
+  // };
   const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedPropertyId || !paymentAmount) return;
     setSubmittingPayment(true);
-    let receiptUrl = null;
+
+    let receiptPath: string | null = null;
+    let receiptUrl: string | null = null;
+
     if (receiptFile) {
-      const path = `${user.id}/${Date.now()}_${receiptFile.name}`;
-      const { data: uploadData, error: uploadErr } = await supabase.storage
+      const ext = receiptFile.name.split(".").pop() || "bin";
+      const storagePath = `${user.id}/${Date.now()}_${receiptFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
+      const { error: uploadErr } = await supabase.storage
         .from("receipts")
-        .upload(path, receiptFile, { upsert: true });
+        .upload(storagePath, receiptFile, { upsert: false });
 
       if (uploadErr) {
-        toast({ title: "Receipt upload failed", description: uploadErr.message, variant: "destructive" });
+        toast({
+          title: "Receipt upload failed",
+          description: uploadErr.message,
+          variant: "destructive",
+        });
+        setSubmittingPayment(false);
         return;
       }
 
-      if (uploadData) {
-        // receipts bucket is private (public = false), so public URL 404s.
-        const { data: signed, error: signedErr } = await supabase.storage
-          .from("receipts")
-          .createSignedUrl(path, 60 * 60);
+      receiptPath = storagePath; // Store path for future signed URL generation
 
-        if (signedErr) {
-          toast({ title: "Could not open receipt", description: signedErr.message, variant: "destructive" });
-          return;
-        }
-
-        // Store signed URL.
-        // The signed URL must include the correct auth query params.
-        // Also handle response-shape differences.
-        receiptUrl =
-          (signed as any)?.signedUrl ||
-          (signed as any)?.url ||
-          (signed as any)?.data?.signedUrl ||
-          signed.signedUrl;
-
-        // If we somehow ended up with a public-object URL, ignore it.
-        if (typeof receiptUrl === "string" && receiptUrl.includes("/object/public/receipts/")) {
-          toast({
-            title: "Receipt link error",
-            description: "Generated URL points to a public endpoint, but receipts bucket is private.",
-            variant: "destructive",
-          });
-          receiptUrl = null;
-        }
-      }
+      // Generate an initial signed URL (1 hour) just for the immediate response
+      const { data: signedData } = await supabase.storage
+        .from("receipts")
+        .createSignedUrl(storagePath, 3600);
+      receiptUrl = (signedData as any)?.signedUrl || null;
     }
-    const { error } = await (supabase as any).from("payments").insert({
-      user_id: user.id, property_id: parseInt(selectedPropertyId),
-      amount: parseFloat(paymentAmount), receipt_url: receiptUrl, status: "Pending",
-    });
-    if (error) {
+
+    // Insert payment record with both path and url
+    const { data: paymentRecord, error: payErr } = await (supabase as any)
+      .from("payments")
+      .insert({
+        user_id: user.id,
+        property_id: parseInt(selectedPropertyId),
+        amount: parseFloat(paymentAmount),
+        receipt_url: receiptUrl,
+        receipt_path: receiptPath,     // NEW: persistent storage path
+        status: "Pending",
+        verification_status: "pending", // NEW: verification workflow
+        payment_method: "bank_transfer",
+      })
+      .select("id")
+      .single();
+
+    if (payErr) {
       toast({ title: "Failed to submit payment", variant: "destructive" });
-    } else {
-      toast({ title: "Payment submitted!", description: "Awaiting admin confirmation." });
-      setPaymentAmount("");
-      setReceiptFile(null);
-      fetchAll();
+      setSubmittingPayment(false);
+      return;
     }
+
+    // If there's a file, also create a payment_documents record for persistent metadata
+    if (receiptPath && paymentRecord?.id) {
+      await (supabase as any).from("payment_documents").insert({
+        payment_id: paymentRecord.id,
+        user_id: user.id,
+        file_url: receiptUrl,
+        file_path: receiptPath,
+        file_name: receiptFile?.name || null,
+        file_type: receiptFile?.type || null,
+        file_size: receiptFile?.size || null,
+        verification_status: "pending",
+      });
+
+      // Log the submission
+      await (supabase as any).rpc("log_payment_action", {
+        _payment_id: paymentRecord.id,
+        _action: "submitted",
+        _new_status: "pending",
+        _metadata: {
+          has_document: true,
+          file_name: receiptFile?.name,
+          file_type: receiptFile?.type,
+        },
+      });
+    }
+
+    toast({
+      title: "Payment submitted!",
+      description: "Your payment proof has been received and is pending verification.",
+    });
+
+    setPaymentAmount("");
+    setReceiptFile(null);
+    setSelectedPropertyId("");
+    fetchAll();
     setSubmittingPayment(false);
   };
 
