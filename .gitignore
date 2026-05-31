@@ -68,7 +68,7 @@ Thumbs.db
 
 # Supabase edge env (local)
 supabase/.env
-#supabase/functions/**/.env
+supabase/functions/**/.env
 
 # Supabase
 Supabase/migrations/**/.env
