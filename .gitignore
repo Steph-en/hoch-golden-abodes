@@ -68,10 +68,10 @@ Thumbs.db
 
 # Supabase edge env (local)
 supabase/.env
-supabase/functions/
+supabase/functions/**/.env
 
 # Supabase
-supabase/migrations/
+supabase/migrations/**/.env
 
 # Supabase local config and generated artifacts
 supabase/config.toml
