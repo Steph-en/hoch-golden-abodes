@@ -71,7 +71,7 @@ supabase/.env
 supabase/functions/
 
 # Supabase
-Supabase/migrations/
+supabase/migrations/
 
 # Supabase local config and generated artifacts
 supabase/config.toml
