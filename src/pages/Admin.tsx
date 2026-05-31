@@ -39,6 +39,7 @@ import AccessDenied from "@/components/admin/AccessDenied";
 import { useToast } from "@/hooks/use-toast";
 import type { AdminTabId } from "@/hooks/usePermissions";
 import AdminPaymentsTab from "@/components/admin/AdminPaymentsTab";
+import AdminAgreementsTab from "@/components/admin/AdminAgreementsTab";
 
 const PROPERTY_STATUSES = ["Available", "Reserved", "Sold"] as const;
 const RENTAL_KINDS = ["rental_property", "hotel", "commercial_rental"];
@@ -860,87 +861,10 @@ const Admin = () => {
 
           {/* ── Agreements (super admin only) ──────────────────────────────── */}
           {activeTab === "agreements" && isSuperAdmin && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader><CardTitle>Create Agreement</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <Select value={newAgrUserId} onValueChange={setNewAgrUserId}>
-                      <SelectTrigger><SelectValue placeholder="Select user" /></SelectTrigger>
-                      <SelectContent>{allUsers.map((u: any) => <SelectItem key={u.user_id} value={u.user_id}>{u.display_name || u.email}</SelectItem>)}</SelectContent>
-                    </Select>
-                    <Select value={newAgrPropertyId} onValueChange={setNewAgrPropertyId}>
-                      <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
-                      <SelectContent>{dbProperties.map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.title}</SelectItem>)}</SelectContent>
-                    </Select>
-                    <Input type="file" accept=".pdf,.doc,.docx" onChange={e => setNewAgrDoc(e.target.files?.[0] || null)} />
-                  </div>
-                  <Button onClick={handleCreateAgreement} disabled={creatingAgr || !newAgrUserId || !newAgrPropertyId} className="mt-4">
-                    {creatingAgr ? "Creating…" : "Create Agreement"}
-                  </Button>
-                </CardContent>
-              </Card>
-              {allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).map(agr => {
-                const { title } = getPropDisplay(agr.property_id);
-                const u = getUser(agr.user_id);
-                return (
-                  <div key={agr.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">{title}</p>
-                      <p className="text-sm text-muted-foreground">{u?.display_name || u?.email}</p>
-                      {agr.signature_url && <img src={agr.signature_url} alt="Sig" className="h-10 mt-2 border border-border rounded" />}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleApproveAgreement(agr)}><CheckCircle2 className="w-4 h-4 mr-1" />Approve</Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleRejectAgreement(agr.id)}><XCircle className="w-4 h-4 mr-1" />Reject</Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <AdminAgreementsTab allUsers={allUsers} dbProperties={dbProperties} />
           )}
 
           {/* ── Payments (super admin only) ────────────────────────────────── */}
-          {/* {activeTab === "payments" && isSuperAdmin && (
-            <div className="space-y-4">
-              {allPayments.filter(p => p.status === "Pending").map(pay => {
-                const { title } = getPropDisplay(pay.property_id);
-                const u = getUser(pay.user_id);
-                return (
-                  <div key={pay.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-muted/30 rounded-xl">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">{title} — ${pay.amount?.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">{u?.display_name || u?.email}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleConfirmPayment(pay)}><CheckCircle2 className="w-4 h-4 mr-1" />Confirm</Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleRejectPayment(pay.id)}><XCircle className="w-4 h-4 mr-1" />Reject</Button>
-                    </div>
-                  </div>
-                );
-              })}
-              <Card><CardContent className="p-0">
-                <Table>
-                  <TableHeader><TableRow><TableHead>Property</TableHead><TableHead>User</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {allPayments.map(pay => {
-                      const { title } = getPropDisplay(pay.property_id);
-                      const u = getUser(pay.user_id);
-                      return (
-                        <TableRow key={pay.id}>
-                          <TableCell className="font-medium">{title}</TableCell>
-                          <TableCell className="text-muted-foreground">{u?.display_name || u?.email}</TableCell>
-                          <TableCell className="font-semibold">${pay.amount?.toLocaleString()}</TableCell>
-                          <TableCell><span className={`px-2.5 py-1 rounded-full text-xs font-medium ${pay.status==="Confirmed"?"bg-emerald-500/10 text-emerald-600":pay.status==="Rejected"?"bg-red-500/10 text-red-600":"bg-amber-500/10 text-amber-600"}`}>{pay.status}</span></TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{new Date(pay.payment_date).toLocaleDateString()}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </CardContent></Card>
-            </div>
-          )} */}
           {activeTab === "payments" && isSuperAdmin && (
             <AdminPaymentsTab allUsers={allUsers} dbProperties={dbProperties}/>
           )}

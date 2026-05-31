@@ -29,10 +29,15 @@ import SignaturePad from "@/components/SignaturePad";
 import { useMyBookings, cancelBooking } from "@/hooks/useRentals";
 import { format, isPast, parseISO } from "date-fns";
 import SEO from "@/components/SEO";
+import AgreementDetailsModal from "@/components/agreements/AgreementDetailsModal";
+import AgreementStatusBadge from "@/components/agreements/AgreementStatusBadge";
+import { resolveStatus } from "@/hooks/useAgreements";
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────
+
+
 
 const StatusBadge = ({ status }: { status: string }) => {
   const styles: Record<string, string> = {
@@ -358,8 +363,10 @@ const Dashboard = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [myProperties, setMyProperties] = useState<number[]>([]);
   const [profileForm, setProfileForm] = useState({ display_name: "", phone: "", bio: "" });
-  const [saving, setSaving] = useState(false);
+const [saving, setSaving] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+  const [selectedAgreement, setSelectedAgreement] = useState<any>(null);
+
   const [inquiryFilter, setInquiryFilter] = useState("all");
   const [inquirySort, setInquirySort] = useState("newest");
 
@@ -456,67 +463,6 @@ const Dashboard = () => {
     }
   };
 
-  // const handleSubmitPayment = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (!user || !selectedPropertyId || !paymentAmount) return;
-  //   setSubmittingPayment(true);
-  //   let receiptUrl = null;
-  //   if (receiptFile) {
-  //     const path = `${user.id}/${Date.now()}_${receiptFile.name}`;
-  //     const { data: uploadData, error: uploadErr } = await supabase.storage
-  //       .from("receipts")
-  //       .upload(path, receiptFile, { upsert: true });
-
-  //     if (uploadErr) {
-  //       toast({ title: "Receipt upload failed", description: uploadErr.message, variant: "destructive" });
-  //       return;
-  //     }
-
-  //     if (uploadData) {
-  //       // receipts bucket is private (public = false), so public URL 404s.
-  //       const { data: signed, error: signedErr } = await supabase.storage
-  //         .from("receipts")
-  //         .createSignedUrl(path, 60 * 60);
-
-  //       if (signedErr) {
-  //         toast({ title: "Could not open receipt", description: signedErr.message, variant: "destructive" });
-  //         return;
-  //       }
-
-  //       // Store signed URL.
-  //       // The signed URL must include the correct auth query params.
-  //       // Also handle response-shape differences.
-  //       receiptUrl =
-  //         (signed as any)?.signedUrl ||
-  //         (signed as any)?.url ||
-  //         (signed as any)?.data?.signedUrl ||
-  //         signed.signedUrl;
-
-  //       // If we somehow ended up with a public-object URL, ignore it.
-  //       if (typeof receiptUrl === "string" && receiptUrl.includes("/object/public/receipts/")) {
-  //         toast({
-  //           title: "Receipt link error",
-  //           description: "Generated URL points to a public endpoint, but receipts bucket is private.",
-  //           variant: "destructive",
-  //         });
-  //         receiptUrl = null;
-  //       }
-  //     }
-  //   }
-  //   const { error } = await (supabase as any).from("payments").insert({
-  //     user_id: user.id, property_id: parseInt(selectedPropertyId),
-  //     amount: parseFloat(paymentAmount), receipt_url: receiptUrl, status: "Pending",
-  //   });
-  //   if (error) {
-  //     toast({ title: "Failed to submit payment", variant: "destructive" });
-  //   } else {
-  //     toast({ title: "Payment submitted!", description: "Awaiting admin confirmation." });
-  //     setPaymentAmount("");
-  //     setReceiptFile(null);
-  //     fetchAll();
-  //   }
-  //   setSubmittingPayment(false);
-  // };
   const handleSubmitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedPropertyId || !paymentAmount) return;
@@ -767,48 +713,83 @@ const Dashboard = () => {
           {/* ── Agreements ── */}
           {activeTab === "agreements" && (
             agreements.length === 0 ? (
-              <EmptyState icon={FileSignature} title="No agreements yet" description="Agreements assigned by the admin will appear here" />
+              <EmptyState
+                icon={FileSignature}
+                title="No agreements yet"
+                description="Agreements assigned by an admin will appear here"
+              />
             ) : (
               <div className="space-y-4">
                 {agreements.map((agr: any) => {
                   const prop = getStaticProp(agr.property_id);
-                  const isSigning = signingAgreementId === agr.id;
+                  const status = resolveStatus(agr);
+                  const hasSigned = !!(agr.signed_document_url);
+                  const isRejected = status === "rejected";
                   return (
-                    <Card key={agr.id}>
+                    <Card
+                      key={agr.id}
+                      className="cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                      onClick={() => setSelectedAgreement(agr)}
+                    >
                       <CardContent className="p-5">
                         <div className="flex flex-col md:flex-row md:items-start gap-4">
-                          {prop && <img src={prop.image} alt={prop.title} className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />}
+                          {prop && (
+                            <img
+                              src={prop.image}
+                              alt={prop.title}
+                              className="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-border"
+                            />
+                          )}
+
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-foreground">{prop?.title || "Property"}</h4>
-                            <StatusBadge status={agr.approval_status} />
-                            <p className="text-xs text-muted-foreground mt-2">{new Date(agr.created_at).toLocaleDateString()}</p>
-                            {agr.document_url && (
-                              <a href={agr.document_url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline mt-2 inline-flex items-center gap-1">
-                                <Download className="w-3 h-3" /> View Agreement Document
-                              </a>
-                            )}
+                            <h4 className="font-semibold text-foreground">
+                              {prop?.title || `Property #${agr.property_id}`}
+                            </h4>
+                            <div className="mt-1.5">
+                              <AgreementStatusBadge status={status} size="sm" />
+                            </div>
+
+                            <div className="mt-2 space-y-0.5">
+                              <p className="text-xs text-muted-foreground">
+                                Created {new Date(agr.created_at).toLocaleDateString()}
+                              </p>
+                              {agr.signed_uploaded_at && (
+                                <p className="text-xs text-muted-foreground">
+                                  Uploaded {new Date(agr.signed_uploaded_at).toLocaleDateString()}
+                                </p>
+                              )}
+                              {agr.verified_at && (
+                                <p className="text-xs text-muted-foreground">
+                                  Verified {new Date(agr.verified_at).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex-shrink-0">
-                            {agr.approval_status === "Pending" && !agr.signature_url && (
-                              <Button size="sm" onClick={() => setSigningAgreementId(isSigning ? null : agr.id)}>
-                                <FileSignature className="w-4 h-4 mr-1" /> {isSigning ? "Cancel" : "Sign"}
-                              </Button>
+
+                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+                              <Eye className="w-3.5 h-3.5" /> View Details
+                            </Button>
+                            {hasSigned && (
+                              <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> Document uploaded
+                              </span>
                             )}
-                            {agr.signature_url && <span className="text-xs text-emerald-600 font-medium">✓ Signed</span>}
+                            {status === "pending_signature" && (
+                              <span className="text-xs text-amber-600 font-medium">
+                                Signature required
+                              </span>
+                            )}
                           </div>
                         </div>
-                        {isSigning && (
-                          <div className="mt-6 border-t border-border pt-6 space-y-4">
-                            <h5 className="font-semibold text-foreground">Sign Agreement</h5>
-                            <SignaturePad onSignatureChange={(data, type) => { setSignatureData(data); setSignatureType(type); }} />
-                            <div className="space-y-2">
-                              <Label>Upload Signed Document (optional)</Label>
-                              <Input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setSignedFile(e.target.files?.[0] || null)} />
-                            </div>
-                            <Button onClick={() => handleSignAgreement(agr.id)} disabled={!signatureData || submittingSig}>
-                              {submittingSig ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
-                              Submit Signature
-                            </Button>
+
+                        {/* Rejection notice */}
+                        {isRejected && agr.verification_notes && (
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                              <strong>Rejection reason:</strong> {agr.verification_notes}
+                              {" "}— Please upload a corrected signed document.
+                            </p>
                           </div>
                         )}
                       </CardContent>
@@ -818,6 +799,29 @@ const Dashboard = () => {
               </div>
             )
           )}
+
+          {/* Agreement details modal */}
+          <AgreementDetailsModal
+            agreement={
+              selectedAgreement
+                ? { ...selectedAgreement, agreement_status: resolveStatus(selectedAgreement) }
+                : null
+            }
+            open={!!selectedAgreement}
+            onClose={() => setSelectedAgreement(null)}
+            onStatusChange={() => { setSelectedAgreement(null); fetchAll(); }}
+            isSuperAdmin={false}
+            propertyTitle={
+              selectedAgreement
+                ? getStaticProp(selectedAgreement.property_id)?.title
+                : undefined
+            }
+            propertyImage={
+              selectedAgreement
+                ? getStaticProp(selectedAgreement.property_id)?.image
+                : undefined
+            }
+          />
 
           {/* ── Payments ── */}
           {activeTab === "payments" && (

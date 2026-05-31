@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -227,9 +227,10 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={o => !o && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Property" : "Create New Property"}</DialogTitle>
+          <DialogDescription className="sr-only">Dialog description</DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="mt-2">

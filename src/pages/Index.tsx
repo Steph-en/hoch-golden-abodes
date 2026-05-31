@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { supabase } from "@/utils/supabase";
 import HeroSection from "@/components/HeroSection";
 import ScrollVideoHero from "@/components/ScrollVideoHero";
 import ServicesSection from "@/components/ServicesSection";
@@ -18,7 +19,23 @@ import heroProperty3 from "@/assets/hero-property-3.jpg";
 
 const Index = () => {
   const [loaded, setLoaded] = useState(false);
+  const [propertyCount, setPropertyCount] = useState<number | null>(null);
   const handlePreloaderComplete = useCallback(() => setLoaded(true), []);
+
+  useEffect(() => {
+    async function loadProperties() {
+      const { data, error } = await supabase.from("properties").select("id,name").limit(5);
+
+      if (error) {
+        console.error("Supabase query error:", error);
+        return;
+      }
+
+      setPropertyCount(data?.length ?? 0);
+    }
+
+    loadProperties();
+  }, []);
 
   return (
     <div className="overflow-x-hidden">
@@ -40,6 +57,12 @@ const Index = () => {
       />
       {!loaded && <Preloader onComplete={handlePreloaderComplete} />}
       <HeroSection />
+
+      {propertyCount !== null && (
+        <div className="mx-auto max-w-7xl px-4 py-8 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
+          Loaded {propertyCount} properties from Supabase.
+        </div>
+      )}
 
       {/* Scroll-controlled cinematic video */}
       {/* <ScrollVideoHero /> */}
