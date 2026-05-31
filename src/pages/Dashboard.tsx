@@ -37,8 +37,6 @@ import { resolveStatus } from "@/hooks/useAgreements";
 // Helpers
 // ─────────────────────────────────────────────────────────────
 
-
-
 const StatusBadge = ({ status }: { status: string }) => {
   const styles: Record<string, string> = {
     Pending: "bg-amber-500/10 text-amber-600",
@@ -269,7 +267,6 @@ const MyBookingsTab = ({ userId }: { userId: string }) => {
                       <StatusBadge status={booking.payment_status} />
                     </div>
 
-                    {/* Payment info */}
                     {booking.payment_status === "unpaid" &&
                       booking.status !== "cancelled" && (
                         <p className="text-xs text-muted-foreground text-right">
@@ -277,7 +274,6 @@ const MyBookingsTab = ({ userId }: { userId: string }) => {
                         </p>
                       )}
 
-                    {/* Cancel */}
                     {canCancel && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -324,7 +320,6 @@ const MyBookingsTab = ({ userId }: { userId: string }) => {
                       </AlertDialog>
                     )}
 
-                    {/* View property link */}
                     <Link
                       to={`/stays/${booking.property_id}`}
                       className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -362,8 +357,11 @@ const Dashboard = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [myProperties, setMyProperties] = useState<number[]>([]);
+  // ── FIX: store DB property records so cards render even when IDs
+  //        don't exist in the local static properties array ──────────
+  const [dbProperties, setDbProperties] = useState<any[]>([]);
   const [profileForm, setProfileForm] = useState({ display_name: "", phone: "", bio: "" });
-const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
   const [selectedAgreement, setSelectedAgreement] = useState<any>(null);
 
@@ -410,6 +408,7 @@ const [saving, setSaving] = useState(false);
       (supabase as any).from("payments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
       (supabase as any).from("invoices").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
     ]);
+
     setInquiries(inqRes.data || []);
     setAgreements(agrRes.data || []);
     setPayments(payRes.data || []);
@@ -418,7 +417,29 @@ const [saving, setSaving] = useState(false);
     const approvedProps = (agrRes.data || [])
       .filter((a: any) => a.approval_status === "Approved")
       .map((a: any) => a.property_id);
-    setMyProperties([...new Set(approvedProps)] as number[]);
+    const uniquePropIds = [...new Set(approvedProps)] as number[];
+    setMyProperties(uniquePropIds);
+
+    // ── FIX: fetch all property IDs referenced across agreements,
+    //         payments, invoices and inquiries from Supabase so cards
+    //         render correctly regardless of static-data coverage ─────
+    const allReferencedIds = [
+      ...uniquePropIds,
+      ...(payRes.data  || []).map((p: any) => p.property_id),
+      ...(invRes.data  || []).map((i: any) => i.property_id),
+      ...(inqRes.data  || []).map((i: any) => i.property_id),
+      ...(agrRes.data  || []).map((a: any) => a.property_id),
+    ].filter(Boolean);
+
+    const uniqueRefIds = [...new Set(allReferencedIds)] as number[];
+
+    if (uniqueRefIds.length > 0) {
+      const { data: propsData } = await (supabase as any)
+        .from("properties")
+        .select("*")          // avoids 400 from unknown column names
+        .in("id", uniqueRefIds);
+      setDbProperties(propsData || []);
+    }
   };
 
   useEffect(() => {
@@ -448,6 +469,30 @@ const [saving, setSaving] = useState(false);
     setSaving(false);
   };
 
+  // ── FIX: look up property from DB first, fall back to static array ──
+  // Uses select("*") so we get whatever columns exist, then tries every
+  // plausible column-name variant your schema might use.
+  const getProperty = (id: number) => {
+    const db = dbProperties.find((p) => p.id === id);
+    if (db) {
+      return {
+        id:       db.id,
+        title:    db.title    || db.name || `Property #${id}`,
+        location: db.location || db.address || db.city || "",
+        price:    db.price    || db.listing_price || "",
+        // Try every image column name variant
+        image:    db.image_url   || db.image      || db.thumbnail ||
+                  db.cover_image || db.photo_url  || db.images?.[0] || "",
+        // Try every bedroom/bathroom/area column name variant
+        beds:     db.bedrooms  ?? db.beds  ?? db.bedroom_count  ?? 0,
+        baths:    db.bathrooms ?? db.baths ?? db.bathroom_count ?? 0,
+        sqft:     db.area ?? db.sqft ?? db.size ?? db.floor_area ?? "",
+      };
+    }
+    // Fall back to local static data for properties that pre-date the DB
+    return staticProperties.find((p) => p.id === id) ?? null;
+  };
+
   const handleDownloadInvoice = async (invoiceId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke("generate-invoice-pdf", {
@@ -472,7 +517,6 @@ const [saving, setSaving] = useState(false);
     let receiptUrl: string | null = null;
 
     if (receiptFile) {
-      const ext = receiptFile.name.split(".").pop() || "bin";
       const storagePath = `${user.id}/${Date.now()}_${receiptFile.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
       const { error: uploadErr } = await supabase.storage
@@ -480,25 +524,18 @@ const [saving, setSaving] = useState(false);
         .upload(storagePath, receiptFile, { upsert: false });
 
       if (uploadErr) {
-        toast({
-          title: "Receipt upload failed",
-          description: uploadErr.message,
-          variant: "destructive",
-        });
+        toast({ title: "Receipt upload failed", description: uploadErr.message, variant: "destructive" });
         setSubmittingPayment(false);
         return;
       }
 
-      receiptPath = storagePath; // Store path for future signed URL generation
-
-      // Generate an initial signed URL (1 hour) just for the immediate response
+      receiptPath = storagePath;
       const { data: signedData } = await supabase.storage
         .from("receipts")
         .createSignedUrl(storagePath, 3600);
       receiptUrl = (signedData as any)?.signedUrl || null;
     }
 
-    // Insert payment record with both path and url
     const { data: paymentRecord, error: payErr } = await (supabase as any)
       .from("payments")
       .insert({
@@ -506,9 +543,9 @@ const [saving, setSaving] = useState(false);
         property_id: parseInt(selectedPropertyId),
         amount: parseFloat(paymentAmount),
         receipt_url: receiptUrl,
-        receipt_path: receiptPath,     // NEW: persistent storage path
+        receipt_path: receiptPath,
         status: "Pending",
-        verification_status: "pending", // NEW: verification workflow
+        verification_status: "pending",
         payment_method: "bank_transfer",
       })
       .select("id")
@@ -520,7 +557,6 @@ const [saving, setSaving] = useState(false);
       return;
     }
 
-    // If there's a file, also create a payment_documents record for persistent metadata
     if (receiptPath && paymentRecord?.id) {
       await (supabase as any).from("payment_documents").insert({
         payment_id: paymentRecord.id,
@@ -533,7 +569,6 @@ const [saving, setSaving] = useState(false);
         verification_status: "pending",
       });
 
-      // Log the submission
       await (supabase as any).rpc("log_payment_action", {
         _payment_id: paymentRecord.id,
         _action: "submitted",
@@ -586,7 +621,6 @@ const [saving, setSaving] = useState(false);
 
   if (loading || !user) return null;
 
-  const getStaticProp = (id: number) => staticProperties.find((p) => p.id === id);
   const propertyInvoiceMap: Record<number, any> = {};
   invoices.forEach((inv) => { propertyInvoiceMap[inv.property_id] = inv; });
 
@@ -625,7 +659,7 @@ const [saving, setSaving] = useState(false);
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-10 border-b border-border pb-[1px]">
+        <div className="flex gap-1 mb-10 border-b border-border pb-[1px] overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -673,11 +707,18 @@ const [saving, setSaving] = useState(false);
               <EmptyState icon={Building2} title="No properties yet" description="Properties with approved agreements will appear here" actionLabel="Browse Properties" actionTo="/explore" />
             ) : (
               <div className="grid md:grid-cols-2 gap-6">
-                {(myProperties as number[]).map((propId) => {
-                  const prop = getStaticProp(propId);
+                {myProperties.map((propId) => {
+                  const prop = getProperty(propId);
                   const invoice = propertyInvoiceMap[propId];
                   const progress = invoice ? (invoice.amount_paid / invoice.total_amount) * 100 : 0;
-                  if (!prop) return null;
+                  if (!prop) return (
+                    // Show a placeholder instead of silently dropping the card
+                    <Card key={propId}>
+                      <CardContent className="p-5 text-center text-muted-foreground text-sm">
+                        Property #{propId} — details unavailable
+                      </CardContent>
+                    </Card>
+                  );
                   return (
                     <Card key={propId}>
                       <CardContent className="p-0">
@@ -721,7 +762,7 @@ const [saving, setSaving] = useState(false);
             ) : (
               <div className="space-y-4">
                 {agreements.map((agr: any) => {
-                  const prop = getStaticProp(agr.property_id);
+                  const prop = getProperty(agr.property_id);
                   const status = resolveStatus(agr);
                   const hasSigned = !!(agr.signed_document_url);
                   const isRejected = status === "rejected";
@@ -740,7 +781,6 @@ const [saving, setSaving] = useState(false);
                               className="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-border"
                             />
                           )}
-
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-foreground">
                               {prop?.title || `Property #${agr.property_id}`}
@@ -748,7 +788,6 @@ const [saving, setSaving] = useState(false);
                             <div className="mt-1.5">
                               <AgreementStatusBadge status={status} size="sm" />
                             </div>
-
                             <div className="mt-2 space-y-0.5">
                               <p className="text-xs text-muted-foreground">
                                 Created {new Date(agr.created_at).toLocaleDateString()}
@@ -765,7 +804,6 @@ const [saving, setSaving] = useState(false);
                               )}
                             </div>
                           </div>
-
                           <div className="flex flex-col items-end gap-2 flex-shrink-0">
                             <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                               <Eye className="w-3.5 h-3.5" /> View Details
@@ -782,8 +820,6 @@ const [saving, setSaving] = useState(false);
                             )}
                           </div>
                         </div>
-
-                        {/* Rejection notice */}
                         {isRejected && agr.verification_notes && (
                           <div className="mt-3 pt-3 border-t border-border">
                             <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
@@ -813,12 +849,12 @@ const [saving, setSaving] = useState(false);
             isSuperAdmin={false}
             propertyTitle={
               selectedAgreement
-                ? getStaticProp(selectedAgreement.property_id)?.title
+                ? getProperty(selectedAgreement.property_id)?.title
                 : undefined
             }
             propertyImage={
               selectedAgreement
-                ? getStaticProp(selectedAgreement.property_id)?.image
+                ? getProperty(selectedAgreement.property_id)?.image
                 : undefined
             }
           />
@@ -837,8 +873,8 @@ const [saving, setSaving] = useState(false);
                           <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
                             <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
                             <SelectContent>
-                              {(myProperties as number[]).map((id) => {
-                                const p = getStaticProp(id);
+                              {myProperties.map((id) => {
+                                const p = getProperty(id);
                                 return p ? <SelectItem key={id} value={String(id)}>{p.title}</SelectItem> : null;
                               })}
                             </SelectContent>
@@ -869,7 +905,7 @@ const [saving, setSaving] = useState(false);
                   ) : (
                     <div className="space-y-3">
                       {payments.map((pay: any) => {
-                        const prop = getStaticProp(pay.property_id);
+                        const prop = getProperty(pay.property_id);
                         return (
                           <div key={pay.id} className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl">
                             <div className="flex-1 min-w-0">
@@ -895,7 +931,7 @@ const [saving, setSaving] = useState(false);
             ) : (
               <div className="space-y-4">
                 {invoices.map((inv: any) => {
-                  const prop = getStaticProp(inv.property_id);
+                  const prop = getProperty(inv.property_id);
                   const progress = (inv.amount_paid / inv.total_amount) * 100;
                   return (
                     <Card key={inv.id}>
@@ -949,7 +985,7 @@ const [saving, setSaving] = useState(false);
                 </div>
                 <div className="space-y-4">
                   {filteredInquiries.map((inquiry: any) => {
-                    const prop = staticProperties.find((p) => p.id === inquiry.property_id);
+                    const prop = getProperty(inquiry.property_id);
                     return (
                       <div
                         key={inquiry.id}

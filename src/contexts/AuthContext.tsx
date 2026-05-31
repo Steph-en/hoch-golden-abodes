@@ -30,24 +30,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await (supabase as any)
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single()
-      .throwOnError();
+    try {
+      // Use .limit(1) instead of .single() so duplicate rows never throw a 406.
+      // .single() raises "Cannot coerce the result to a single JSON object" when
+      // more than one profile row exists for the same user id.
+      const { data: rows, error } = await (supabase as any)
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .limit(1);
 
-    if (data?.suspended) {
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-      if (typeof window !== "undefined") {
-        window.location.href = "/auth?suspended=1";
+      if (error) {
+        console.error("fetchProfile error:", error.message);
+        return;
       }
-      return;
+
+      const data = rows?.[0] ?? null;
+
+      if (data?.suspended) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth?suspended=1";
+        }
+        return;
+      }
+
+      setProfile(data);
+    } catch (err) {
+      console.error("fetchProfile unexpected error:", err);
     }
-    setProfile(data);
   };
 
   useEffect(() => {
