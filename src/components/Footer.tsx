@@ -55,7 +55,7 @@ const Footer = () => {
       </div>
 
       {/* Main Footer */}
-      <div className="bg-foreground/95 py-10">
+      <div className="bg-foreground/100 py-5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-12">
             {/* Brand Column */}
@@ -197,7 +197,7 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="bg-foreground border-t border-background/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-background/50 text-sm">
               © {currentYear} Hoch Online Real Estate. All rights reserved.

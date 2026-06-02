@@ -72,7 +72,7 @@ const About = () => {
             alt="Luxury property"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50" />
         </div>
 
         {/* Content */}
