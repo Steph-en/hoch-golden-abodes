@@ -32,6 +32,7 @@ import SEO from "@/components/SEO";
 import AgreementDetailsModal from "@/components/agreements/AgreementDetailsModal";
 import AgreementStatusBadge from "@/components/agreements/AgreementStatusBadge";
 import { resolveStatus } from "@/hooks/useAgreements";
+import DashboardSidebar, { SideNavItem } from "@/components/ui/DashboardSidebar";
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -624,66 +625,45 @@ const Dashboard = () => {
   const propertyInvoiceMap: Record<number, any> = {};
   invoices.forEach((inv) => { propertyInvoiceMap[inv.property_id] = inv; });
 
-  const tabs = [
-    { id: "favorites" as TabId, label: "Favorites", icon: Heart, count: favoriteProperties.length },
-    { id: "bookings" as TabId, label: "My Stays", icon: Hotel, count: undefined },
-    { id: "properties" as TabId, label: "My Properties", icon: Building2, count: myProperties.length },
-    { id: "agreements" as TabId, label: "Agreements", icon: FileSignature, count: agreements.length },
-    { id: "payments" as TabId, label: "Payments", icon: CreditCard, count: payments.length },
-    { id: "invoices" as TabId, label: "Invoices", icon: Receipt, count: invoices.length },
-    { id: "inquiries" as TabId, label: "Inquiries", icon: MessageSquare, count: inquiries.length },
-    { id: "profile" as TabId, label: "Profile", icon: Settings, count: undefined },
+  const navItems: SideNavItem[] = [
+    { id: "favorites",   label: "Favorites",      icon: Heart,          count: favoriteProperties.length },
+    { id: "bookings",    label: "My Stays",        icon: Hotel },
+    { id: "properties",  label: "My Properties",   icon: Building2,      count: myProperties.length },
+    { id: "agreements",  label: "Agreements",      icon: FileSignature,  count: agreements.length },
+    { id: "payments",    label: "Payments",        icon: CreditCard,     count: payments.length },
+    { id: "invoices",    label: "Invoices",        icon: Receipt,        count: invoices.length },
+    { id: "inquiries",   label: "Inquiries",       icon: MessageSquare,  count: inquiries.length },
+    { id: "profile",     label: "Profile",         icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-20">
+    <div className="min-h-screen bg-background flex pt-16">
       <SEO
         title="Your Dashboard | Hoch Online"
         description="Manage your favourite properties, stays, enquiries, agreements and payments."
         path="/dashboard"
         noIndex
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
-              <User className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-display text-3xl md:text-4xl font-semibold text-foreground">
-                {profile?.display_name || "My Dashboard"}
-              </h1>
-              <p className="text-muted-foreground">{user.email}</p>
-            </div>
-          </div>
-        </motion.div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-10 border-b border-border pb-[1px] overflow-x-auto">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-              {tab.count !== undefined && (
-                <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                  activeTab === tab.id ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                }`}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+      {/* ── Sidebar ── */}
+      <DashboardSidebar
+        items={navItems}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as TabId)}
+        heading={profile?.display_name || "My Dashboard"}
+        subheading={user.email}
+      />
 
-        <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      {/* ── Main content ── */}
+      <main className="flex-1 min-w-0 overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <h1 className="font-display text-2xl md:text-3xl font-semibold text-foreground capitalize">
+              {navItems.find(n => n.id === activeTab)?.label ?? "Dashboard"}
+            </h1>
+          </motion.div>
+
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
 
           {/* ── Favorites ── */}
           {activeTab === "favorites" && (
@@ -1038,8 +1018,9 @@ const Dashboard = () => {
               </div>
             </div>
           )}
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
+      </main>
 
       <EnquiryDetailModal inquiry={selectedInquiry} open={!!selectedInquiry} onClose={() => setSelectedInquiry(null)} onStatusChange={fetchAll} />
     </div>
