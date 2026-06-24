@@ -130,69 +130,37 @@ const Explore = () => {
             </p>
           </motion.div>
 
-          {/* ── Kind tabs ── */}
+          {/* ── Search bar ── */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={headerInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex flex-wrap justify-center gap-2 mb-8"
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="max-w-2xl mx-auto"
           >
-            {KIND_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeKind === tab.value;
-              return (
-                <button
-                  key={tab.value}
-                  onClick={() => {
-                    setActiveKind(tab.value);
-                    setShowFilters(false);
-                  }}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-gold"
-                      : "bg-background border border-border text-muted-foreground hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by name or location…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 pr-4 py-6 text-lg rounded-full border-2 border-border focus:border-primary"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowFilters(!showFilters)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+              </Button>
+            </div>
           </motion.div>
-
-          {/* ── Search bar (sales only) ── */}
-          {activeKind === "sale" && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={headerInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.25 }}
-              className="max-w-2xl mx-auto"
-            >
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search by name or location…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 py-6 text-lg rounded-full border-2 border-border focus:border-primary"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
-                >
-                  <SlidersHorizontal className="w-5 h-5" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
         </div>
       </section>
 
       {/* ── Sales filters ── */}
-      {activeKind === "sale" && (
+      {(
         <AnimatePresence>
           {showFilters && (
             <motion.div
