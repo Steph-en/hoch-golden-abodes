@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, lazy, Suspense, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X,
-  Map, LayoutGrid, Loader2, ArrowUpDown, Hotel, Building2, Briefcase, Home,
+  Map, LayoutGrid, Loader2, ArrowUpDown, Hotel,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,6 @@ import { propertyTypes, locations, priceRanges } from "@/data/properties";
 import CompareButton from "@/components/CompareButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProperties } from "@/hooks/useProperties";
-import { useStays } from "@/hooks/useRentals";
-import type { RentalProperty } from "@/hooks/useRentals";
 import SEO, { breadcrumbLd } from "@/components/SEO";
 
 const PropertyMap = lazy(() => import("@/components/PropertyMap"));
