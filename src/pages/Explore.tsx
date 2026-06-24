@@ -51,17 +51,15 @@ const Explore = () => {
   // Sync state → URL
   useEffect(() => {
     const params: Record<string, string> = {};
-    if (activeKind !== "sale") params.kind = activeKind;
-    if (activeKind === "sale") {
-      if (searchQuery) params.q = searchQuery;
-      if (selectedType) params.type = selectedType;
-      if (selectedLocation) params.location = selectedLocation;
-      if (selectedPriceRange) params.price = selectedPriceRange;
-      if (selectedStatus) params.status = selectedStatus;
-      if (sortBy && sortBy !== "newest") params.sort = sortBy;
-    }
+    if (searchQuery) params.q = searchQuery;
+    if (selectedType) params.type = selectedType;
+    if (selectedLocation) params.location = selectedLocation;
+    if (selectedPriceRange) params.price = selectedPriceRange;
+    if (selectedStatus) params.status = selectedStatus;
+    if (sortBy && sortBy !== "newest") params.sort = sortBy;
     setSearchParams(params, { replace: true });
-  }, [activeKind, searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus, sortBy]);
+  }, [searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus, sortBy]);
+
 
   const filteredSaleProperties = useMemo(() => {
     const filtered = properties.filter((property: any) => {
