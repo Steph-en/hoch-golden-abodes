@@ -99,7 +99,7 @@ const Explore = () => {
 
   const hasActiveFilters = selectedType || selectedLocation || selectedPriceRange || selectedStatus || searchQuery;
 
-  const activeTab = KIND_TABS.find((t) => t.value === activeKind)!;
+  
 
   return (
     <div className="min-h-screen bg-background">
