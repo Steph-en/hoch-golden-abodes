@@ -34,11 +34,8 @@ const Explore = () => {
   const { properties, loading } = useProperties();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Active listing kind tab — defaults to "sale"
-  const kindParam = searchParams.get("kind") as ListingKind | null;
-  const [activeKind, setActiveKind] = useState<ListingKind>(
-    KIND_TABS.some((t) => t.value === kindParam) ? (kindParam as ListingKind) : "sale"
-  );
+  // Sales-only page — rentals live exclusively on /stays.
+
 
   // Sales-specific filters
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
