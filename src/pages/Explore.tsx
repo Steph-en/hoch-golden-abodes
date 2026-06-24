@@ -262,12 +262,9 @@ const Explore = () => {
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
 
-          {/* ── Non-sale kinds: delegate to RentalPane ── */}
-          {activeKind !== "sale" && <RentalPane kind={activeKind} />}
+          {/* ── Sales listings ── */}
+          <>
 
-          {/* ── Sales kind ── */}
-          {activeKind === "sale" && (
-            <>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
                 <p className="text-muted-foreground">
                   <span className="font-semibold text-foreground">{filteredSaleProperties.length}</span>{" "}
