@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   Upload, X, Loader2, Image as ImageIcon, Link as LinkIcon,
-  GripVertical, AlertCircle, Plus,
+  GripVertical, AlertCircle, Plus, Info,
 } from "lucide-react";
 
 const TYPES = ["Villa","Apartment","Townhouse","Penthouse","House","Hotel","Office","Land","Commercial"];
@@ -19,6 +19,20 @@ const CURRENCIES = ["USD","GHS","EUR","GBP"];
 const IMAGE_TYPES = ["gallery","thumbnail","floorplan","exterior","interior"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["image/jpeg","image/png","image/webp","image/gif"];
+
+// Listing kind controls where this property appears site-wide:
+//  • "sale"               → Explore page (For Sale)
+//  • "hotel"               → Stays/Airbnb page; rooms managed in Admin → Rooms
+//  • "rental_property"     → Stays/Airbnb page (apartments for rent); units managed in Admin → Rooms
+//  • "commercial_rental"   → Stays/Airbnb page (offices, conference rooms, etc.); spaces managed in Admin → Rooms
+const LISTING_KINDS = [
+  { value: "sale",              label: "For Sale" },
+  { value: "hotel",             label: "Hotel (short-stay rooms)" },
+  { value: "rental_property",   label: "Apartment for Rent" },
+  { value: "commercial_rental", label: "Commercial Rental (offices, conference rooms, etc.)" },
+] as const;
+
+const isRentalKind = (kind: string) => kind !== "sale";
 
 interface ImageEntry { url: string; imageType: string; id: string; }
 
@@ -48,6 +62,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
+    listing_kind: "sale" as string,
     title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
     beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
     description: "", amenitiesText: "", year_built: "", parking: 0,
@@ -61,6 +76,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
     if (!open) return;
     if (property) {
       setForm({
+        listing_kind: property.listing_kind || "sale",
         title: property.title || "",
         location: property.location || "",
         area: property.area || "",
@@ -94,6 +110,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
       setImages(existingImages);
     } else {
       setForm({
+        listing_kind: "sale",
         title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
         beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
         description: "", amenitiesText: "", year_built: "", parking: 0,
@@ -154,7 +171,6 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
     if (files.length > 0) await handleFileSelect(files);
   }, []);
 
-  // Drag to reorder
   const handleDragStart = (index: number) => setDragIndex(index);
   const handleDragEnterItem = (index: number) => {
     if (dragIndex === null || dragIndex === index) return;
@@ -172,14 +188,24 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
     setImages(prev => prev.map(img => img.id === id ? { ...img, imageType } : img));
 
   const handleSave = async () => {
-    if (!form.title || !form.location || !form.price) {
-      toast({ title: "Missing required fields", description: "Title, location, and price are required.", variant: "destructive" });
+    // Price isn't required for rental listings — per-room/unit pricing is
+    // managed separately in Admin → Rooms. Title and location are always required.
+    const priceRequired = form.listing_kind === "sale";
+    if (!form.title || !form.location || (priceRequired && !form.price)) {
+      toast({
+        title: "Missing required fields",
+        description: priceRequired
+          ? "Title, location, and price are required."
+          : "Title and location are required.",
+        variant: "destructive",
+      });
       return;
     }
     setSaving(true);
     const payload: any = {
+      listing_kind: form.listing_kind,
       title: form.title, location: form.location, area: form.area || null,
-      price: form.price, price_value: Number(form.price_value) || 0,
+      price: form.price || null, price_value: Number(form.price_value) || 0,
       beds: Number(form.beds) || 0, baths: Number(form.baths) || 0,
       sqft: form.sqft || null, type: form.type, status: form.status,
       description: form.description || null,
@@ -204,7 +230,6 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
     if (res.error) {
       toast({ title: "Save failed", description: res.error.message, variant: "destructive" });
     } else {
-      // Sync property_images table
       const propId = isEdit ? property.id : res.data?.id;
       if (propId) {
         await (supabase as any).from("property_images").delete().eq("property_id", propId);
@@ -217,13 +242,20 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
           );
         }
       }
-      toast({ title: isEdit ? "Property updated" : "Property created" });
+      toast({
+        title: isEdit ? "Property updated" : "Property created",
+        description: isRentalKind(form.listing_kind) && !isEdit
+          ? "Now add rooms or units to it from the Rooms tab."
+          : undefined,
+      });
       onSaved(); onClose();
     }
     setSaving(false);
   };
 
   const f = (key: string, val: any) => setForm(prev => ({ ...prev, [key]: val }));
+
+  const selectedKind = LISTING_KINDS.find(k => k.value === form.listing_kind);
 
   return (
     <Dialog open={open} onOpenChange={o => !o && onClose()}>
@@ -232,6 +264,25 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
           <DialogTitle>{isEdit ? "Edit Property" : "Create New Property"}</DialogTitle>
           <DialogDescription className="sr-only">Dialog description</DialogDescription>
         </DialogHeader>
+
+        {/* ── Listing Kind selector — always visible, outside tabs ── */}
+        <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-2">
+          <Label className="text-sm font-semibold">Listing Kind *</Label>
+          <Select value={form.listing_kind} onValueChange={v => f("listing_kind", v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {LISTING_KINDS.map(k => (
+                <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+            <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+            {form.listing_kind === "sale"
+              ? "Appears on the Explore page under properties for sale."
+              : <>Appears on the Stays page only. After saving, add rooms/units/spaces from <strong>Admin → Rooms</strong>.</>}
+          </p>
+        </div>
 
         <Tabs defaultValue="basic" className="mt-2">
           <TabsList className="mb-4 flex flex-wrap h-auto gap-1">
@@ -245,10 +296,20 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
           {/* ── Basic ── */}
           <TabsContent value="basic" className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="md:col-span-2"><Label>Title *</Label><Input value={form.title} onChange={e => f("title", e.target.value)} placeholder="Luxury Villa East Legon" /></div>
+              <div className="md:col-span-2">
+                <Label>Title *</Label>
+                <Input
+                  value={form.title}
+                  onChange={e => f("title", e.target.value)}
+                  placeholder={isRentalKind(form.listing_kind) ? "ESP Heights Hotel" : "Luxury Villa East Legon"}
+                />
+              </div>
               <div><Label>Location *</Label><Input value={form.location} onChange={e => f("location", e.target.value)} placeholder="East Legon, Accra" /></div>
               <div><Label>Area</Label><Input value={form.area} onChange={e => f("area", e.target.value)} placeholder="East Legon" /></div>
-              <div><Label>Display Price *</Label><Input value={form.price} onChange={e => f("price", e.target.value)} placeholder="$850,000" /></div>
+              <div>
+                <Label>{form.listing_kind === "sale" ? "Display Price *" : "Starting Price (optional)"}</Label>
+                <Input value={form.price} onChange={e => f("price", e.target.value)} placeholder={form.listing_kind === "sale" ? "$850,000" : "From $120/night"} />
+              </div>
               <div><Label>Price Value (numeric)</Label><Input type="number" value={form.price_value} onChange={e => f("price_value", Number(e.target.value))} /></div>
               <div><Label>Currency</Label>
                 <Select value={form.currency} onValueChange={v => f("currency", v)}>
@@ -279,6 +340,15 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
 
           {/* ── Details ── */}
           <TabsContent value="details">
+            {isRentalKind(form.listing_kind) && (
+              <div className="mb-4 p-3 rounded-lg bg-amber-500/10 text-amber-700 text-sm flex items-start gap-2">
+                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>
+                  Bedroom/bathroom counts below are for display only. Manage individual rooms, units, or spaces
+                  (with their own pricing and availability) from <strong>Admin → Rooms</strong> after saving.
+                </span>
+              </div>
+            )}
             <div className="grid md:grid-cols-3 gap-4">
               <div><Label>Bedrooms</Label><Input type="number" min={0} value={form.beds} onChange={e => f("beds", Number(e.target.value))} /></div>
               <div><Label>Bathrooms</Label><Input type="number" min={0} value={form.baths} onChange={e => f("baths", Number(e.target.value))} /></div>
@@ -291,7 +361,6 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
 
           {/* ── Media ── */}
           <TabsContent value="media" className="space-y-6">
-            {/* Main image */}
             <div>
               <Label className="text-base font-semibold">Main / Thumbnail Image</Label>
               <div className="flex items-center gap-4 mt-2">
@@ -323,12 +392,10 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
               </div>
             </div>
 
-            {/* Gallery */}
             <div>
               <Label className="text-base font-semibold">Gallery Images</Label>
               <p className="text-xs text-muted-foreground mb-3">Drag to reorder. Supports file upload and direct URLs.</p>
 
-              {/* Drop zone */}
               <div
                 onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
@@ -352,7 +419,6 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
                 )}
               </div>
 
-              {/* URL input */}
               <div className="flex gap-2 mb-4">
                 <div className="relative flex-1">
                   <LinkIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -370,7 +436,6 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
                 </div>
               )}
 
-              {/* Image grid with drag-to-reorder */}
               {images.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {images.map((img, idx) => (
@@ -420,7 +485,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
               <div><Label>Country</Label><Input value={form.country} onChange={e => f("country", e.target.value)} /></div>
               <div><Label>City</Label><Input value={form.city} onChange={e => f("city", e.target.value)} placeholder="Accra" /></div>
               <div><Label>Region</Label><Input value={form.region} onChange={e => f("region", e.target.value)} placeholder="Greater Accra" /></div>
-              <div />{/* spacer */}
+              <div />
               <div><Label>GPS Latitude</Label><Input value={form.gps_lat} onChange={e => f("gps_lat", e.target.value)} placeholder="5.6037" /></div>
               <div><Label>GPS Longitude</Label><Input value={form.gps_lng} onChange={e => f("gps_lng", e.target.value)} placeholder="-0.1870" /></div>
             </div>

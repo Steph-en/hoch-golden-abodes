@@ -134,6 +134,10 @@ const Admin = () => {
   const [propertyTab,           setPropertyTab]           = useState<"active"|"archived">("active");
   const [propertyStatusFilter,  setPropertyStatusFilter]  = useState("all");
   const [propertySearch,        setPropertySearch]        = useState("");
+  // "all" shows every listing kind in the Properties CRUD table — sale,
+  // hotel, rental_property, and commercial_rental — so admins can manage
+  // rental listings (e.g. "ESP Heights Hotel") from the same screen.
+  const [propertyKindFilter,    setPropertyKindFilter]    = useState<"all"|"sale"|"hotel"|"rental_property"|"commercial_rental">("all");
 
   const [inquiryStatusFilter,   setInquiryStatusFilter]   = useState("all");
   const [inquiryPropertyFilter, setInquiryPropertyFilter] = useState("all");
@@ -190,9 +194,16 @@ const Admin = () => {
 
   // ── Derived data ──────────────────────────────────────────────────────────────
   const rentalProperties  = dbProperties.filter((p: any) => RENTAL_KINDS.includes(p.listing_kind));
-  const salesProperties   = dbProperties.filter((p: any) => !RENTAL_KINDS.includes(p.listing_kind));
-  const activeProps       = salesProperties.filter((p: any) => !p.is_archived && !p.deleted_at);
-  const archivedProps     = salesProperties.filter((p: any) =>  p.is_archived ||  p.deleted_at);
+  // The Properties CRUD table now shows ALL listing kinds by default (sale +
+  // rental kinds), filterable via propertyKindFilter. rentalProperties above
+  // is still used separately by the Rooms / Stays Bookings tabs.
+  const kindFilteredProperties = useMemo(() => {
+    if (propertyKindFilter === "all") return dbProperties;
+    if (propertyKindFilter === "sale") return dbProperties.filter((p: any) => !RENTAL_KINDS.includes(p.listing_kind));
+    return dbProperties.filter((p: any) => p.listing_kind === propertyKindFilter);
+  }, [dbProperties, propertyKindFilter]);
+  const activeProps       = kindFilteredProperties.filter((p: any) => !p.is_archived && !p.deleted_at);
+  const archivedProps     = kindFilteredProperties.filter((p: any) =>  p.is_archived ||  p.deleted_at);
   const pendingAgreements = isSuperAdmin ? allAgreements.filter(a => a.approval_status === "Pending" && a.signature_url).length : 0;
   const pendingPayments   = isSuperAdmin ? allPayments.filter(p => p.status === "Pending").length : 0;
 
@@ -206,7 +217,7 @@ const Admin = () => {
         p.title.toLowerCase().includes(s) || p.location.toLowerCase().includes(s));
     }
     return list;
-  }, [dbProperties, propertyTab, propertyStatusFilter, propertySearch]);
+  }, [dbProperties, propertyTab, propertyStatusFilter, propertySearch, propertyKindFilter]);
 
   const filteredUsers = useMemo(() => {
     if (!isSuperAdmin) return [];
@@ -676,6 +687,16 @@ const Admin = () => {
                       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input placeholder="Search…" value={propertySearch} onChange={e => setPropertySearch(e.target.value)} className="pl-9" />
                     </div>
+                    <Select value={propertyKindFilter} onValueChange={(v: any) => setPropertyKindFilter(v)}>
+                      <SelectTrigger className="w-48"><SelectValue placeholder="All listing kinds" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Listing Kinds</SelectItem>
+                        <SelectItem value="sale">For Sale</SelectItem>
+                        <SelectItem value="hotel">Hotels</SelectItem>
+                        <SelectItem value="rental_property">Apartments for Rent</SelectItem>
+                        <SelectItem value="commercial_rental">Commercial Rentals</SelectItem>
+                      </SelectContent>
+                    </Select>
                     {propertyTab === "active" && (
                       <Select value={propertyStatusFilter} onValueChange={setPropertyStatusFilter}>
                         <SelectTrigger className="w-44"><SelectValue placeholder="All statuses" /></SelectTrigger>
@@ -761,6 +782,11 @@ const Admin = () => {
                                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                                           <h4 className="font-semibold truncate">{prop.title}</h4>
                                           <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${propStatusColor[prop.status] || "bg-muted text-muted-foreground"}`}>{prop.status}</span>
+                                          {prop.listing_kind && prop.listing_kind !== "sale" && (
+                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600 capitalize">
+                                              {prop.listing_kind.replace(/_/g, " ")}
+                                            </span>
+                                          )}
                                           {prop.featured && <span className="px-2.5 py-0.5 rounded-full text-xs bg-primary/10 text-primary">Featured</span>}
                                         </div>
                                         <p className="text-sm text-muted-foreground">{prop.location} · {prop.price}</p>
