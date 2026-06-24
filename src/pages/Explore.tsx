@@ -394,7 +394,7 @@ const Explore = () => {
                 </>
               )}
             </>
-          )}
+
         </div>
       </section>
     </div>
