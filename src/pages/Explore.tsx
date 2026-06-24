@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, lazy, Suspense, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   MapPin, Bed, Bath, Square, Heart, Search, SlidersHorizontal, X,
-  Map, LayoutGrid, Loader2, ArrowUpDown, Hotel, Building2, Briefcase, Home,
+  Map, LayoutGrid, Loader2, ArrowUpDown, Hotel,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,6 @@ import { propertyTypes, locations, priceRanges } from "@/data/properties";
 import CompareButton from "@/components/CompareButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useProperties } from "@/hooks/useProperties";
-import { useStays } from "@/hooks/useRentals";
-import type { RentalProperty } from "@/hooks/useRentals";
 import SEO, { breadcrumbLd } from "@/components/SEO";
 
 const PropertyMap = lazy(() => import("@/components/PropertyMap"));
@@ -27,119 +25,6 @@ const SORT_OPTIONS = [
 ] as const;
 type SortKey = typeof SORT_OPTIONS[number]["value"];
 
-type ListingKind = "sale" | "hotel" | "rental_property" | "commercial_rental";
-
-const KIND_TABS: { value: ListingKind; label: string; icon: any }[] = [
-  { value: "sale", label: "For Sale", icon: Home },
-  { value: "hotel", label: "Hotels & Short Stay", icon: Hotel },
-  { value: "rental_property", label: "Apartments for Rent", icon: Building2 },
-  { value: "commercial_rental", label: "Commercial Rentals", icon: Briefcase },
-];
-
-// ─── Rental property card ──────────────────────────────────────────────────
-
-const RentalCard = ({ stay }: { stay: RentalProperty }) => (
-  <motion.div
-    layout
-    initial={{ opacity: 0, scale: 0.96 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.96 }}
-    transition={{ duration: 0.25 }}
-    whileHover={{ y: -6 }}
-    className="group bg-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow border border-border"
-  >
-    <div className="relative aspect-[4/3] overflow-hidden">
-      <img
-        src={stay.image_url || stay.images?.[0] || "/placeholder.svg"}
-        alt={stay.title}
-        loading="lazy"
-        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="absolute top-4 left-4">
-        <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium capitalize">
-          {stay.listing_kind === "rental_property"
-            ? "Apartment"
-            : stay.listing_kind === "hotel"
-            ? "Hotel"
-            : "Commercial"}
-        </span>
-      </div>
-    </div>
-    <div className="p-5">
-      <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-1">{stay.title}</h3>
-      <div className="flex items-center text-muted-foreground text-sm mb-3">
-        <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
-        <span className="line-clamp-1">{stay.location}</span>
-      </div>
-      <Link to={`/stays/${stay.id}`}>
-        <Button className="w-full" variant="outline">
-          View Rooms
-        </Button>
-      </Link>
-    </div>
-  </motion.div>
-);
-
-// ─── Rental list pane ─────────────────────────────────────────────────────
-
-const RentalPane = ({ kind }: { kind: ListingKind }) => {
-  const [search, setSearch] = useState("");
-  const { stays, loading } = useStays(kind);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return stays;
-    const s = search.toLowerCase();
-    return stays.filter(
-      (st) =>
-        st.title.toLowerCase().includes(s) ||
-        st.location.toLowerCase().includes(s) ||
-        (st.area || "").toLowerCase().includes(s)
-    );
-  }, [stays, search]);
-
-  return (
-    <div>
-      {/* Search bar */}
-      <div className="relative max-w-md mx-auto mb-10">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={`Search ${kind === "hotel" ? "hotels" : kind === "rental_property" ? "apartments" : "commercial listings"}…`}
-          className="pl-12 py-5 rounded-full border-2 border-border focus:border-primary"
-        />
-      </div>
-
-      {loading ? (
-        <div className="flex flex-col items-center py-20 text-muted-foreground">
-          <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
-          <p>Loading listings…</p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20">
-          <Hotel className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-foreground mb-2">
-            {stays.length === 0 ? "No listings yet" : "No results found"}
-          </h3>
-          <p className="text-muted-foreground">
-            {stays.length === 0
-              ? "Check back soon — new listings are added regularly."
-              : "Try a different search term."}
-          </p>
-        </div>
-      ) : (
-        <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((stay) => (
-              <RentalCard key={stay.id} stay={stay} />
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      )}
-    </div>
-  );
-};
 
 // ─── Main Explore page ────────────────────────────────────────────────────
 
@@ -149,11 +34,8 @@ const Explore = () => {
   const { properties, loading } = useProperties();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Active listing kind tab — defaults to "sale"
-  const kindParam = searchParams.get("kind") as ListingKind | null;
-  const [activeKind, setActiveKind] = useState<ListingKind>(
-    KIND_TABS.some((t) => t.value === kindParam) ? (kindParam as ListingKind) : "sale"
-  );
+  // Sales-only page — rentals live exclusively on /stays.
+
 
   // Sales-specific filters
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
@@ -169,17 +51,15 @@ const Explore = () => {
   // Sync state → URL
   useEffect(() => {
     const params: Record<string, string> = {};
-    if (activeKind !== "sale") params.kind = activeKind;
-    if (activeKind === "sale") {
-      if (searchQuery) params.q = searchQuery;
-      if (selectedType) params.type = selectedType;
-      if (selectedLocation) params.location = selectedLocation;
-      if (selectedPriceRange) params.price = selectedPriceRange;
-      if (selectedStatus) params.status = selectedStatus;
-      if (sortBy && sortBy !== "newest") params.sort = sortBy;
-    }
+    if (searchQuery) params.q = searchQuery;
+    if (selectedType) params.type = selectedType;
+    if (selectedLocation) params.location = selectedLocation;
+    if (selectedPriceRange) params.price = selectedPriceRange;
+    if (selectedStatus) params.status = selectedStatus;
+    if (sortBy && sortBy !== "newest") params.sort = sortBy;
     setSearchParams(params, { replace: true });
-  }, [activeKind, searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus, sortBy]);
+  }, [searchQuery, selectedType, selectedLocation, selectedPriceRange, selectedStatus, sortBy]);
+
 
   const filteredSaleProperties = useMemo(() => {
     const filtered = properties.filter((property: any) => {
@@ -219,7 +99,7 @@ const Explore = () => {
 
   const hasActiveFilters = selectedType || selectedLocation || selectedPriceRange || selectedStatus || searchQuery;
 
-  const activeTab = KIND_TABS.find((t) => t.value === activeKind)!;
+  
 
   return (
     <div className="min-h-screen bg-background">
@@ -229,7 +109,7 @@ const Explore = () => {
         path="/explore"
         jsonLd={breadcrumbLd([
           { name: "Home", path: "/" },
-          { name: activeKind === "sale" ? "Properties" : "Stays", path: "/explore" },
+          { name: "Properties", path: "/explore" },
         ])}
       />
 
@@ -250,69 +130,37 @@ const Explore = () => {
             </p>
           </motion.div>
 
-          {/* ── Kind tabs ── */}
+          {/* ── Search bar ── */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={headerInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex flex-wrap justify-center gap-2 mb-8"
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="max-w-2xl mx-auto"
           >
-            {KIND_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeKind === tab.value;
-              return (
-                <button
-                  key={tab.value}
-                  onClick={() => {
-                    setActiveKind(tab.value);
-                    setShowFilters(false);
-                  }}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-gold"
-                      : "bg-background border border-border text-muted-foreground hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by name or location…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 pr-4 py-6 text-lg rounded-full border-2 border-border focus:border-primary"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowFilters(!showFilters)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+              </Button>
+            </div>
           </motion.div>
-
-          {/* ── Search bar (sales only) ── */}
-          {activeKind === "sale" && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={headerInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.25 }}
-              className="max-w-2xl mx-auto"
-            >
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search by name or location…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 py-6 text-lg rounded-full border-2 border-border focus:border-primary"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
-                >
-                  <SlidersHorizontal className="w-5 h-5" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
         </div>
       </section>
 
       {/* ── Sales filters ── */}
-      {activeKind === "sale" && (
+      {(
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -414,12 +262,9 @@ const Explore = () => {
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
 
-          {/* ── Non-sale kinds: delegate to RentalPane ── */}
-          {activeKind !== "sale" && <RentalPane kind={activeKind} />}
+          {/* ── Sales listings ── */}
+          <>
 
-          {/* ── Sales kind ── */}
-          {activeKind === "sale" && (
-            <>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
                 <p className="text-muted-foreground">
                   <span className="font-semibold text-foreground">{filteredSaleProperties.length}</span>{" "}
@@ -549,7 +394,7 @@ const Explore = () => {
                 </>
               )}
             </>
-          )}
+
         </div>
       </section>
     </div>
