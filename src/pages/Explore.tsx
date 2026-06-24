@@ -109,7 +109,7 @@ const Explore = () => {
         path="/explore"
         jsonLd={breadcrumbLd([
           { name: "Home", path: "/" },
-          { name: activeKind === "sale" ? "Properties" : "Stays", path: "/explore" },
+          { name: "Properties", path: "/explore" },
         ])}
       />
 
