@@ -66,6 +66,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
     title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
     beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
     description: "", amenitiesText: "", year_built: "", parking: 0,
+    units: 1,
     mainImageUrl: "", featured: false,
     country: "Ghana", city: "", region: "", gps_lat: "", gps_lng: "",
     owner_name: "", owner_email: "", owner_phone: "", video_url: "",
@@ -92,6 +93,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
         amenitiesText: (property.amenities || []).join(", "),
         year_built: property.year_built ? String(property.year_built) : "",
         parking: Number(property.parking) || 0,
+        units: Number(property.units) || 1,
         mainImageUrl: property.image_url || "",
         featured: !!property.featured,
         country: property.country || "Ghana",
@@ -113,7 +115,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
         listing_kind: "sale",
         title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
         beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
-        description: "", amenitiesText: "", year_built: "", parking: 0,
+        description: "", amenitiesText: "", year_built: "", parking: 0, units: 1,
         mainImageUrl: "", featured: false, country: "Ghana", city: "", region: "",
         gps_lat: "", gps_lng: "", owner_name: "", owner_email: "", owner_phone: "", video_url: "",
       });
@@ -212,6 +214,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
       amenities: form.amenitiesText.split(",").map(s => s.trim()).filter(Boolean),
       year_built: form.year_built ? parseInt(form.year_built) : null,
       parking: Number(form.parking) || 0,
+      units: Math.max(1, Number(form.units) || 1),
       image_url: form.mainImageUrl || (images[0]?.url ?? null),
       images: images.map(img => img.url),
       featured: form.featured, currency: form.currency || "USD",
@@ -350,6 +353,15 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
               </div>
             )}
             <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <Label>Number of Units</Label>
+                <Input type="number" min={1} value={form.units} onChange={e => f("units", Number(e.target.value))} placeholder="1" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isRentalKind(form.listing_kind)
+                    ? "How many rooms/apartments/spaces this property has."
+                    : "How many units are included in this listing."}
+                </p>
+              </div>
               <div><Label>Bedrooms</Label><Input type="number" min={0} value={form.beds} onChange={e => f("beds", Number(e.target.value))} /></div>
               <div><Label>Bathrooms</Label><Input type="number" min={0} value={form.baths} onChange={e => f("baths", Number(e.target.value))} /></div>
               <div><Label>Sqft</Label><Input value={form.sqft} onChange={e => f("sqft", e.target.value)} placeholder="4,200" /></div>

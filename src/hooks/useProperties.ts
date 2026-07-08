@@ -21,6 +21,8 @@ export interface DBProperty {
   image_url: string | null;
   images: string[];
   status: string;
+  units: number;
+  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -49,7 +51,8 @@ export const mergeWithStaticImages = (dbProp: DBProperty): StaticProperty & { st
       ? dbProp.images
       : (dbProp.image_url ? [dbProp.image_url] : (staticProp?.images || ["/placeholder.svg"])),
     status: dbProp.status,
-  };
+    units: dbProp.units ?? 1,
+  } as StaticProperty & { status: string; units: number };
 };
 
 export const useProperties = () => {
@@ -60,6 +63,7 @@ export const useProperties = () => {
     const { data } = await (supabase as any)
       .from("properties")
       .select("*")
+      .is("deleted_at", null)
       .order("id");
     setDbProperties(data || []);
     setLoading(false);
@@ -71,7 +75,7 @@ export const useProperties = () => {
 
   const mergedProperties = dbProperties.length > 0
     ? dbProperties.map(mergeWithStaticImages)
-    : staticProperties.map(p => ({ ...p, status: "Available" }));
+    : staticProperties.map(p => ({ ...p, status: "Available", units: 1 }));
 
   return { properties: mergedProperties, loading, refetch: fetchProperties };
 };

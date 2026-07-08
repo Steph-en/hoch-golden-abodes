@@ -478,6 +478,7 @@ export type Database = {
           status: string
           title: string
           type: string
+          units: number
           updated_at: string
           video_url: string | null
           year_built: number | null
@@ -513,6 +514,7 @@ export type Database = {
           status?: string
           title: string
           type?: string
+          units?: number
           updated_at?: string
           video_url?: string | null
           year_built?: number | null
@@ -548,6 +550,7 @@ export type Database = {
           status?: string
           title?: string
           type?: string
+          units?: number
           updated_at?: string
           video_url?: string | null
           year_built?: number | null
