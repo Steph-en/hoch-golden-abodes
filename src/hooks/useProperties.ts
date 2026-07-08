@@ -51,7 +51,8 @@ export const mergeWithStaticImages = (dbProp: DBProperty): StaticProperty & { st
       ? dbProp.images
       : (dbProp.image_url ? [dbProp.image_url] : (staticProp?.images || ["/placeholder.svg"])),
     status: dbProp.status,
-  };
+    units: dbProp.units ?? 1,
+  } as StaticProperty & { status: string; units: number };
 };
 
 export const useProperties = () => {
@@ -62,6 +63,7 @@ export const useProperties = () => {
     const { data } = await (supabase as any)
       .from("properties")
       .select("*")
+      .is("deleted_at", null)
       .order("id");
     setDbProperties(data || []);
     setLoading(false);
