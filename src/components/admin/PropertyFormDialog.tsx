@@ -115,7 +115,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
         listing_kind: "sale",
         title: "", location: "", area: "", price: "", price_value: 0, currency: "USD",
         beds: 0, baths: 0, sqft: "", type: "Villa", status: "Available",
-        description: "", amenitiesText: "", year_built: "", parking: 0,
+        description: "", amenitiesText: "", year_built: "", parking: 0, units: 1,
         mainImageUrl: "", featured: false, country: "Ghana", city: "", region: "",
         gps_lat: "", gps_lng: "", owner_name: "", owner_email: "", owner_phone: "", video_url: "",
       });
