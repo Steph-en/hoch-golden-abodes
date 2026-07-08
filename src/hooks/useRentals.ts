@@ -91,12 +91,14 @@ export const useStays = (kind?: string | null) => {
       let q = (supabase as any)
         .from("properties")
         .select("*")
+        .is("deleted_at", null)
         .in("listing_kind", RENTAL_KINDS)
         .order("featured", { ascending: false });
       if (kind && kind !== "all") {
         q = (supabase as any)
           .from("properties")
           .select("*")
+          .is("deleted_at", null)
           .eq("listing_kind", kind)
           .order("featured", { ascending: false });
       }
