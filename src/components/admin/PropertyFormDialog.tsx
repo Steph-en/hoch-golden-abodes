@@ -93,6 +93,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
         amenitiesText: (property.amenities || []).join(", "),
         year_built: property.year_built ? String(property.year_built) : "",
         parking: Number(property.parking) || 0,
+        units: Number(property.units) || 1,
         mainImageUrl: property.image_url || "",
         featured: !!property.featured,
         country: property.country || "Ghana",
