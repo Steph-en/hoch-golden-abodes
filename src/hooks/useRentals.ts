@@ -158,6 +158,7 @@ export const useRoom = (roomId: string | undefined) => {
           .from("properties")
           .select("*")
           .eq("id", r.property_id)
+          .is("deleted_at", null)
           .maybeSingle();
         setProperty(p as RentalProperty);
       }
