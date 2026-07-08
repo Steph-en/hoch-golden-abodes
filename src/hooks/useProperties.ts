@@ -21,6 +21,8 @@ export interface DBProperty {
   image_url: string | null;
   images: string[];
   status: string;
+  units: number;
+  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
 }
