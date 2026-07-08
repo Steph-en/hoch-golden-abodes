@@ -75,7 +75,7 @@ export const useProperties = () => {
 
   const mergedProperties = dbProperties.length > 0
     ? dbProperties.map(mergeWithStaticImages)
-    : staticProperties.map(p => ({ ...p, status: "Available" }));
+    : staticProperties.map(p => ({ ...p, status: "Available", units: 1 }));
 
   return { properties: mergedProperties, loading, refetch: fetchProperties };
 };
