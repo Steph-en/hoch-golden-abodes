@@ -361,6 +361,13 @@ const Explore = () => {
                           <div className="flex items-center gap-1.5"><Bed className="w-4 h-4" /><span>{property.beds}</span></div>
                           <div className="flex items-center gap-1.5"><Bath className="w-4 h-4" /><span>{property.baths}</span></div>
                           <div className="flex items-center gap-1.5"><Square className="w-4 h-4" /><span>{property.sqft} sqft</span></div>
+                          {(property as any).units > 1 && (
+                            <div className="flex items-center gap-1.5 ml-auto">
+                              <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                                {(property as any).units} units
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <Link to={`/property/${property.id}`}>
                           <Button className="w-full" variant="outline">View Details</Button>
