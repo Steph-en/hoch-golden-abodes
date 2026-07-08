@@ -121,7 +121,7 @@ export const useStay = (id: number | undefined) => {
     (async () => {
       setLoading(true);
       const [{ data: p }, { data: r }] = await Promise.all([
-        (supabase as any).from("properties").select("*").eq("id", id).maybeSingle(),
+        (supabase as any).from("properties").select("*").eq("id", id).is("deleted_at", null).maybeSingle(),
         (supabase as any)
           .from("rooms")
           .select("*")
