@@ -214,6 +214,7 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
       amenities: form.amenitiesText.split(",").map(s => s.trim()).filter(Boolean),
       year_built: form.year_built ? parseInt(form.year_built) : null,
       parking: Number(form.parking) || 0,
+      units: Math.max(1, Number(form.units) || 1),
       image_url: form.mainImageUrl || (images[0]?.url ?? null),
       images: images.map(img => img.url),
       featured: form.featured, currency: form.currency || "USD",
