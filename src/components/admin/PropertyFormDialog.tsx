@@ -353,6 +353,15 @@ const PropertyFormDialog = ({ open, onClose, property, onSaved }: Props) => {
               </div>
             )}
             <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <Label>Number of Units</Label>
+                <Input type="number" min={1} value={form.units} onChange={e => f("units", Number(e.target.value))} placeholder="1" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {isRentalKind(form.listing_kind)
+                    ? "How many rooms/apartments/spaces this property has."
+                    : "How many units are included in this listing."}
+                </p>
+              </div>
               <div><Label>Bedrooms</Label><Input type="number" min={0} value={form.beds} onChange={e => f("beds", Number(e.target.value))} /></div>
               <div><Label>Bathrooms</Label><Input type="number" min={0} value={form.baths} onChange={e => f("baths", Number(e.target.value))} /></div>
               <div><Label>Sqft</Label><Input value={form.sqft} onChange={e => f("sqft", e.target.value)} placeholder="4,200" /></div>
