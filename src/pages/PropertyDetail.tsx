@@ -18,7 +18,8 @@ import {
   Phone,
   Mail,
   MessageSquare,
-  Loader2
+  Loader2,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -338,6 +339,13 @@ const PropertyDetail = () => {
 
             {/* Property Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 bg-muted/50 rounded-2xl">
+              {(property as any).units > 1 && (
+                <div className="text-center">
+                  <Building2 className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <p className="font-display text-2xl font-semibold text-foreground">{(property as any).units}</p>
+                  <p className="text-muted-foreground text-sm">Units</p>
+                </div>
+              )}
               {property.beds > 0 && (
                 <div className="text-center">
                   <Bed className="w-8 h-8 text-primary mx-auto mb-2" />

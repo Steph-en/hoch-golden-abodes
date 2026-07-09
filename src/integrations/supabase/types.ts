@@ -464,6 +464,7 @@ export type Database = {
           id: number
           image_url: string | null
           images: string[] | null
+          is_archived: boolean
           listing_kind: Database["public"]["Enums"]["listing_kind"]
           location: string
           owner_email: string | null
@@ -500,6 +501,7 @@ export type Database = {
           id?: number
           image_url?: string | null
           images?: string[] | null
+          is_archived?: boolean
           listing_kind?: Database["public"]["Enums"]["listing_kind"]
           location: string
           owner_email?: string | null
@@ -536,6 +538,7 @@ export type Database = {
           id?: number
           image_url?: string | null
           images?: string[] | null
+          is_archived?: boolean
           listing_kind?: Database["public"]["Enums"]["listing_kind"]
           location?: string
           owner_email?: string | null
@@ -821,6 +824,7 @@ export type Database = {
       }
     }
     Functions: {
+      archive_property: { Args: { _property_id: number }; Returns: undefined }
       assign_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -892,6 +896,11 @@ export type Database = {
           user_id: string
         }[]
       }
+      permanent_delete_property: {
+        Args: { _property_id: number }
+        Returns: undefined
+      }
+      restore_property: { Args: { _property_id: number }; Returns: undefined }
       revoke_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
