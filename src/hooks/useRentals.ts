@@ -91,14 +91,14 @@ export const useStays = (kind?: string | null) => {
       let q = (supabase as any)
         .from("properties")
         .select("*")
-        .is("deleted_at", null)
+        .is("deleted_at", null).eq("is_archived", false)
         .in("listing_kind", RENTAL_KINDS)
         .order("featured", { ascending: false });
       if (kind && kind !== "all") {
         q = (supabase as any)
           .from("properties")
           .select("*")
-          .is("deleted_at", null)
+          .is("deleted_at", null).eq("is_archived", false)
           .eq("listing_kind", kind)
           .order("featured", { ascending: false });
       }
@@ -121,7 +121,7 @@ export const useStay = (id: number | undefined) => {
     (async () => {
       setLoading(true);
       const [{ data: p }, { data: r }] = await Promise.all([
-        (supabase as any).from("properties").select("*").eq("id", id).is("deleted_at", null).maybeSingle(),
+        (supabase as any).from("properties").select("*").eq("id", id).is("deleted_at", null).eq("is_archived", false).maybeSingle(),
         (supabase as any)
           .from("rooms")
           .select("*")
@@ -158,7 +158,7 @@ export const useRoom = (roomId: string | undefined) => {
           .from("properties")
           .select("*")
           .eq("id", r.property_id)
-          .is("deleted_at", null)
+          .is("deleted_at", null).eq("is_archived", false)
           .maybeSingle();
         setProperty(p as RentalProperty);
       }
