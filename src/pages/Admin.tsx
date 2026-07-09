@@ -789,7 +789,7 @@ const Admin = () => {
                                           )}
                                           {prop.featured && <span className="px-2.5 py-0.5 rounded-full text-xs bg-primary/10 text-primary">Featured</span>}
                                         </div>
-                                        <p className="text-sm text-muted-foreground">{prop.location} · {prop.price}</p>
+                                        <p className="text-sm text-muted-foreground">{prop.location} · {prop.price} · {prop.units ?? 1} unit{(prop.units ?? 1) === 1 ? "" : "s"}</p>
                                         {isSuperAdmin && <p className="text-xs text-muted-foreground mt-0.5">{enquiryCount} enquiries</p>}
                                       </div>
                                       <div className="flex flex-wrap gap-2 flex-shrink-0">
