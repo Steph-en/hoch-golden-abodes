@@ -64,6 +64,7 @@ export const useProperties = () => {
       .from("properties")
       .select("*")
       .is("deleted_at", null)
+      .eq("is_archived", false)
       .order("id");
     setDbProperties(data || []);
     setLoading(false);
