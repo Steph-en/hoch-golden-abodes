@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import HeroSection from "@/components/HeroSection";
 import ScrollVideoHero from "@/components/ScrollVideoHero";
 import ServicesSection from "@/components/ServicesSection";
@@ -24,7 +24,7 @@ const Index = () => {
 
   useEffect(() => {
     async function loadProperties() {
-      const { data, error } = await supabase.from("properties").select("id,name").limit(5);
+      const { data, error } = await supabase.from("properties").select("id,title").limit(5);
 
       if (error) {
         console.error("Supabase query error:", error);
