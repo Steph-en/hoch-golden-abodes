@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import HeroSection from "@/components/HeroSection";
 import ScrollVideoHero from "@/components/ScrollVideoHero";
 import ServicesSection from "@/components/ServicesSection";
